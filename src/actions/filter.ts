@@ -24,7 +24,8 @@ export const filterAction = <Al extends Alias<object>, Attr extends string>(
   }, [] as Filter[]);
 
   const val = Array.isArray(value) ? value : [value];
-  return {
+
+  const newState: GlobalState<Al> = {
     ...state,
     filters: [
       ...allFilters,
@@ -34,6 +35,7 @@ export const filterAction = <Al extends Alias<object>, Attr extends string>(
       },
     ],
   };
+  return newState
 };
 
 export const clearFilterAction = <Al>(state: GlobalState<Al>) => {

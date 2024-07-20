@@ -7,29 +7,21 @@
     "incremental": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": [
-      "esnext"
-    ],
-    "module": "esnext",
-    "moduleResolution": "node",
-    "noEmit": true,
+    "outDir": "./dist",
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": [
-        "*"
+        "./*"
       ]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
-    "target": "ESNext"
+    "strict": true
   },
-  "include": [
-    "./src/**/*",
-    ".eslintrc.cjs",
-    "./prettier.config.cjs",
-    "./index.ts"
+  "type": "module",
+  "exclude": [
+    "./*.config.cjs"
   ]
 }

@@ -9,8 +9,8 @@ import {
   filterAction,
   type FilterValue,
   type GlobalState,
+  type Include,
   includeAction,
-  type Includes,
   type Sort,
   sortAction,
 } from "@/index";
@@ -35,7 +35,7 @@ const reducer = <Aliases extends Record<string, string>>(
       return clearFilterAction(state);
     }
     case "include": {
-      const includes = action.payload as Includes;
+      const includes = action.payload as Include;
       return includeAction(includes, state);
     }
     case "sort": {
@@ -63,7 +63,7 @@ export interface QueryBuilder<AliasType = NonNullable<unknown>> {
   ) => QueryBuilder<AliasType>;
   build: () => string;
   clearFilters: () => QueryBuilder<AliasType>;
-  includes: (includes: Includes) => QueryBuilder<AliasType>;
+  includes: (includes: Include) => QueryBuilder<AliasType>;
   sorts: (
     attribute: string,
     direction?: "asc" | "desc",
