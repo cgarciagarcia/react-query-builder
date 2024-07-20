@@ -18,15 +18,15 @@ using your favorite library for frontend `React.js` using a customize hook which
 Here is a simple example:
 
 ```js
-import {useQueryBuilder} from "@cgarciagarcia/react-qiery-builder";
+import {useQueryBuilder} from "@cgarciagarcia/react-query-builder";
 
-const baseConfigIfYouWant = {
+const baseConfig = {
     aliases: {
         "frontend_name": "backend_name",
     }
 }
 
-const builder = useQueryBuilder(baseConfigIfYouWant)
+const builder = useQueryBuilder(baseConfig)
     .filters("age", 18)
     .sorts("created_at")// by default sorting asc
     .sorts("age", 'desc') // sorting desc
