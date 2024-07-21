@@ -5,13 +5,14 @@
 You can install package using yarn (or npm):
 
 ```bash
-yarn add @cgarciagarcia/react-qiery-builder
+yarn add @cgarciagarcia/react-query-builder
 ```
 
 ## Usage
 
-This package was thought offer an easy way to interact with backend integration `spatie/laravel-query-builder`
-using your favorite library for frontend `React.js` using a customize hook which you could interact.
+
+This package is designed to provide an easy way to interact with the backend integration of `spatie/laravel-query-builder` 
+using your favorite frontend library, `React.js`. It includes a custom hook that you can use for seamless interaction.
 
 ### All Example
 
@@ -27,6 +28,7 @@ const baseConfig = {
 }
 
 const builder = useQueryBuilder(baseConfig)
+    .clearFilters()
     .filters("age", 18)
     .sorts("created_at")// by default sorting asc
     .sorts("age", 'desc') // sorting desc
