@@ -1,11 +1,5 @@
-import { type Alias, type GlobalState, usingAlias, } from "@/utils";
-
-export type FilterValue = (string | number)[] | string | number;
-
-export interface Filter {
-  attribute: string;
-  value: (string | number)[];
-}
+import { usingAlias }                                                  from "utils";
+import { type Alias, type Filter, type FilterValue, type GlobalState } from "types";
 
 export const filterAction = <Al extends Alias<object>, Attr extends string>(
   attribute: Attr,

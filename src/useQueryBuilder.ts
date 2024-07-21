@@ -1,25 +1,26 @@
 import { useReducer, useState } from "react";
 
 import {
-  type Actions,
-  type Alias,
   build,
   clearFilterAction,
-  type Filter,
   filterAction,
+  includeAction,
+  sortAction,
+} from "index";
+
+import {
+  type Actions,
+  type Alias,
+  type Filter,
   type FilterValue,
   type GlobalState,
   type Include,
-  includeAction,
   type Sort,
-  sortAction,
-} from "@/index";
-
+} from "types"
 
 interface Action {
   type: Actions;
   payload: unknown;
-
 }
 
 const reducer = <Aliases extends Record<string, string>>(
@@ -46,7 +47,6 @@ const reducer = <Aliases extends Record<string, string>>(
       return { ...state };
     }
   }
-
 };
 
 const initialState = <T>(): GlobalState<T> => ({

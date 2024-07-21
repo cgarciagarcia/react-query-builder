@@ -8,25 +8,29 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "lib": [
-      "ESNext"
+      "es2023",
+      "dom",
+      "dom.iterable"
     ],
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "types": [
+      "react",
+    ],
     "outDir": "./dist",
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
   },
-  "type": "module",
+  "include": [
+    "index.js",
+    "src/types/index.d.ts"
+  ],
   "exclude": [
+    "dist",
     "node_modules",
     "*.config.cjs"
   ]

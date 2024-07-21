@@ -1,8 +1,5 @@
-import { type GlobalState, usingAlias } from "@/index";
-
-export type Sort = [string, "asc" | "desc"];
-
-export type Sorts = Sort[];
+import { usingAlias }                  from "index";
+import { type Sort, type GlobalState } from "types";
 
 export const sortAction = <T>(sorts: Sort, state: GlobalState<T>) => {
   const [attribute, direction] = sorts;

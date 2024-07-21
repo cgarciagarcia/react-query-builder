@@ -1,4 +1,4 @@
-import  { type GlobalState } from "@/utils/state";
+import { type GlobalState } from "types";
 
 
 export const build = <T>(state: GlobalState<T>): string => {

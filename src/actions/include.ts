@@ -1,7 +1,4 @@
-import { type GlobalState } from "@/index";
-
-export type Include = string
-export type Includes = string[];
+import { type Include, type GlobalState } from "types";
 
 export const includeAction = <T>(
   includes: Include,
