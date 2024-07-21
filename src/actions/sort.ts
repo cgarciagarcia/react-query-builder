@@ -1,4 +1,4 @@
-import { usingAlias }                  from "index";
+import { usingAlias }                  from "../utils";
 import { type Sort, type GlobalState } from "types";
 
 export const sortAction = <T>(sorts: Sort, state: GlobalState<T>) => {
