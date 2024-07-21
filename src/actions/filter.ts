@@ -1,4 +1,4 @@
-import { usingAlias }                                                  from "utils";
+import { usingAlias }                                                  from "../utils";
 import { type Alias, type Filter, type FilterValue, type GlobalState } from "types";
 
 export const filterAction = <Al extends Alias<object>, Attr extends string>(

@@ -5,17 +5,19 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
+    "declaration": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "lib": [
-      "es2023",
+      "ES2022",
       "dom",
       "dom.iterable"
     ],
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "Node",
     "types": [
-      "react",
+      "react"
     ],
     "outDir": "./dist",
     "noUnusedParameters": true,
@@ -25,10 +27,6 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": [
-    "index.js",
-    "src/types/index.d.ts"
-  ],
   "exclude": [
     "dist",
     "node_modules",
