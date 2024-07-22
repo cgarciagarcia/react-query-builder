@@ -1,6 +1,5 @@
 import { type GlobalState } from "types";
 
-
 export const build = <T>(state: GlobalState<T>): string => {
   const filters = state.filters.reduce(
     (acc, filter) => ({
@@ -17,6 +16,8 @@ export const build = <T>(state: GlobalState<T>): string => {
     return acc;
   }, [] as string[]);
 
+  const includes = state.includes.join(',')
+
   const urlSearchParams = new URLSearchParams({
     ...filters,
   });
@@ -24,6 +25,9 @@ export const build = <T>(state: GlobalState<T>): string => {
   if (sorts.length > 0) {
     urlSearchParams.append("sort", sorts.join(","));
   }
+
+  if (includes)
+    urlSearchParams.append("include", includes);
 
   const searchParamsString = urlSearchParams.toString();
 

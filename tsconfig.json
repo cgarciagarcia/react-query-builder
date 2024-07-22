@@ -9,12 +9,12 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "lib": [
-      "ES2022",
+      "ESNext",
       "dom",
       "dom.iterable"
     ],
-    "module": "ES2022",
-    "target": "ES2022",
+    "module": "ESNext",
+    "target": "ESNext",
     "moduleResolution": "Node",
     "types": [
       "react"

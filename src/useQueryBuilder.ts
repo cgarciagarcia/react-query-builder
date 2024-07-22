@@ -1,126 +1,166 @@
-import { useReducer, useState } from "react";
+import { useReducer, useState } from 'react'
 
 import {
   build,
-  clearFilterAction,
+  clearFiltersAction,
+  clearIncludeAction, clearSortsAction,
   filterAction,
-  includeAction,
-  sortAction,
-} from "index";
+  includeAction, removeFilterAction,
+  removeIncludeAction, removeSortAction,
+  sortAction
+} from 'index'
 
 import {
   type Actions,
   type Alias,
   type Filter,
-  type FilterValue,
+  type Filters,
   type GlobalState,
   type Include,
+  type Includes,
+  type QueryBuilder,
   type Sort,
-} from "types"
+  type Sorts
+} from 'types'
 
 interface Action {
   type: Actions;
-  payload: unknown;
+  payload?: unknown;
 }
 
-const reducer = <Aliases extends Record<string, string>>(
+const reducer = <Aliases extends Record<string, string>> (
   state: GlobalState<Aliases>,
-  action: Action,
-) => {
+  action: Action
+): GlobalState<Aliases> => {
   switch (action?.type) {
-    case "filter": {
-      const filter = action.payload as Filter;
-      return filterAction(filter.attribute, filter.value, state);
+    case 'filter': {
+      const filter = action.payload as Filter
+      return filterAction(filter.attribute, filter.value, state)
     }
-    case "clear_filter": {
-      return clearFilterAction(state);
+    case 'remove_filter': {
+      const attribute = action.payload as string
+      return removeFilterAction(attribute, state)
     }
-    case "include": {
-      const includes = action.payload as Include;
-      return includeAction(includes, state);
+    case 'clear_filters': {
+      return clearFiltersAction(state)
     }
-    case "sort": {
-      const sorts = action.payload as Sort;
-      return sortAction(sorts, state);
+    case 'include': {
+      const includes = action.payload as Include
+      return includeAction(includes, state)
+    }
+    case 'remove_include': {
+      const include = action.payload as Include
+      return removeIncludeAction(include, state)
+    }
+    case 'clear_includes': {
+      return clearIncludeAction(state)
+    }
+    case 'sort': {
+      const sorts = action.payload as Sort
+      return sortAction(sorts, state)
+    }
+    case 'remove_sort': {
+      const attribute = action.payload as string
+      return removeSortAction(attribute, state)
+    }
+    case 'clear_sorts': {
+      return clearSortsAction(state)
     }
     default: {
-      return { ...state };
+      return { ...state }
     }
   }
-};
+}
 
-const initialState = <T>(): GlobalState<T> => ({
+const initialState = <T> (): GlobalState<T> => ({
   aliases: {} as Alias<T>,
   filters: [],
   includes: [],
-  sorts: [],
-});
+  sorts: []
+})
 
-export interface QueryBuilder<AliasType = NonNullable<unknown>> {
-  filters: (
-    attribute: keyof AliasType | string,
-    value: FilterValue,
-  ) => QueryBuilder<AliasType>;
-  build: () => string;
-  clearFilters: () => QueryBuilder<AliasType>;
-  includes: (includes: Include) => QueryBuilder<AliasType>;
-  sorts: (
-    attribute: string,
-    direction?: "asc" | "desc",
-  ) => QueryBuilder<AliasType>;
-}
 
-type ExtensibleQueryProps<T> = Pick<
-  QueryBuilder<T>,
-  "filters" | "includes" | "sorts"
->;
-
-interface QueryBuilderProps<AliasType> extends ExtensibleQueryProps<AliasType> {
+interface BaseConfig<AliasType> {
   aliases?: AliasType;
+  includes?: Includes
+  sorts?: Sorts
+  filters?: Filters
 }
 
-export const useQueryBuilder: <Aliases extends Record<string, string>>(
-  config?: QueryBuilderProps<Aliases>,
-) => QueryBuilder<Aliases> = <Aliases extends Record<string, string>>(
-  config = {} as QueryBuilderProps<Aliases>,
+export const useQueryBuilder: <Aliases>(
+  config?: BaseConfig<Aliases>
+) => QueryBuilder<Aliases> = <Aliases extends Record<string, string>> (
+  config = {} as BaseConfig<Aliases>
 ) => {
-  const [init] = useState(() => initialState<Aliases>());
+  const [init] = useState(() => initialState<Aliases>())
   const [state, dispatch] = useReducer(reducer, init, (init) => ({
     ...init,
-    aliases: config?.aliases ?? ({} as Aliases),
-  }));
+    aliases: config?.aliases ?? ({} as Aliases)
+  }))
 
   const builder: QueryBuilder<Aliases> = {
-    filters: (attribute, value) => {
+    filter: (attribute, value) => {
       dispatch({
-        type: "filter",
-        payload: { attribute, value },
-      });
-      return builder;
+        type: 'filter',
+        payload: { attribute, value }
+      })
+      return builder
     },
-    build: () => build(state),
+    removeFilter: (attribute) => {
+      dispatch({
+        type: 'remove_filter',
+        payload: attribute
+      })
+      return builder
+    },
     clearFilters: () => {
       dispatch({
-        type: "clear_filter",
-        payload: undefined,
-      });
-      return builder;
+        type: 'clear_filters'
+      })
+      return builder
     },
-    includes: (includes) => {
+    include: (includes) => {
       dispatch({
-        type: "include",
-        payload: includes,
-      });
-      return builder;
+        type: 'include',
+        payload: includes
+      })
+      return builder
     },
-    sorts: (attribute, direction) => {
+    clearIncludes: () => {
       dispatch({
-        type: "sort",
-        payload: [attribute, direction ?? "asc"],
-      });
-      return builder;
+        type: 'clear_includes'
+      })
+      return builder
     },
-  };
+    removeInclude: (include) => {
+      dispatch({
+        type: 'remove_include',
+        payload: include
+      })
+      return builder
+    },
+    sort: (attribute, direction) => {
+      dispatch({
+        type: 'sort',
+        payload: { attribute, direction: direction ?? 'asc' }
+      })
+      return builder
+    },
+    removeSort: (attribute) => {
+      dispatch({
+        type: 'remove_sort',
+        payload: attribute
+      })
+      return builder
+    },
+    clearSorts: () => {
+      dispatch({
+        type: 'clear_sorts'
+      })
+      return builder
+    },
+    build: () => build(state)
+  }
 
-  return builder;
-};
+  return builder
+}
