@@ -87,7 +87,7 @@ interface BaseConfig<AliasType> {
   filters?: Filters
 }
 
-export const useQueryBuilder: <Aliases>(
+export const useQueryBuilder: <Aliases extends Record<string, string>>(
   config?: BaseConfig<Aliases>
 ) => QueryBuilder<Aliases> = <Aliases extends Record<string, string>> (
   config = {} as BaseConfig<Aliases>
