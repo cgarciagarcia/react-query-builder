@@ -21,7 +21,7 @@ import {
   type QueryBuilder,
   type Sort,
   type Sorts
-} from 'types'
+} from './types'
 
 interface Action {
   type: Actions;

@@ -1,4 +1,4 @@
-import { type GlobalState } from 'types'
+import { type GlobalState } from '../types'
 
 export const build = <T> (state: GlobalState<T>): string => {
   const filters = state.filters.reduce(

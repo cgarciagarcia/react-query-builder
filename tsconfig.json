@@ -31,5 +31,8 @@
     "dist",
     "node_modules",
     "*.config.cjs"
+  ],
+  "include": [
+    "src/**/*",
   ]
 }

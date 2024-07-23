@@ -5,7 +5,7 @@ export type Alias<Prop> = {
 export interface Sort {
   attribute: string;
   direction: 'asc' | 'desc';
-} //[string, "asc" | "desc"];
+}
 export type Sorts = Sort[];
 export type Include = string
 export type Includes = string[];
