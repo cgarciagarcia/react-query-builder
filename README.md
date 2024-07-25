@@ -1,13 +1,10 @@
+**TypeScript Query Builder** provides a way to build a query string compatible with
+[spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder).
 
-<p>
-    <b>JavaScript/TypeScript Query Builder</b>
-    provides a way to build a query string compatible with
-    <a href="https://github.com/spatie/laravel-query-builder">spatie/laravel-query-builder</a>.
-</p>
 
 # WARNING: This library is not establish yet, it will be soon
 
-## Install
+## Installation
 
 You can install package using yarn (or npm):
 
@@ -21,7 +18,7 @@ This package is designed to provide an easy way to interact with the backend int
 of `spatie/laravel-query-builder`
 using your favorite frontend library, `React.js`. It includes a custom hook that you can use for seamless interaction.
 
-### All Example
+<h3 style="color:#cb3837">Some Examples</h3>
 
 Here is a simple example:
 
@@ -35,7 +32,8 @@ const baseConfig = {
 }
 
 const builder = useQueryBuilder(baseConfig)
-  .clearFilters()
+
+builder
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
@@ -44,6 +42,35 @@ const builder = useQueryBuilder(baseConfig)
 console.log(theQuery.build());
 // /users?filter[age]=18&sort=created_at,-age&includes=posts,comments
 ```
+
+<h3 style="color:#cb3837;">Remove Methods</h3>
+You can use the remove method in sort, includes, filter like this:
+
+```ts
+const builder = useQueryBuilder(baseConfig)
+
+  builder
+    .removeFilter('name', 'last_name')
+    .removeSort('name', 'id')
+    .removeInclude('address', 'documents')
+```
+
+<h3 style="color:#cb3837">Clear Methods</h3>
+
+You can use the clear methods for delete the entire data group  
+
+```ts
+const builder = useQueryBuilder(baseConfig)
+
+  builder
+    .clearFilters()
+    .clearIncludes()
+    .clearSorts()
+```
+
+## Next features
+* Interaction with url query string
+
 
 ## License
 
