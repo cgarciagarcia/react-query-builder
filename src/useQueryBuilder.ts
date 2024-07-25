@@ -97,7 +97,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
   const [init] = useState(() => initialState<Aliases>())
   const [state, dispatch] = useReducer(reducer, init, (init) => ({
     ...init,
-    aliases: config?.aliases ?? ({} as Aliases)
+    ...config
   }))
 
   const builder: QueryBuilder<Aliases> = {
