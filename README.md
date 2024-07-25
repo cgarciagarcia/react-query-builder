@@ -46,7 +46,7 @@ console.log(theQuery.build());
 <h3 style="color:#cb3837;">Remove Methods</h3>
 You can use the remove method in sort, includes, filter like this:
 
-```ts
+```js
 const builder = useQueryBuilder(baseConfig)
 
   builder
@@ -55,11 +55,11 @@ const builder = useQueryBuilder(baseConfig)
     .removeInclude('address', 'documents')
 ```
 
-<h3 style="color:#cb3837">Clear Methods</h3>
+<h3 style="color:#cb3837;">Clear Methods</h3>
 
 You can use the clear methods for delete the entire data group  
 
-```ts
+```js
 const builder = useQueryBuilder(baseConfig)
 
   builder
