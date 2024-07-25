@@ -39,14 +39,14 @@ export const clearFiltersAction = <Al> (state: GlobalState<Al>) => {
   }
 }
 
-export const removeFilterAction = <Al extends Alias<object>, Attr extends string> (
+export const removeFilterAction = <Al extends Alias<object>, Attr extends string[]> (
   attribute: Attr,
   state: GlobalState<Al>
 ) => {
-  const alias = usingAlias(state, attribute)
+  const filterAliased = attribute.map(attr => usingAlias(state, attr))
   const newState: GlobalState<Al> = {
     ...state,
-    filters: state.filters.filter((filter) => filter.attribute !== alias)
+    filters: state.filters.filter((filter) => !filterAliased.includes(filter.attribute))
   }
   return newState
 }

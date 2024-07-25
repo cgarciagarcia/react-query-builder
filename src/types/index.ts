@@ -37,16 +37,16 @@ export interface QueryBuilder<AliasType = NonNullable<unknown>> {
     attribute: keyof AliasType | string,
     value: FilterValue
   ) => QueryBuilder<AliasType>;
-  removeFilter: (attribute: keyof AliasType | string) => QueryBuilder<AliasType>;
+  removeFilter: (...attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
-  include: (includes: Include) => QueryBuilder<AliasType>;
-  removeInclude: (include: Include) => QueryBuilder<AliasType>;
+  include: (...includes: Includes) => QueryBuilder<AliasType>;
+  removeInclude: (include: Includes) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
   sort: (
     attribute: keyof AliasType | string,
     direction?: 'asc' | 'desc'
   ) => QueryBuilder<AliasType>;
-  removeSort: (attribute: keyof AliasType | string) => QueryBuilder<AliasType>;
+  removeSort: (attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
 }

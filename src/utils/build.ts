@@ -26,8 +26,9 @@ export const build = <T> (state: GlobalState<T>): string => {
     urlSearchParams.append('sort', sorts.join(','))
   }
 
-  if (includes)
+  if (includes) {
     urlSearchParams.append('include', includes)
+  }
 
   const searchParamsString = urlSearchParams.toString()
 

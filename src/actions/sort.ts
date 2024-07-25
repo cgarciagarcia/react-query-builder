@@ -9,11 +9,11 @@ export const sortAction = <T> (sort: Sort, state: GlobalState<T>) => {
   } satisfies GlobalState<T>
 }
 
-export const removeSortAction = <T> (attribute: string, state: GlobalState<T>) => {
-  const attributeAliased = usingAlias(state, attribute)
+export const removeSortAction = <T> (attributes: string[], state: GlobalState<T>) => {
+  const attributesAliased = attributes.map(attr => usingAlias(state, attr))
   return {
     ...state,
-    sorts: state.sorts.filter((sort) => sort.attribute !== attributeAliased)
+    sorts: state.sorts.filter((sort) => !attributesAliased.includes(sort.attribute))
   } satisfies GlobalState<T>
 }
 

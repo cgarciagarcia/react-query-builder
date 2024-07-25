@@ -16,7 +16,6 @@ import {
   type Filter,
   type Filters,
   type GlobalState,
-  type Include,
   type Includes,
   type QueryBuilder,
   type Sort,
@@ -38,18 +37,18 @@ const reducer = <Aliases extends Record<string, string>> (
       return filterAction(filter.attribute, filter.value, state)
     }
     case 'remove_filter': {
-      const attribute = action.payload as string
+      const attribute = action.payload as string[]
       return removeFilterAction(attribute, state)
     }
     case 'clear_filters': {
       return clearFiltersAction(state)
     }
     case 'include': {
-      const includes = action.payload as Include
+      const includes = action.payload as Includes
       return includeAction(includes, state)
     }
     case 'remove_include': {
-      const include = action.payload as Include
+      const include = action.payload as Includes
       return removeIncludeAction(include, state)
     }
     case 'clear_includes': {
@@ -60,7 +59,7 @@ const reducer = <Aliases extends Record<string, string>> (
       return sortAction(sorts, state)
     }
     case 'remove_sort': {
-      const attribute = action.payload as string
+      const attribute = action.payload as string[]
       return removeSortAction(attribute, state)
     }
     case 'clear_sorts': {
@@ -106,7 +105,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       })
       return builder
     },
-    removeFilter: (attribute) => {
+    removeFilter: (...attribute) => {
       dispatch({
         type: 'remove_filter',
         payload: attribute
@@ -132,10 +131,10 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       })
       return builder
     },
-    removeInclude: (include) => {
+    removeInclude: (...includes) => {
       dispatch({
         type: 'remove_include',
-        payload: include
+        payload: includes
       })
       return builder
     },
