@@ -3,12 +3,15 @@ import { useReducer, useState } from 'react'
 import {
   build,
   clearFiltersAction,
-  clearIncludeAction, clearSortsAction,
+  clearIncludeAction,
+  clearSortsAction,
   filterAction,
-  includeAction, removeFilterAction,
-  removeIncludeAction, removeSortAction,
+  includeAction,
+  removeFilterAction,
+  removeIncludeAction,
+  removeSortAction,
   sortAction
-} from 'index'
+} from './index'
 
 import {
   type Actions,
