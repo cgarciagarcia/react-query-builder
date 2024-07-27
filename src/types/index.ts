@@ -1,5 +1,5 @@
 export type Alias<Prop> = {
-  [key in keyof Prop]: Prop[key] extends string ? string : never;
+  [key in keyof Prop]: Prop[key] extends string ? string : string;
 };
 
 export interface Sort {

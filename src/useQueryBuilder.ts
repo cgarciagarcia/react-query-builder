@@ -2,6 +2,9 @@ import { useReducer, useState } from 'react'
 
 import {
   build,
+} from '@/utils'
+
+import {
   clearFiltersAction,
   clearIncludeAction,
   clearSortsAction,
@@ -11,7 +14,7 @@ import {
   removeIncludeAction,
   removeSortAction,
   sortAction
-} from './index'
+} from '@/actions'
 
 import {
   type Actions,

@@ -1,4 +1,4 @@
-import { type GlobalState, type Includes } from '../types'
+import { type GlobalState, type Includes } from '@/types'
 
 export const includeAction = <T> (
   includes: Includes,

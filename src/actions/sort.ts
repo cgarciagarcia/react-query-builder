@@ -1,5 +1,5 @@
-import { usingAlias } from '../utils'
-import { type Sort, type GlobalState } from '../types'
+import { usingAlias } from '@/utils'
+import { type Sort, type GlobalState } from '@/types'
 
 export const sortAction = <T> (sort: Sort, state: GlobalState<T>) => {
   const attributeAliased = usingAlias(state, sort.attribute)

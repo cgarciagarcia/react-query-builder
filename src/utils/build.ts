@@ -1,10 +1,11 @@
-import { type GlobalState } from '../types'
+import { type GlobalState } from '@/types'
+import { usingAlias } from '@/utils/alias'
 
 export const build = <T> (state: GlobalState<T>): string => {
   const filters = state.filters.reduce(
     (acc, filter) => ({
       ...acc,
-      [`filter[${filter.attribute}]`]: filter.value.join(',')
+      [`filter[${usingAlias(state, filter.attribute)}]`]: filter.value.join(',')
     }),
     {}
   )
@@ -32,5 +33,5 @@ export const build = <T> (state: GlobalState<T>): string => {
 
   const searchParamsString = urlSearchParams.toString()
 
-  return searchParamsString ? '?' + urlSearchParams.toString() : ''
+  return searchParamsString ? '?' + decodeURIComponent(searchParamsString) : ''
 }
