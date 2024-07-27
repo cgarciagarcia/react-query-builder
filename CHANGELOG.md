@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.1...v1.6.2) (2024-07-27)
+
+
+### Bug Fixes
+
+* **chore:** remove test folder from npm package ([3804539](https://github.com/cgarciagarcia/react-query-builder/commit/3804539f62c48582c55228902d8bde70924b5aaf))
+
 ### [1.6.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.0...v1.6.1) (2024-07-27)
 
 ## 1.6.0 (2024-07-27)
