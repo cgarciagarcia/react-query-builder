@@ -4,7 +4,7 @@ export const build = <T> (state: GlobalState<T>): string => {
   const filters = state.filters.reduce(
     (acc, filter) => ({
       ...acc,
-      [`filters[${filter.attribute}]`]: filter.value.join(',')
+      [`filter[${filter.attribute}]`]: filter.value.join(',')
     }),
     {}
   )
