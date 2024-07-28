@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.0...v1.7.1) (2024-07-28)
+
+
+### Bug Fixes
+
+* **chore:** fixing coverage generation report ([816e0db](https://github.com/cgarciagarcia/react-query-builder/commit/816e0db81cb04212d7032047acb0fdc9536da8c4))
+
 ## [1.7.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.3...v1.7.0) (2024-07-28)
 
 
