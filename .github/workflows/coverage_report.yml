@@ -30,7 +30,7 @@ jobs:
       - name: 'Generate Coverage report files'
         env:
           CI: true
-        run: 'jest --coverage --coverageDirectory=./tests/coverage'
+        run: 'npm run test -- --coverage --coverageDirectory=./tests/coverage'
 
       - name: 'Coveralls Parallel'
         uses: 'coverallsapp/github-action@master'

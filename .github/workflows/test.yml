@@ -2,9 +2,9 @@ name: Node CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build:
@@ -34,4 +34,17 @@ jobs:
       - name: 'Run Tests and Coverage'
         env:
           CI: true
-        run: 'npm run test'
+        run: 'npm run coverage'
+
+      - name: 'Coveralls Parallel'
+        uses: 'coverallsapp/github-action@master'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          path-to-lcov: './tests/coverage/lcov.info'
+
+      - name: 'Coveralls Finished'
+        uses: 'coverallsapp/github-action@master'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
