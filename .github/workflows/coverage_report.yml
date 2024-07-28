@@ -24,6 +24,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: 'Determine branch from tag'
+        run: |
+            branch_name=$(git name-rev --name-only HEAD)
+            echo "branch_name=$branch_name" >> $GITHUB_ENV
+            -
       - name: 'Install Dependencies'
         run: 'npm install'
 
@@ -34,9 +39,8 @@ jobs:
 
       - name: 'Coveralls Parallel'
         uses: 'coverallsapp/github-action@master'
-        env:
-          CI_BRANCH: 'main'
         with:
+          git-branch: ${{ env.branch_name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           path-to-lcov: './tests/coverage/lcov.info'
