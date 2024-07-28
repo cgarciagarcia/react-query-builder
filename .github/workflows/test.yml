@@ -2,9 +2,9 @@ name: Test CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build:
@@ -31,20 +31,7 @@ jobs:
       - name: Lint Files
         run: 'npm run lint'
 
-      - name: 'Run Tests and Coverage'
+      - name: 'Run Tests'
         env:
           CI: true
-        run: 'npm run coverage'
-
-      - name: 'Coveralls Parallel'
-        uses: 'coverallsapp/github-action@master'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          parallel: true
-          path-to-lcov: './tests/coverage/lcov.info'
-
-      - name: 'Coveralls Finished'
-        uses: 'coverallsapp/github-action@master'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          parallel-finished: true
+        run: 'npm run test'
