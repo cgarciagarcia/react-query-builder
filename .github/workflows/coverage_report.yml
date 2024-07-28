@@ -1,0 +1,46 @@
+name: Coverage generator report
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: 'Checkout Project'
+        uses: 'actions/checkout@v3.0.1'
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: 'actions/setup-node@v3.1.1'
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: 'Install Dependencies'
+        run: 'npm install'
+
+      - name: 'Generate Coverage report files'
+        env:
+          CI: true
+        run: 'jest --coverage --coverageDirectory=./tests/coverage'
+
+      - name: 'Coveralls Parallel'
+        uses: 'coverallsapp/github-action@master'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          path-to-lcov: './tests/coverage/lcov.info'
+
+      - name: 'Coveralls Finished'
+        uses: 'coverallsapp/github-action@master'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true

@@ -1,3 +1,6 @@
+[![Coverage Status](https://coveralls.io/repos/github/cgarciagarcia/react-query-builder/badge.svg)](https://coveralls.io/github/cgarciagarcia/react-query-builder)
+
+
 **TypeScript Query Builder** provides a way to build a query string compatible with
 [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder).
 
