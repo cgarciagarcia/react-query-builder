@@ -29,7 +29,6 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
 
       - name: 'Install Dependencies'
         run: 'npm install'
@@ -37,5 +36,8 @@ jobs:
       - name: 'Releasing app'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: 'npm run release'
+        run: |
+          npm run tag:generate
+          git push --follow-tags https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }} main
+          npm run release
 
