@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.3...v1.7.0) (2024-07-28)
+
+
+### Features
+
+* add CI test and coverage report ([ed5780a](https://github.com/cgarciagarcia/react-query-builder/commit/ed5780a1feea99c0ff3fd3acacb36cc1124b065c))
+
 ### [1.6.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.2...v1.6.3) (2024-07-28)
 
 
