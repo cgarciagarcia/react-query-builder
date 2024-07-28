@@ -21,8 +21,7 @@
     "url": "git+https://github.com/cgarciagarcia/react-query-builder.git"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "tsc-alias": "^1.8.10"
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
@@ -49,6 +48,7 @@
     "standard-version": "^9.5.0",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
     "typescript": "^5.2.2"
   },
   "keywords": [
