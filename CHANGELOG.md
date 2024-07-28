@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.11](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.8...v1.7.11) (2024-07-28)
+
+
+### Bug Fixes
+
+* run husky with npm in release ([b1d1d2d](https://github.com/cgarciagarcia/react-query-builder/commit/b1d1d2dd003b2ba972f259ebe6aee95841bf9c73))
+
 ### [1.7.10](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.8...v1.7.10) (2024-07-28)
 
 ### [1.7.9](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.8...v1.7.9) (2024-07-28)
