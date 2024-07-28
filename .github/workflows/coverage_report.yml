@@ -28,7 +28,6 @@ jobs:
         run: |
             branch_name=$(git name-rev --name-only HEAD)
             echo "branch_name=$branch_name" >> $GITHUB_ENV
-            -
       - name: 'Install Dependencies'
         run: 'npm install'
 
