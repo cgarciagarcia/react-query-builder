@@ -34,6 +34,8 @@ jobs:
 
       - name: 'Coveralls Parallel'
         uses: 'coverallsapp/github-action@master'
+        env:
+          CI_BRANCH: 'main'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
