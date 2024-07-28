@@ -6,11 +6,11 @@ export const filterAction = <Al extends Alias<object>, Attr extends string> (
   value: FilterValue,
   state: GlobalState<Al>
 ) => {
-  const alias = usingAlias(state, attribute)
+
   let prevFilter: Filter | undefined
 
   const allFilters = state.filters.reduce((filters, filter) => {
-    if (filter.attribute === alias) {
+    if (filter.attribute === attribute) {
       prevFilter = filter
       return filters
     }
