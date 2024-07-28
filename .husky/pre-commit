@@ -1,1 +1,1 @@
-pnpm pre-commit
+npm run pre-commit
