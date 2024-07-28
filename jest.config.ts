@@ -3,8 +3,6 @@ import { JestConfigWithTsJest } from 'ts-jest'
 
 const config: JestConfigWithTsJest = {
   verbose: true,
-  collectCoverage: true,
-  coverageDirectory: 'tests/coverage',
   preset: 'ts-jest',
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js'],
