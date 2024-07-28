@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.2...v1.6.3) (2024-07-28)
+
+
+### Bug Fixes
+
+* **chore:** pass tsc-alias from dependency to dev-dependency ([921abcb](https://github.com/cgarciagarcia/react-query-builder/commit/921abcb1dc3be06cfe9d8b6c76b427e05f3e9bcf))
+
 ### [1.6.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.6.1...v1.6.2) (2024-07-27)
 
 
