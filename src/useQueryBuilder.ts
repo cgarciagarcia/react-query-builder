@@ -5,18 +5,19 @@ import {
 } from '@/utils'
 
 import {
+  clearFieldsAction,
   clearFiltersAction,
   clearIncludeAction,
-  clearSortsAction,
+  clearSortsAction, fieldAction,
   filterAction,
-  includeAction,
+  includeAction, removeFieldAction,
   removeFilterAction,
   removeIncludeAction,
   removeSortAction,
   sortAction
 } from '@/actions'
 
-import {
+import  { type Fields ,
   type Actions,
   type Alias,
   type Filter,
@@ -26,7 +27,7 @@ import {
   type QueryBuilder,
   type Sort,
   type Sorts
-} from './types'
+} from './types';
 
 interface Action {
   type: Actions;
@@ -71,6 +72,17 @@ const reducer = <Aliases extends Record<string, string>> (
     case 'clear_sorts': {
       return clearSortsAction(state)
     }
+    case 'field': {
+      const fields = action.payload as Fields
+      return fieldAction(fields, state)
+    }
+    case 'remove_field': {
+      const attributes = action.payload as string[]
+      return removeFieldAction(attributes, state)
+    }
+    case 'clear_fields': {
+      return clearFieldsAction(state)
+    }
     default: {
       return { ...state }
     }
@@ -81,7 +93,8 @@ const initialState = <T> (): GlobalState<T> => ({
   aliases: {} as Alias<T>,
   filters: [],
   includes: [],
-  sorts: []
+  sorts: [],
+  fields: [] as Fields,
 })
 
 
@@ -164,7 +177,27 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       })
       return builder
     },
-    build: () => build(state)
+    build: () => build(state),
+    field: (...attribute) => {
+      dispatch({
+        type: 'field',
+        payload: attribute
+      })
+      return builder
+    },
+    removeField: (...attribute) => {
+      dispatch({
+        type:'remove_field',
+        payload: attribute
+      })
+      return builder
+    },
+    clearFields: () => {
+      dispatch({
+        type: 'clear_fields'
+      })
+      return builder
+    }
   }
 
   return builder

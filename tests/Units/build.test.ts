@@ -8,7 +8,8 @@ describe('Assert build method is working correctly', () => {
       aliases: {},
       filters: [],
       includes: [],
-      sorts: []
+      sorts: [],
+      fields: []
     })
     expect(val).toBe('')
   })
@@ -23,7 +24,8 @@ describe('Assert build method is working correctly', () => {
         }
       ],
       includes: [],
-      sorts: []
+      sorts: [],
+      fields: []
     })
     expect(val).toBe('?filter[date]=2024-01-01')
   })
@@ -42,7 +44,8 @@ describe('Assert build method is working correctly', () => {
         }
       ],
       includes: [],
-      sorts: []
+      sorts: [],
+      fields: []
     })
     expect(val).toBe('?filter[date]=2024-01-01,2024-01-02&filter[name]=Carlos+garcia')
   })
@@ -52,7 +55,8 @@ describe('Assert build method is working correctly', () => {
       aliases: {},
       filters: [],
       includes: ['user'],
-      sorts: []
+      sorts: [],
+      fields: []
     })).toBe('?include=user')
   })
 
@@ -61,7 +65,8 @@ describe('Assert build method is working correctly', () => {
       aliases: {},
       filters: [],
       includes: ['user', 'works'],
-      sorts: []
+      sorts: [],
+      fields: []
     })).toBe('?include=user,works')
   })
 
@@ -75,7 +80,8 @@ describe('Assert build method is working correctly', () => {
           attribute: 'name',
           direction: 'asc'
         }
-      ]
+      ],
+      fields: []
     })).toBe(
       '?sort=name'
     )
@@ -91,7 +97,8 @@ describe('Assert build method is working correctly', () => {
           attribute: 'name',
           direction: 'desc'
         }
-      ]
+      ],
+      fields: []
     })).toBe(
       '?sort=-name'
     )
@@ -120,14 +127,16 @@ describe('Assert build method is working correctly', () => {
           attribute: 'date',
           direction: 'desc'
         }
-      ]
+      ],
+      fields: []
     })).toBe(
       '?filter[name]=Carlos+garcia&filter[date]=2024-01-01,2024-01-02&sort=name,-date&include=user,works'
     )
   })
 
   it('Should return a valid query string filter using aliases', () => {
-    const state = {
+
+    expect(build({
       aliases: {
         user: 'u'
       },
@@ -138,10 +147,9 @@ describe('Assert build method is working correctly', () => {
         }
       ],
       includes: [],
-      sorts: []
-    }
-
-    expect(build(state)).toBe(
+      sorts: [],
+      fields: []
+    })).toBe(
       '?filter[u]=1'
     )
   })
