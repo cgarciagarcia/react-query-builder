@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c3e6dbe3816d4cd7b496e0142c730972)](https://app.codacy.com/gh/cgarciagarcia/react-query-builder?utm_source=github.com&utm_medium=referral&utm_content=cgarciagarcia/react-query-builder&utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/cgarciagarcia/react-query-builder/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/cgarciagarcia/react-query-builder)
 [![Test CI](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml/badge.svg)](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
