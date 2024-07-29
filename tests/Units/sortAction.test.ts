@@ -1,16 +1,17 @@
 import { it, expect, describe } from '@jest/globals'
 import { clearSortsAction, removeSortAction, sortAction } from '@/actions'
-import { type GlobalState } from '@/types'
+import  { type GlobalState } from '@/types'
 
 
 describe('Sort action test: ', () => {
 
   it('should add a new sort', () => {
-    const state = {
+    const state: GlobalState = {
       aliases: {},
       filters: [],
       includes: [],
-      sorts: []
+      sorts: [],
+      fields: [],
     }
 
     const result = sortAction({
@@ -36,7 +37,8 @@ describe('Sort action test: ', () => {
           attribute: 'name',
           direction: 'asc'
         }
-      ]
+      ],
+      fields: [],
     }
 
     const result = sortAction({
@@ -53,11 +55,12 @@ describe('Sort action test: ', () => {
   })
 
   it('should be possible to add multiple sorts', () => {
-    const state = {
+    const state: GlobalState = {
       aliases: {},
       filters: [],
       includes: [],
-      sorts: []
+      sorts: [],
+      fields: []
     }
 
     const result = sortAction({
@@ -103,7 +106,8 @@ describe('Sort action test: ', () => {
           attribute: 'age',
           direction: 'desc'
         }
-      ]
+      ],
+      fields: [],
     }
 
     const result = removeSortAction(['name'], state)
@@ -130,7 +134,8 @@ describe('Sort action test: ', () => {
           attribute: 'age',
           direction: 'desc'
         }
-      ]
+      ],
+      fields: [],
     }
 
     const result = removeSortAction(['name', 'age'], state)
@@ -152,7 +157,8 @@ describe('Sort action test: ', () => {
           attribute: 'age',
           direction: 'desc'
         }
-      ]
+      ],
+      fields: [],
     }
 
     const result = clearSortsAction(state)

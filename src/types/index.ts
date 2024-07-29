@@ -18,8 +18,12 @@ export interface Filter {
 
 export type Filters = Filter[]
 
+export type Field = string;
+export type Fields = Field[]
+
 export interface GlobalState<Al = NonNullable<unknown>> {
   aliases: Alias<Al>;
+  fields: Fields;
   filters: Filter[];
   includes: Includes;
   sorts: Sorts;
@@ -28,8 +32,9 @@ export interface GlobalState<Al = NonNullable<unknown>> {
 export type SortActions = 'sort' | 'remove_sort' | 'clear_sorts'
 export type FilterActions = 'filter' | 'remove_filter' | 'clear_filters';
 export type IncludeActions = 'include' | 'remove_include' | 'clear_includes';
+export type FieldActions = 'field' |'remove_field' | 'clear_fields';
 
-export type Actions = FilterActions | SortActions | IncludeActions;
+export type Actions = FilterActions | SortActions | IncludeActions | FieldActions;
 
 
 export interface QueryBuilder<AliasType = NonNullable<unknown>> {
@@ -49,4 +54,7 @@ export interface QueryBuilder<AliasType = NonNullable<unknown>> {
   removeSort: (attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
+  field: ( attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
+  removeField: (attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
+  clearFields: () => QueryBuilder<AliasType>;
 }
