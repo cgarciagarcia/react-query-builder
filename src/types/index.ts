@@ -18,7 +18,7 @@ export interface Filter {
 
 export type Filters = Filter[]
 
-export interface GlobalState<Al> {
+export interface GlobalState<Al = NonNullable<unknown>> {
   aliases: Alias<Al>;
   filters: Filter[];
   includes: Includes;
