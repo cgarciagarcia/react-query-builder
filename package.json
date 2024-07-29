@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint --max-warnings 0 .",
     "clean": "rm -rf dist",
     "test": "jest",
     "build": "npm run clean && tsc -p tsconfig.json && tsc-alias",

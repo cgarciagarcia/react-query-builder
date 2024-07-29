@@ -1,6 +1,6 @@
-import {it, expect, describe } from '@jest/globals'
+import { it, expect, describe } from '@jest/globals'
 import { clearSortsAction, removeSortAction, sortAction } from '@/actions'
-import { GlobalState } from '@/types'
+import { type GlobalState } from '@/types'
 
 
 describe('Sort action test: ', () => {
