@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.15](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.14...v1.7.15) (2024-07-29)
+
 ### [1.7.14](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.13...v1.7.14) (2024-07-29)
 
 ### [1.7.13](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.12...v1.7.13) (2024-07-29)
