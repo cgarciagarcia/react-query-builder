@@ -39,7 +39,7 @@ jobs:
         run: 'npm run test -- --coverage --coverageDirectory=./tests/coverage'
 
       - name: 'Coveralls Parallel'
-        uses: 'coverallsapp/github-action@master'
+        uses: 'coverallsapp/github-action@v2.3.0'
         with:
           git-branch: ${{ env.branch_name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
           path-to-lcov: './tests/coverage/lcov.info'
 
       - name: 'Coveralls Finished'
-        uses: 'coverallsapp/github-action@master'
+        uses: 'coverallsapp/github-action@v2.3.0'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
