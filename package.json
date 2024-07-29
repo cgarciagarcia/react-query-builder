@@ -13,7 +13,7 @@
     "test": "jest",
     "build": "npm run clean && tsc -p tsconfig.json && tsc-alias",
     "tag:generate": "standard-version",
-    "release": "npm run build && rm -rf ./dist/tests && npm publish && rm -rf ./dist",
+    "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
     "prepare": "husky",
     "pre-commit": "npm run lint && npm run test"
   },
