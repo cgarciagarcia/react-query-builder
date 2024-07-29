@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.17...v1.8.0) (2024-07-29)
+
+
+### Features
+
+* add fields action ( add new field, remove field, clear all fields at once ) also add test ([d47237a](https://github.com/cgarciagarcia/react-query-builder/commit/d47237a76f7d676de346920a49763e33c7ca698f))
+
 ### [1.7.17](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.16...v1.7.17) (2024-07-29)
 
 ### [1.7.16](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.15...v1.7.16) (2024-07-29)
