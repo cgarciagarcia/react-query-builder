@@ -41,4 +41,7 @@ jobs:
           npm run tag:generate
           git push --follow-tags origin main
           npm run release
-
+      - name: 'Trigger badged'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: 'generate-coverall-report'
