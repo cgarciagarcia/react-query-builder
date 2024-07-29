@@ -6,7 +6,7 @@ export const includeAction = <T> (
 ): GlobalState<T> => {
   return {
     ...state,
-    includes: [...state.includes, ...includes]
+    includes: [...state.includes.filter(include => !includes.includes(include)), ...includes]
   } satisfies GlobalState<T>
 }
 
