@@ -2,7 +2,7 @@
 **TypeScript React hook query Builder** provides a way to build a query string compatible with
 [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder).
 
-<a href='https://coveralls.io/github/cgarciagarcia/react-query-builder?branch=main&kill_cache=1'><img src='https://coveralls.io/repos/github/cgarciagarcia/react-query-builder/badge.svg?branch=main&kill_cache=1' alt='Coverage Status' /></a>
+[![Coverage Status](https://coveralls.io/repos/github/cgarciagarcia/react-query-builder/badge.svg?branch=main&service=github&kill_cache=1)](https://coveralls.io/github/cgarciagarcia/react-query-builder?branch=main)
 [![Test CI](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml/badge.svg)](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1f3f48abc84f4e3cba76e39e804786d6)](https://app.codacy.com/gh/cgarciagarcia/react-query-builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
