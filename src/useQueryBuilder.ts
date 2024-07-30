@@ -1,7 +1,7 @@
 import { useReducer, useState } from 'react'
 
 import {
-  build,
+  build
 } from '@/utils'
 
 import {
@@ -17,7 +17,8 @@ import {
   sortAction
 } from '@/actions'
 
-import  { type Fields ,
+import {
+  type Fields,
   type Actions,
   type Alias,
   type Filter,
@@ -27,7 +28,7 @@ import  { type Fields ,
   type QueryBuilder,
   type Sort,
   type Sorts
-} from './types';
+} from './types'
 
 interface Action {
   type: Actions;
@@ -77,7 +78,7 @@ const reducer = <Aliases extends Record<string, string>> (
       return fieldAction(fields, state)
     }
     case 'remove_field': {
-      const attributes = action.payload as string[]
+      const attributes = action.payload as Fields
       return removeFieldAction(attributes, state)
     }
     case 'clear_fields': {
@@ -94,7 +95,7 @@ const initialState = <T> (): GlobalState<T> => ({
   filters: [],
   includes: [],
   sorts: [],
-  fields: [] as Fields,
+  fields: [] as Fields
 })
 
 
@@ -137,7 +138,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       })
       return builder
     },
-    include: (includes) => {
+    include: (...includes) => {
       dispatch({
         type: 'include',
         payload: includes
@@ -164,7 +165,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       })
       return builder
     },
-    removeSort: (attribute) => {
+    removeSort: (...attribute) => {
       dispatch({
         type: 'remove_sort',
         payload: attribute
@@ -178,7 +179,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
       return builder
     },
     build: () => build(state),
-    field: (...attribute) => {
+    fields: (...attribute) => {
       dispatch({
         type: 'field',
         payload: attribute
@@ -187,7 +188,7 @@ export const useQueryBuilder: <Aliases extends Record<string, string>>(
     },
     removeField: (...attribute) => {
       dispatch({
-        type:'remove_field',
+        type: 'remove_field',
         payload: attribute
       })
       return builder
