@@ -37,13 +37,14 @@ const baseConfig = {
 const builder = useQueryBuilder(baseConfig)
 
 builder
+  .fields('user.name', 'user.last_name')
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
   .include("posts", "comments")
 
 console.log(theQuery.build());
-// /users?filter[age]=18&sort=created_at,-age&includes=posts,comments
+// /users?fields[user]=name,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
 ```
 
 <h3 style="color:#cb3837;">Remove Methods</h3>
@@ -53,6 +54,7 @@ You can use the remove method in sort, includes, filter like this:
 const builder = useQueryBuilder(baseConfig)
 
   builder
+    .removeField('field_1', 'field_2')
     .removeFilter('name', 'last_name')
     .removeSort('name', 'id')
     .removeInclude('address', 'documents')
@@ -66,13 +68,14 @@ You can use the clear methods for delete the entire data group
 const builder = useQueryBuilder(baseConfig)
 
   builder
+    .clearFields()
     .clearFilters()
     .clearIncludes()
     .clearSorts()
 ```
 
 ## Next features
-* filter attributes
+
 * Interaction with url query string
 
 
