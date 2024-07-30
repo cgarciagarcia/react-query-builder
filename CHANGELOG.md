@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.8.0...v1.8.1) (2024-07-30)
+
+
+### Bug Fixes
+
+* improve typescript interfaces/types and update docs ([0df53cd](https://github.com/cgarciagarcia/react-query-builder/commit/0df53cd18cc5ebcb6443f2912e057b958af3fea2))
+
 ## [1.8.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.7.17...v1.8.0) (2024-07-29)
 
 
