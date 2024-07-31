@@ -33,7 +33,7 @@ interface BaseConfig<AliasType> {
   filters?: Filters
 }
 
-export const useQueryBuilder = <Aliases extends Record<string, string>> (
+export const useQueryBuilder = <Aliases extends Record<string, string> = NonNullable<unknown>> (
   config: BaseConfig<Aliases> = {}
 ): QueryBuilder<Aliases> => {
 

@@ -31,17 +31,17 @@ export interface GlobalState<Al = NonNullable<unknown>> {
 }
 
 export interface QueryBuilder<AliasType = NonNullable<unknown>> {
-  filter: (attribute: keyof AliasType | string, value: FilterValue) => QueryBuilder<AliasType>;
-  removeFilter: (...attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
+  filter: (attribute: (AliasType extends object ? (keyof AliasType)|string : string), value: FilterValue) => QueryBuilder<AliasType>;
+  removeFilter: (...attribute: (AliasType extends object ? keyof AliasType : string)[]) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
   include: (...includes: Includes) => QueryBuilder<AliasType>;
   removeInclude: (...include: Includes) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
-  sort: (attribute: keyof AliasType | string, direction?: 'asc' | 'desc') => QueryBuilder<AliasType>;
-  removeSort: (...attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
+  sort: (attribute: (AliasType extends object ? keyof AliasType : string), direction?: 'asc' | 'desc') => QueryBuilder<AliasType>;
+  removeSort: (...attribute: (AliasType extends object ? keyof AliasType : string)[]) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
-  fields: (...attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
-  removeField: (...attribute: (keyof AliasType | string)[]) => QueryBuilder<AliasType>;
+  fields: (...attribute: Field[]) => QueryBuilder<AliasType>;
+  removeField: (...attribute: Field[]) => QueryBuilder<AliasType>;
   clearFields: () => QueryBuilder<AliasType>;
 }
