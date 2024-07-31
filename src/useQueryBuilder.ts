@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react'
+import { useState } from 'react'
 
 import {
   build
@@ -19,85 +19,12 @@ import {
 
 import {
   type Fields,
-  type Actions,
   type Alias,
-  type Filter,
   type Filters,
-  type GlobalState,
   type Includes,
   type QueryBuilder,
-  type Sort,
   type Sorts
 } from './types'
-
-interface Action {
-  type: Actions;
-  payload?: unknown;
-}
-
-const reducer = <Aliases extends Record<string, string>> (
-  state: GlobalState<Aliases>,
-  action: Action
-): GlobalState<Aliases> => {
-  switch (action?.type) {
-    case 'filter': {
-      const filter = action.payload as Filter
-      return filterAction(filter.attribute, filter.value, state)
-    }
-    case 'remove_filter': {
-      const attribute = action.payload as string[]
-      return removeFilterAction(attribute, state)
-    }
-    case 'clear_filters': {
-      return clearFiltersAction(state)
-    }
-    case 'include': {
-      const includes = action.payload as Includes
-      return includeAction(includes, state)
-    }
-    case 'remove_include': {
-      const include = action.payload as Includes
-      return removeIncludeAction(include, state)
-    }
-    case 'clear_includes': {
-      return clearIncludeAction(state)
-    }
-    case 'sort': {
-      const sorts = action.payload as Sort
-      return sortAction(sorts, state)
-    }
-    case 'remove_sort': {
-      const attribute = action.payload as string[]
-      return removeSortAction(attribute, state)
-    }
-    case 'clear_sorts': {
-      return clearSortsAction(state)
-    }
-    case 'field': {
-      const fields = action.payload as Fields
-      return fieldAction(fields, state)
-    }
-    case 'remove_field': {
-      const attributes = action.payload as Fields
-      return removeFieldAction(attributes, state)
-    }
-    case 'clear_fields': {
-      return clearFieldsAction(state)
-    }
-    default: {
-      return { ...state }
-    }
-  }
-}
-
-const initialState = <T> (): GlobalState<T> => ({
-  aliases: {} as Alias<T>,
-  filters: [],
-  includes: [],
-  sorts: [],
-  fields: [] as Fields
-})
-
 
 interface BaseConfig<AliasType> {
   aliases?: AliasType;
@@ -106,99 +33,73 @@ interface BaseConfig<AliasType> {
   filters?: Filters
 }
 
-export const useQueryBuilder: <Aliases extends Record<string, string>>(
-  config?: BaseConfig<Aliases>
-) => QueryBuilder<Aliases> = <Aliases extends Record<string, string>> (
-  config = {} as BaseConfig<Aliases>
-) => {
-  const [init] = useState(() => initialState<Aliases>())
-  const [state, dispatch] = useReducer(reducer, init, (init) => ({
-    ...init,
-    ...config
+export const useQueryBuilder = <Aliases extends Record<string, string> = NonNullable<unknown>> (
+  config: BaseConfig<Aliases> = {}
+): QueryBuilder<Aliases> => {
+
+  const [state, setState] = useState(() => ({
+    ...{
+      aliases: {} as Alias<Aliases>,
+      filters: [],
+      includes: [],
+      sorts: [],
+      fields: [] as Fields
+    }, ...config
   }))
 
   const builder: QueryBuilder<Aliases> = {
     filter: (attribute, value) => {
-      dispatch({
-        type: 'filter',
-        payload: { attribute, value }
-      })
+      setState(s => filterAction(attribute, value, s))
       return builder
     },
     removeFilter: (...attribute) => {
-      dispatch({
-        type: 'remove_filter',
-        payload: attribute
-      })
+      setState(s => removeFilterAction(attribute, s))
       return builder
     },
     clearFilters: () => {
-      dispatch({
-        type: 'clear_filters'
-      })
+      setState((s) => clearFiltersAction(s))
       return builder
     },
     include: (...includes) => {
-      dispatch({
-        type: 'include',
-        payload: includes
-      })
+      setState((s) => includeAction(includes, s))
       return builder
     },
     clearIncludes: () => {
-      dispatch({
-        type: 'clear_includes'
-      })
+      setState((s) => clearIncludeAction(s))
       return builder
     },
     removeInclude: (...includes) => {
-      dispatch({
-        type: 'remove_include',
-        payload: includes
-      })
+      setState((s) => removeIncludeAction(includes, s))
       return builder
     },
     sort: (attribute, direction) => {
-      dispatch({
-        type: 'sort',
-        payload: { attribute, direction: direction ?? 'asc' }
-      })
+      setState(s => sortAction(
+        { attribute, direction: direction ?? 'asc' },
+        s
+      ))
       return builder
     },
     removeSort: (...attribute) => {
-      dispatch({
-        type: 'remove_sort',
-        payload: attribute
-      })
+      setState(s => removeSortAction(attribute, s))
       return builder
     },
     clearSorts: () => {
-      dispatch({
-        type: 'clear_sorts'
-      })
+      setState(s => clearSortsAction(s))
       return builder
     },
-    build: () => build(state),
     fields: (...attribute) => {
-      dispatch({
-        type: 'field',
-        payload: attribute
-      })
+      setState(s => fieldAction(attribute, s))
       return builder
     },
     removeField: (...attribute) => {
-      dispatch({
-        type: 'remove_field',
-        payload: attribute
-      })
+      setState(s => removeFieldAction(attribute, s))
       return builder
     },
     clearFields: () => {
-      dispatch({
-        type: 'clear_fields'
-      })
+      setState(s => clearFieldsAction(s))
       return builder
-    }
+    },
+    build: () => build(state)
   }
 
   return builder

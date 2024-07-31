@@ -1,5 +1,4 @@
-import  { type Fields , type GlobalState, type Alias } from '@/types';
-
+import { type Fields, type GlobalState, type Alias } from '@/types'
 
 export const fieldAction = <Al extends Alias<object>> (fields: Fields, state: GlobalState<Al>) => {
   return {
@@ -15,7 +14,7 @@ export const fieldAction = <Al extends Alias<object>> (fields: Fields, state: Gl
 export const removeFieldAction = <Al extends Alias<object>> (fields: Fields, state: GlobalState<Al>) => {
   return {
     ...state,
-    fields: state.fields.filter((field) =>!fields.includes(field))
+    fields: state.fields.filter((field) => !fields.includes(field))
   } satisfies GlobalState<Al>
 }
 
