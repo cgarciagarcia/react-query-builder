@@ -6,6 +6,7 @@ on:
       - '*'
   repository_dispatch:
     types: [ 'generate-coverall-report' ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -51,3 +52,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+
+      - uses: 'actions/checkout@v2'
+      - name: 'Run codacy-coverage-reporter'
+        uses: 'codacy/codacy-coverage-reporter-action@v1.3.0'
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: './tests/coverage/lcov.info'
+
