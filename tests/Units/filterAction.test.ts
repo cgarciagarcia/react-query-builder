@@ -1,19 +1,12 @@
 import { expect, it, describe } from '@jest/globals'
 import { clearFiltersAction, filterAction, removeFilterAction } from '@/actions'
-import  { type GlobalState } from '@/types'
+import { type GlobalState } from '@/types'
+import { initialState } from '@tests/Units/utils'
 
 
 describe('Filter Action test: ', () => {
   it('should add a new filter', () => {
-    const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: []
-    }
-
-    const result = filterAction('name', 'Carlos Garcia', state)
+    const result = filterAction('name', 'Carlos Garcia', initialState)
 
     expect(result.filters).toEqual([
       {
@@ -25,16 +18,13 @@ describe('Filter Action test: ', () => {
 
   it('Should update an existing filter', () => {
     const state: GlobalState = {
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'name',
           value: ['Carlos Garcia']
         }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
+      ]
     }
 
     const result = filterAction('name', ['Juan Perez'], state)
@@ -48,15 +38,7 @@ describe('Filter Action test: ', () => {
   })
 
   it('Should be possible to add multiple filter with the same attribute', () => {
-    const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: []
-    }
-
-    const result = filterAction('name', ['Carlos Garcia', 'Juan Perez'], state)
+    const result = filterAction('name', ['Carlos Garcia', 'Juan Perez'], initialState)
 
     expect(result.filters).toEqual([
       {
@@ -68,7 +50,7 @@ describe('Filter Action test: ', () => {
 
   it('Should possible to remove a filter', () => {
     const state: GlobalState = {
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'name',
@@ -78,10 +60,7 @@ describe('Filter Action test: ', () => {
           attribute: 'age',
           value: [28]
         }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
+      ]
     }
 
     const result = removeFilterAction(['name'], state)
@@ -96,7 +75,7 @@ describe('Filter Action test: ', () => {
 
   it('Should be possible to remove multiple filters at the same time', () => {
     const state: GlobalState = {
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'name',
@@ -106,10 +85,7 @@ describe('Filter Action test: ', () => {
           attribute: 'age',
           value: [28]
         }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
+      ]
     }
 
     const result = removeFilterAction(['name', 'age'], state)
@@ -117,9 +93,9 @@ describe('Filter Action test: ', () => {
     expect(result.filters).toEqual([])
   })
 
-  it ('Should clear all filters at once', () => {
+  it('Should clear all filters at once', () => {
     const state: GlobalState = {
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'name',
@@ -129,10 +105,7 @@ describe('Filter Action test: ', () => {
           attribute: 'age',
           value: [28]
         }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
+      ]
     }
 
     const result = clearFiltersAction(state)
@@ -142,6 +115,7 @@ describe('Filter Action test: ', () => {
 
   it('Should be possible to add a new filter with an alias', () => {
     const state: GlobalState = {
+      ...initialState,
       aliases: {
         user: 'u'
       },
@@ -150,10 +124,7 @@ describe('Filter Action test: ', () => {
           attribute: 'user',
           value: ['Carlos']
         }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
+      ]
     }
 
     const result = filterAction('last_name', 'Garcia', state)

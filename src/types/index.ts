@@ -28,6 +28,14 @@ export interface GlobalState<Al = NonNullable<unknown>> {
   filters: Filter[];
   includes: Includes;
   sorts: Sorts;
+  delimiters: {
+    global: string;
+    fields: string|null;
+    filters: string|null;
+    sorts: string|null;
+    includes: string|null;
+    appends: string|null;
+  }
 }
 
 export interface QueryBuilder<AliasType = NonNullable<unknown>> {
