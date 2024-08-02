@@ -43,7 +43,7 @@ export const build = <T> (state: GlobalState<T>): string => {
   }, [] as string[])
 
   if (sorts.length > 0) {
-    urlSearchParams.append('sort', sorts.join(state.delimiters.includes ?? state.delimiters.global))
+    urlSearchParams.append('sort', sorts.join(state.delimiters.sorts ?? state.delimiters.global))
   }
 
   if (state.includes.length > 0) {
