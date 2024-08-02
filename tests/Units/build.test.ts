@@ -1,38 +1,29 @@
 import { build } from '@/utils'
 import { expect, it, describe } from '@jest/globals'
+import { initialState } from '@tests/Units/utils'
 
 
 describe('Assert build method is working correctly', () => {
   it('should return a empty url', () => {
-    const val = build({
-      aliases: {},
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: []
-    })
+    const val = build(initialState)
     expect(val).toBe('')
   })
 
   it('should return a valid query with one filter', () => {
     const val = build({
-      aliases: {},
-      filters: [
-        {
-          attribute: 'date',
-          value: ['2024-01-01']
-        }
-      ],
-      includes: [],
-      sorts: [],
-      fields: []
-    })
+        ...initialState, filters: [
+          {
+            attribute: 'date',
+            value: ['2024-01-01']
+          }
+        ]
+      })
     expect(val).toBe('?filter[date]=2024-01-01')
   })
 
   it('should return a valid query with multiple values for one filter', () => {
     const val = build({
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'date',
@@ -43,45 +34,33 @@ describe('Assert build method is working correctly', () => {
           value: ['Carlos garcia']
         }
       ],
-      includes: [],
-      sorts: [],
-      fields: []
     })
     expect(val).toBe('?filter[date]=2024-01-01,2024-01-02&filter[name]=Carlos+garcia')
   })
 
   it('should return a valid query with include', () => {
     expect(build({
-      aliases: {},
-      filters: [],
+      ...initialState,
       includes: ['user'],
-      sorts: [],
-      fields: []
     })).toBe('?include=user')
   })
 
   it('should return a valid query with multiple includes', () => {
     expect(build({
-      aliases: {},
-      filters: [],
+      ...initialState,
       includes: ['user', 'works'],
-      sorts: [],
-      fields: []
     })).toBe('?include=user,works')
   })
 
   it('should return a valid query with sorts ascending', () => {
     expect(build({
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
           direction: 'asc'
         }
       ],
-      fields: []
     })).toBe(
       '?sort=name'
     )
@@ -89,16 +68,13 @@ describe('Assert build method is working correctly', () => {
 
   it('should return a valid query with sorts descending', () => {
     expect(build({
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
           direction: 'desc'
         }
       ],
-      fields: []
     })).toBe(
       '?sort=-name'
     )
@@ -106,7 +82,7 @@ describe('Assert build method is working correctly', () => {
 
   it('should return a valid query string with filters, includes, and sorts', () => {
     expect(build({
-      aliases: {},
+      ...initialState,
       filters: [
         {
           attribute: 'name',
@@ -128,7 +104,6 @@ describe('Assert build method is working correctly', () => {
           direction: 'desc'
         }
       ],
-      fields: []
     })).toBe(
       '?filter[name]=Carlos+garcia&filter[date]=2024-01-01,2024-01-02&sort=name,-date&include=user,works'
     )
@@ -137,6 +112,7 @@ describe('Assert build method is working correctly', () => {
   it('Should return a valid query string filter using aliases', () => {
 
     expect(build({
+      ...initialState,
       aliases: {
         user: 'u'
       },
@@ -146,11 +122,56 @@ describe('Assert build method is working correctly', () => {
           value: ['1']
         }
       ],
-      includes: [],
-      sorts: [],
-      fields: []
     })).toBe(
       '?filter[u]=1'
+    )
+  })
+
+  it('should use custom delimiters', () => {
+    const val = build({
+      fields: ['user.name', 'user.age'],
+      aliases: {
+        user: 'u'
+      },
+      filters: [
+        {
+          attribute: 'user',
+          value: ['1']
+        }
+      ],
+      includes: ['address', 'other'],
+      delimiters: {
+        global: '|',
+        fields: ':',
+        filters: ':',
+        sorts: ':',
+        includes: ':',
+        appends: ':',
+      },
+      sorts: [{ attribute:'name', direction: 'asc' }, { attribute: 'id', direction:'desc' } ]
+    })
+
+    expect(val).toBe(
+      '?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other'
+    )
+  })
+
+  it('should use custom delimiter and fields with model and without model', () => {
+    const val = build({
+      ...initialState,
+      fields: ['user.name', 'asd', 'dsa'],
+      delimiters: {
+        global: '|',
+        fields: ':',
+        filters: ':',
+        sorts: ':',
+        includes: ':',
+        appends: ':',
+      },
+    })
+
+    expect(val).toBe(
+      '?fields[user]=name&fields=asd:dsa'
     )
   })
 })

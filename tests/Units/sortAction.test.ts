@@ -1,23 +1,16 @@
 import { it, expect, describe } from '@jest/globals'
 import { clearSortsAction, removeSortAction, sortAction } from '@/actions'
 import  { type GlobalState } from '@/types'
+import { initialState } from '@tests/Units/utils'
 
 
 describe('Sort action test: ', () => {
 
   it('should add a new sort', () => {
-    const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: [],
-    }
-
     const result = sortAction({
       attribute: 'name',
       direction: 'asc'
-    }, state)
+    }, initialState)
 
     expect(result.sorts).toEqual([
       {
@@ -29,16 +22,13 @@ describe('Sort action test: ', () => {
 
   it('should not add duplicate sorts', () => {
     const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
           direction: 'asc'
         }
       ],
-      fields: [],
     }
 
     const result = sortAction({
@@ -55,18 +45,10 @@ describe('Sort action test: ', () => {
   })
 
   it('should be possible to add multiple sorts', () => {
-    const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: []
-    }
-
     const result = sortAction({
       attribute: 'name',
       direction: 'asc'
-    }, state)
+    }, initialState)
 
     expect(result.sorts).toEqual([
       {
@@ -94,9 +76,7 @@ describe('Sort action test: ', () => {
 
   it('should remove a sort', () => {
     const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
@@ -107,7 +87,6 @@ describe('Sort action test: ', () => {
           direction: 'desc'
         }
       ],
-      fields: [],
     }
 
     const result = removeSortAction(['name'], state)
@@ -122,9 +101,7 @@ describe('Sort action test: ', () => {
 
   it('should remove multiple sorts', () => {
     const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
@@ -135,7 +112,6 @@ describe('Sort action test: ', () => {
           direction: 'desc'
         }
       ],
-      fields: [],
     }
 
     const result = removeSortAction(['name', 'age'], state)
@@ -145,9 +121,7 @@ describe('Sort action test: ', () => {
 
   it('should clear all sorts at once', () => {
     const state: GlobalState = {
-      aliases: {},
-      filters: [],
-      includes: [],
+      ...initialState,
       sorts: [
         {
           attribute: 'name',
@@ -158,7 +132,6 @@ describe('Sort action test: ', () => {
           direction: 'desc'
         }
       ],
-      fields: [],
     }
 
     const result = clearSortsAction(state)

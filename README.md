@@ -37,14 +37,14 @@ const baseConfig = {
 const builder = useQueryBuilder(baseConfig)
 
 builder
-  .fields('user.name', 'user.last_name')
+  .fields('user.name', 'user.last_name', 'other')
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
   .include("posts", "comments")
 
 console.log(theQuery.build());
-// /users?fields[user]=name,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
+// /users?fields[user]=name,fields=other,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
 ```
 
 <h3 style="color:#cb3837;">Remove Methods</h3>

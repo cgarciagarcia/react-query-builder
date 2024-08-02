@@ -5,10 +5,35 @@ export const build = <T> (state: GlobalState<T>): string => {
   const filters = state.filters.reduce(
     (acc, filter) => ({
       ...acc,
-      [`filter[${usingAlias(state, filter.attribute)}]`]: filter.value.join(',')
+      [`filter[${usingAlias(state, filter.attribute)}]`]: filter.value.join(state.delimiters.filters ?? state.delimiters.global)
     }),
     {}
   )
+
+  const fieldsToString: Record<string, string> = {}
+  if (state.fields.length > 0) {
+    const fields = state.fields.reduce<Record<string, string[]>>((acc, field) => {
+      const [entity, prop] = field.split('.') as [string, string]
+
+      if (prop) {
+        acc[`fields[${entity}]`] = [...(acc[`fields[${entity}]`] ?? []), prop]
+      } else {
+        acc.fields = [...(acc.fields ?? []), entity]
+      }
+
+      return acc
+    }, {})
+
+    for (const field in fields) {
+      if (fields[field])
+        fieldsToString[field] = fields[field].join(state.delimiters.fields ?? state.delimiters.global)
+    }
+  }
+
+  const urlSearchParams = new URLSearchParams({
+    ...filters,
+    ...fieldsToString
+  })
 
   const sorts = state.sorts.reduce((acc, sort) => {
     const { attribute, direction } = sort
@@ -17,18 +42,15 @@ export const build = <T> (state: GlobalState<T>): string => {
     return acc
   }, [] as string[])
 
-  const includes = state.includes.join(',')
-
-  const urlSearchParams = new URLSearchParams({
-    ...filters
-  })
-
   if (sorts.length > 0) {
-    urlSearchParams.append('sort', sorts.join(','))
+    urlSearchParams.append('sort', sorts.join(state.delimiters.includes ?? state.delimiters.global))
   }
 
-  if (includes) {
-    urlSearchParams.append('include', includes)
+  if (state.includes.length > 0) {
+    urlSearchParams.append(
+      'include',
+      state.includes.join(state.delimiters.includes ?? state.delimiters.global)
+    )
   }
 
   const searchParamsString = urlSearchParams.toString()

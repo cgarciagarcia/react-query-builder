@@ -31,6 +31,14 @@ interface BaseConfig<AliasType> {
   includes?: Includes
   sorts?: Sorts
   filters?: Filters
+  delimiters?: {
+    global: string;
+    fields: string|null;
+    filters: string|null;
+    sorts: string|null;
+    includes: string|null;
+    appends: string|null;
+  }
 }
 
 export const useQueryBuilder = <Aliases extends Record<string, string> = NonNullable<unknown>> (
@@ -38,13 +46,21 @@ export const useQueryBuilder = <Aliases extends Record<string, string> = NonNull
 ): QueryBuilder<Aliases> => {
 
   const [state, setState] = useState(() => ({
-    ...{
-      aliases: {} as Alias<Aliases>,
-      filters: [],
-      includes: [],
-      sorts: [],
-      fields: [] as Fields
-    }, ...config
+    aliases: {} as Alias<Aliases>,
+    filters: [],
+    includes: [],
+    sorts: [],
+    fields: [] as Fields,
+    ...config,
+    delimiters: {
+      global: ',',
+      fields: null,
+      filters: null,
+      sorts: null,
+      includes: null,
+      appends: null,
+      ...config.delimiters
+    }
   }))
 
   const builder: QueryBuilder<Aliases> = {
