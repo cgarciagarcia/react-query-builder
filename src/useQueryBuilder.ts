@@ -18,8 +18,7 @@ import {
 } from '@/actions'
 
 import {
-  type Fields,
-  type Alias,
+  type GlobalState,
   type Filters,
   type Includes,
   type QueryBuilder,
@@ -33,11 +32,11 @@ interface BaseConfig<AliasType> {
   filters?: Filters
   delimiters?: {
     global: string;
-    fields: string|null;
-    filters: string|null;
-    sorts: string|null;
-    includes: string|null;
-    appends: string|null;
+    fields: string | null;
+    filters: string | null;
+    sorts: string | null;
+    includes: string | null;
+    appends: string | null;
   }
 }
 
@@ -45,12 +44,12 @@ export const useQueryBuilder = <Aliases extends Record<string, string> = NonNull
   config: BaseConfig<Aliases> = {}
 ): QueryBuilder<Aliases> => {
 
-  const [state, setState] = useState(() => ({
-    aliases: {} as Alias<Aliases>,
+  const [state, setState] = useState<GlobalState<Aliases>>(() => ({
+    aliases: {},
     filters: [],
     includes: [],
     sorts: [],
-    fields: [] as Fields,
+    fields: [],
     ...config,
     delimiters: {
       global: ',',
