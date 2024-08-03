@@ -106,6 +106,16 @@ const builder = useQueryBuilder(baseConfig)
 * Interaction with url query string
 
 
+
+## Consider supporting me
+
+I invite you to support its creator. Your contribution will
+not only help maintain and improve this package but also promote the continuous
+development of quality tools and resources. You can also email me and let me know.
+
+Paypal: [@carlosgarciadev](https://paypal.me/carlosgarciadev?country.x=AR&locale.x=es_XC)
+
+
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
