@@ -174,4 +174,33 @@ describe('Assert build method is working correctly', () => {
       '?fields[user]=name&fields=asd:dsa'
     )
   })
+
+  it('should use global delimiters', () => {
+    const val = build({
+      fields: ['user.name', 'user.age'],
+      aliases: {
+        user: 'u'
+      },
+      filters: [
+        {
+          attribute: 'user',
+          value: ['1']
+        }
+      ],
+      includes: ['address', 'other'],
+      delimiters: {
+        global: '|',
+        fields: null,
+        filters: null,
+        sorts: null,
+        includes: null,
+        appends: null,
+      },
+      sorts: [{ attribute:'name', direction: 'asc' }, { attribute: 'id', direction:'desc' } ]
+    })
+
+    expect(val).toBe(
+      '?filter[u]=1&fields[user]=name|age&sort=name|-id&include=address|other'
+    )
+  })
 })

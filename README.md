@@ -31,7 +31,8 @@ import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
 const baseConfig = {
   aliases: {
     "frontend_name": "backend_name",
-  }
+  },
+ 
 }
 
 const builder = useQueryBuilder(baseConfig)
@@ -45,6 +46,32 @@ builder
 
 console.log(theQuery.build());
 // /users?fields[user]=name,fields=other,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
+```
+
+<h3 style="color:#cb3837;">Configurations</h3>
+
+You can set the initial state for your query builder, also it's possible to modify
+the delimiter for each action (fields, filters, includes, sorts), the global delimiter
+will be overwritten  with the specific delimiter
+
+```javascript
+
+// Default configuration 
+const baseConfig = {
+  aliases: {},
+  filters: [],
+  includes: [],
+  sorts: [],
+  fields: [],
+  delimiters: {
+    global: ',',
+    fields: null,
+    filters: null,
+    sorts: null,
+    includes: null,
+    appends: null,
+  }
+}
 ```
 
 <h3 style="color:#cb3837;">Remove Methods</h3>
