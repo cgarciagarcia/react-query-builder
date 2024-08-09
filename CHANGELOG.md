@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.9.2...v1.10.0) (2024-08-09)
+
+
+### Features
+
+* typescript showing error on useQueryBuilder ([#32](https://github.com/cgarciagarcia/react-query-builder/issues/32)) ([1a4e1d4](https://github.com/cgarciagarcia/react-query-builder/commit/1a4e1d48ff5cf758953a38a4cdd46e0ced66e598))
+
 ### [1.9.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.9.1...v1.9.2) (2024-08-03)
 
 ### [1.9.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.9.0...v1.9.1) (2024-08-03)
