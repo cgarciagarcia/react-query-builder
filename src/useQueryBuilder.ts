@@ -17,13 +17,14 @@ import {
   sortAction
 } from '@/actions'
 
-import {
+import  {
+  type Alias,
   type GlobalState,
   type Filters,
   type Includes,
   type QueryBuilder,
   type Sorts
-} from './types'
+} from './types';
 
 interface BaseConfig<AliasType> {
   aliases?: AliasType;
@@ -45,7 +46,7 @@ export const useQueryBuilder = <Aliases extends Record<string, string> = NonNull
 ): QueryBuilder<Aliases> => {
 
   const [state, setState] = useState<GlobalState<Aliases>>(() => ({
-    aliases: {},
+    aliases: {} as Alias<Aliases>,
     filters: [],
     includes: [],
     sorts: [],
