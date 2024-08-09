@@ -18,6 +18,7 @@ import {
 } from '@/actions'
 
 import {
+  type Alias,
   type GlobalState,
   type Filters,
   type Includes,
@@ -45,7 +46,7 @@ export const useQueryBuilder = <Aliases extends Record<string, string> = NonNull
 ): QueryBuilder<Aliases> => {
 
   const [state, setState] = useState<GlobalState<Aliases>>(() => ({
-    aliases: {},
+    aliases: {} as Alias<Aliases>,
     filters: [],
     includes: [],
     sorts: [],
