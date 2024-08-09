@@ -17,14 +17,14 @@ import {
   sortAction
 } from '@/actions'
 
-import  {
+import {
   type Alias,
   type GlobalState,
   type Filters,
   type Includes,
   type QueryBuilder,
   type Sorts
-} from './types';
+} from './types'
 
 interface BaseConfig<AliasType> {
   aliases?: AliasType;
