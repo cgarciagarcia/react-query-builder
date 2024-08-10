@@ -4,11 +4,11 @@ export type Alias<Prop> = {
 
 export interface Sort {
   attribute: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 export type Sorts = Sort[];
-export type Include = string
+export type Include = string;
 export type Includes = string[];
 export type FilterValue = (string | number)[] | string | number;
 
@@ -17,10 +17,10 @@ export interface Filter {
   value: (string | number)[];
 }
 
-export type Filters = Filter[]
+export type Filters = Filter[];
 
 export type Field = string;
-export type Fields = Field[]
+export type Fields = Field[];
 
 export interface GlobalState<Al = NonNullable<unknown>> {
   aliases: Alias<Al>;
@@ -30,23 +30,33 @@ export interface GlobalState<Al = NonNullable<unknown>> {
   sorts: Sorts;
   delimiters: {
     global: string;
-    fields: string|null;
-    filters: string|null;
-    sorts: string|null;
-    includes: string|null;
-    appends: string|null;
-  }
+    fields: string | null;
+    filters: string | null;
+    sorts: string | null;
+    includes: string | null;
+    appends: string | null;
+  };
 }
 
 export interface QueryBuilder<AliasType = NonNullable<unknown>> {
-  filter: (attribute: (AliasType extends object ? (keyof AliasType)|string : string), value: FilterValue) => QueryBuilder<AliasType>;
-  removeFilter: (...attribute: (AliasType extends object ? keyof AliasType : string)[]) => QueryBuilder<AliasType>;
+  filter: (
+    attribute: AliasType extends object ? keyof AliasType | string : string,
+    value: FilterValue,
+  ) => QueryBuilder<AliasType>;
+  removeFilter: (
+    ...attribute: (AliasType extends object ? keyof AliasType : string)[]
+  ) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
   include: (...includes: Includes) => QueryBuilder<AliasType>;
   removeInclude: (...include: Includes) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
-  sort: (attribute: (AliasType extends object ? keyof AliasType : string), direction?: 'asc' | 'desc') => QueryBuilder<AliasType>;
-  removeSort: (...attribute: (AliasType extends object ? keyof AliasType : string)[]) => QueryBuilder<AliasType>;
+  sort: (
+    attribute: AliasType extends object ? keyof AliasType : string,
+    direction?: "asc" | "desc",
+  ) => QueryBuilder<AliasType>;
+  removeSort: (
+    ...attribute: (AliasType extends object ? keyof AliasType : string)[]
+  ) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
   fields: (...attribute: Field[]) => QueryBuilder<AliasType>;

@@ -1,4 +1,4 @@
-import { type GlobalState } from '@/types'
+import { type GlobalState } from "@/types";
 
 export const initialState: GlobalState = {
   aliases: {},
@@ -7,11 +7,11 @@ export const initialState: GlobalState = {
   sorts: [],
   fields: [],
   delimiters: {
-    global: ',',
+    global: ",",
     fields: null,
     filters: null,
     sorts: null,
     includes: null,
     appends: null,
-  }
-} as const
+  },
+} as const;

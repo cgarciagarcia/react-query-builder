@@ -1,144 +1,152 @@
-import { expect, it, describe } from '@jest/globals'
-import { clearFiltersAction, filterAction, removeFilterAction } from '@/actions'
-import { type GlobalState } from '@/types'
-import { initialState } from '@tests/Units/utils'
+import {
+  clearFiltersAction,
+  filterAction,
+  removeFilterAction,
+} from "@/actions";
+import { type GlobalState } from "@/types";
+import { describe, expect, it } from "@jest/globals";
+import { initialState } from "@tests/Units/utils";
 
-
-describe('Filter Action test: ', () => {
-  it('should add a new filter', () => {
-    const result = filterAction('name', 'Carlos Garcia', initialState)
+describe("Filter Action test: ", () => {
+  it("should add a new filter", () => {
+    const result = filterAction("name", "Carlos Garcia", initialState);
 
     expect(result.filters).toEqual([
       {
-        attribute: 'name',
-        value: ['Carlos Garcia']
-      }
-    ])
-  })
+        attribute: "name",
+        value: ["Carlos Garcia"],
+      },
+    ]);
+  });
 
-  it('Should update an existing filter', () => {
+  it("Should update an existing filter", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
         {
-          attribute: 'name',
-          value: ['Carlos Garcia']
-        }
-      ]
-    }
+          attribute: "name",
+          value: ["Carlos Garcia"],
+        },
+      ],
+    };
 
-    const result = filterAction('name', ['Juan Perez'], state)
-
-    expect(result.filters).toEqual([
-      {
-        attribute: 'name',
-        value: ['Carlos Garcia', 'Juan Perez']
-      }
-    ])
-  })
-
-  it('Should be possible to add multiple filter with the same attribute', () => {
-    const result = filterAction('name', ['Carlos Garcia', 'Juan Perez'], initialState)
+    const result = filterAction("name", ["Juan Perez"], state);
 
     expect(result.filters).toEqual([
       {
-        attribute: 'name',
-        value: ['Carlos Garcia', 'Juan Perez']
-      }
-    ])
-  })
+        attribute: "name",
+        value: ["Carlos Garcia", "Juan Perez"],
+      },
+    ]);
+  });
 
-  it('Should possible to remove a filter', () => {
+  it("Should be possible to add multiple filter with the same attribute", () => {
+    const result = filterAction(
+      "name",
+
+      ["Carlos Garcia", "Juan Perez"],
+      initialState,
+    );
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "name",
+
+        value: ["Carlos Garcia", "Juan Perez"],
+      },
+    ]);
+  });
+
+  it("Should possible to remove a filter", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
         {
-          attribute: 'name',
-          value: ['Carlos Garcia', 'Juan Perez']
+          attribute: "name",
+          value: ["Carlos Garcia", "Juan Perez"],
         },
         {
-          attribute: 'age',
-          value: [28]
-        }
-      ]
-    }
+          attribute: "age",
+          value: [28],
+        },
+      ],
+    };
 
-    const result = removeFilterAction(['name'], state)
+    const result = removeFilterAction(["name"], state);
 
     expect(result.filters).toEqual([
       {
-        attribute: 'age',
-        value: [28]
-      }
-    ])
-  })
+        attribute: "age",
+        value: [28],
+      },
+    ]);
+  });
 
-  it('Should be possible to remove multiple filters at the same time', () => {
+  it("Should be possible to remove multiple filters at the same time", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
         {
-          attribute: 'name',
-          value: ['Carlos Garcia', 'Juan Perez']
+          attribute: "name",
+          value: ["Carlos Garcia", "Juan Perez"],
         },
         {
-          attribute: 'age',
-          value: [28]
-        }
-      ]
-    }
+          attribute: "age",
+          value: [28],
+        },
+      ],
+    };
 
-    const result = removeFilterAction(['name', 'age'], state)
+    const result = removeFilterAction(["name", "age"], state);
 
-    expect(result.filters).toEqual([])
-  })
+    expect(result.filters).toEqual([]);
+  });
 
-  it('Should clear all filters at once', () => {
+  it("Should clear all filters at once", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
         {
-          attribute: 'name',
-          value: ['Carlos Garcia', 'Juan Perez']
+          attribute: "name",
+          value: ["Carlos Garcia", "Juan Perez"],
         },
         {
-          attribute: 'age',
-          value: [28]
-        }
-      ]
-    }
+          attribute: "age",
+          value: [28],
+        },
+      ],
+    };
 
-    const result = clearFiltersAction(state)
+    const result = clearFiltersAction(state);
 
-    expect(result.filters).toEqual([])
-  })
+    expect(result.filters).toEqual([]);
+  });
 
-  it('Should be possible to add a new filter with an alias', () => {
+  it("Should be possible to add a new filter with an alias", () => {
     const state: GlobalState = {
       ...initialState,
       aliases: {
-        user: 'u'
+        user: "u",
       },
       filters: [
         {
-          attribute: 'user',
-          value: ['Carlos']
-        }
-      ]
-    }
+          attribute: "user",
+          value: ["Carlos"],
+        },
+      ],
+    };
 
-    const result = filterAction('last_name', 'Garcia', state)
+    const result = filterAction("last_name", "Garcia", state);
 
     expect(result.filters).toEqual([
       {
-        attribute: 'user',
-        value: ['Carlos']
+        attribute: "user",
+        value: ["Carlos"],
       },
       {
-        attribute: 'last_name',
-        value: ['Garcia']
-      }
-    ])
-  })
-
-})
+        attribute: "last_name",
+        value: ["Garcia"],
+      },
+    ]);
+  });
+});

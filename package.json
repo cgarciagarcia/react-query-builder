@@ -15,7 +15,8 @@
     "tag:generate": "standard-version",
     "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
     "prepare": "husky",
-    "pre-commit": "npm run lint && npm run test"
+    "pre-commit": "npm run fix && npm run test",
+    "fix": "prettier --write \"./src/**/*.{js,cjs,mjs,ts,tsx,md,json}\" \"./tests/**/*\" --ignore-path .gitignore && npm run lint -- --fix"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
     "@jest/globals": "^29.7.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/eslint": "^8.44.2",

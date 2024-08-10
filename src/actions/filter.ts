@@ -1,23 +1,28 @@
-import { usingAlias } from '@/utils'
-import { type Alias, type Filter, type FilterValue, type GlobalState } from '@/types'
+import {
+  type Alias,
+  type Filter,
+  type FilterValue,
+  type GlobalState,
+} from "@/types";
+import { usingAlias } from "@/utils";
 
-export const filterAction = <Al extends Alias<object>, Attr extends string> (
+export const filterAction = <Al extends Alias<object>, Attr extends string>(
   attribute: Attr,
   value: FilterValue,
-  state: GlobalState<Al>
+  state: GlobalState<Al>,
 ) => {
-
-  let prevFilter: Filter | undefined
+  let prevFilter: Filter | undefined;
 
   const allFilters = state.filters.reduce((filters, filter) => {
     if (filter.attribute === attribute) {
-      prevFilter = filter
-      return filters
+      prevFilter = filter;
+      return filters;
     }
-    return [...filters, filter]
-  }, [] as Filter[])
 
-  const val = Array.isArray(value) ? value : [value]
+    return [...filters, filter];
+  }, [] as Filter[]);
+
+  const val = Array.isArray(value) ? value : [value];
 
   const newState: GlobalState<Al> = {
     ...state,
@@ -25,28 +30,33 @@ export const filterAction = <Al extends Alias<object>, Attr extends string> (
       ...allFilters,
       {
         attribute: attribute,
-        value: [...(prevFilter?.value ?? []), ...val]
-      }
-    ]
-  }
-  return newState
-}
+        value: [...(prevFilter?.value ?? []), ...val],
+      },
+    ],
+  };
+  return newState;
+};
 
-export const clearFiltersAction = <Al> (state: GlobalState<Al>) => {
+export const clearFiltersAction = <Al>(state: GlobalState<Al>) => {
   return {
     ...state,
-    filters: []
-  }
-}
+    filters: [],
+  };
+};
 
-export const removeFilterAction = <Al extends Alias<object>, Attr extends string[]> (
+export const removeFilterAction = <
+  Al extends Alias<object>,
+  Attr extends string[],
+>(
   attribute: Attr,
-  state: GlobalState<Al>
+  state: GlobalState<Al>,
 ) => {
-  const filterAliased = attribute.map(attr => usingAlias(state, attr))
+  const filterAliased = attribute.map((attr) => usingAlias(state, attr));
   const newState: GlobalState<Al> = {
     ...state,
-    filters: state.filters.filter((filter) => !filterAliased.includes(filter.attribute))
-  }
-  return newState
-}
+    filters: state.filters.filter(
+      (filter) => !filterAliased.includes(filter.attribute),
+    ),
+  };
+  return newState;
+};
