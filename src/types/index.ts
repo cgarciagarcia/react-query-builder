@@ -1,5 +1,5 @@
 export type Alias<Prop> = {
-  [key in keyof Prop]: Prop[key] extends string ? string : string;
+  [key in keyof Prop]: string;
 };
 
 export interface Sort {
@@ -22,12 +22,15 @@ export type Filters = Filter[];
 export type Field = string;
 export type Fields = Field[];
 
-export interface GlobalState<Al = NonNullable<unknown>> {
+export type ConflictMap = Record<string, string[]> | Record<string, never>;
+
+export interface GlobalState<Al = Record<string, never>> {
   aliases: Alias<Al>;
   fields: Fields;
   filters: Filter[];
   includes: Includes;
   sorts: Sorts;
+  pruneConflictingFilters: ConflictMap;
   delimiters: {
     global: string;
     fields: string | null;
@@ -38,7 +41,7 @@ export interface GlobalState<Al = NonNullable<unknown>> {
   };
 }
 
-export interface QueryBuilder<AliasType = NonNullable<unknown>> {
+export interface QueryBuilder<AliasType = Record<string, never>> {
   filter: (
     attribute: AliasType extends object ? keyof AliasType | string : string,
     value: FilterValue,

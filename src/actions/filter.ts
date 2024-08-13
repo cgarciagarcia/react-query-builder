@@ -13,9 +13,14 @@ export const filterAction = <Al extends Alias<object>, Attr extends string>(
 ) => {
   let prevFilter: Filter | undefined;
 
+  const conflicts: string[] | undefined =
+    state.pruneConflictingFilters[attribute];
   const allFilters = state.filters.reduce((filters, filter) => {
     if (filter.attribute === attribute) {
       prevFilter = filter;
+      return filters;
+    }
+    if (conflicts && conflicts.includes(filter.attribute)) {
       return filters;
     }
 

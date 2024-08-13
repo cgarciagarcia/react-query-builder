@@ -48,7 +48,7 @@ export const build = <T>(state: GlobalState<T>): string => {
   const sorts = state.sorts.reduce((acc, sort) => {
     const { attribute, direction } = sort;
     const dir = direction === "desc" ? "-" : "";
-    acc.push(`${dir}${attribute}`);
+    acc.push(`${dir}${usingAlias(state, attribute)}`);
     return acc;
   }, [] as string[]);
 

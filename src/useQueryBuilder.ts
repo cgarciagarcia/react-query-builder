@@ -13,9 +13,11 @@ import {
   removeSortAction,
   sortAction,
 } from "@/actions";
+import { reverseConflicts } from "@/actions/conflict";
 import { build } from "@/utils";
 import {
   type Alias,
+  type ConflictMap,
   type Filters,
   type GlobalState,
   type Includes,
@@ -28,6 +30,7 @@ interface BaseConfig<AliasType> {
   includes?: Includes;
   sorts?: Sorts;
   filters?: Filters;
+  pruneConflictingFilters?: ConflictMap;
   delimiters?: {
     global: string;
     fields: string | null;
@@ -39,7 +42,7 @@ interface BaseConfig<AliasType> {
 }
 
 export const useQueryBuilder = <
-  Aliases extends Record<string, string> = NonNullable<unknown>,
+  Aliases extends Record<string, string> = Record<string, never>,
 >(
   config: BaseConfig<Aliases> = {},
 ): QueryBuilder<Aliases> => {
@@ -49,6 +52,9 @@ export const useQueryBuilder = <
     includes: [],
     sorts: [],
     fields: [],
+    pruneConflictingFilters: reverseConflicts(
+      config.pruneConflictingFilters ?? {},
+    ),
     ...config,
     delimiters: {
       global: ",",

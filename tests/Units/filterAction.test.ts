@@ -3,6 +3,7 @@ import {
   filterAction,
   removeFilterAction,
 } from "@/actions";
+import { reverseConflicts } from "@/actions/conflict";
 import { type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
@@ -43,7 +44,6 @@ describe("Filter Action test: ", () => {
   it("Should be possible to add multiple filter with the same attribute", () => {
     const result = filterAction(
       "name",
-
       ["Carlos Garcia", "Juan Perez"],
       initialState,
     );
@@ -51,7 +51,6 @@ describe("Filter Action test: ", () => {
     expect(result.filters).toEqual([
       {
         attribute: "name",
-
         value: ["Carlos Garcia", "Juan Perez"],
       },
     ]);
@@ -146,6 +145,30 @@ describe("Filter Action test: ", () => {
       {
         attribute: "last_name",
         value: ["Garcia"],
+      },
+    ]);
+  });
+
+  it("should ", () => {
+    const state: GlobalState = {
+      ...initialState,
+      pruneConflictingFilters: reverseConflicts({
+        date: ["month"],
+      }),
+      filters: [
+        {
+          attribute: "date",
+          value: ["2024-01-01"],
+        },
+      ],
+    };
+
+    const result = filterAction("month", "01", state);
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "month",
+        value: ["01"],
       },
     ]);
   });

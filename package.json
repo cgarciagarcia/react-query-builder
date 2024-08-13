@@ -16,7 +16,7 @@
     "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
     "prepare": "husky",
     "pre-commit": "npm run fix && npm run test",
-    "fix": "prettier --write \"./src/**/*.{js,cjs,mjs,ts,tsx,md,json}\" \"./tests/**/*\" --ignore-path .gitignore && npm run lint -- --fix"
+    "fix": "prettier --write \"./src/**/*.{js,cjs,mjs,ts,tsx,md,json}\" \"./tests/**/*\" --ignore-path .gitignore && npm run lint"
   },
   "repository": {
     "type": "git",
