@@ -5,15 +5,11 @@ export const reverseConflicts = (conflictMap: ConflictMap): ConflictMap => {
 
   for (const [filter, conflicts] of Object.entries(conflictMap)) {
     for (const conflict of conflicts) {
-      if (!reversedMap[conflict]) {
-        reversedMap[conflict] = [];
-      }
+      reversedMap[conflict] = reversedMap[conflict] || [];
       if (!reversedMap[conflict].includes(filter)) {
         reversedMap[conflict].push(filter);
       }
-      if (!reversedMap[filter]) {
-        reversedMap[filter] = [];
-      }
+      reversedMap[filter] = reversedMap[filter] || [];
       if (!reversedMap[filter].includes(conflict)) {
         reversedMap[filter].push(conflict);
       }
