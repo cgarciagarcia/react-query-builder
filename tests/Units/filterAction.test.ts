@@ -149,7 +149,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("should ", () => {
+  it("should remove incompatibles filters when pruneConflictingFilters is present", () => {
     const state: GlobalState = {
       ...initialState,
       pruneConflictingFilters: reverseConflicts({
