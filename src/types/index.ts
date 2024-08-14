@@ -41,7 +41,7 @@ export interface GlobalState<Al = Record<string, never>> {
   };
 }
 
-export interface QueryBuilder<AliasType = Record<string, never>> {
+export interface QueryBuilder<AliasType> {
   filter: (
     attribute: AliasType extends object ? keyof AliasType | string : string,
     value: FilterValue,
