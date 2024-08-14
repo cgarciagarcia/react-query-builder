@@ -136,6 +136,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should use custom delimiters", () => {
     const val = build({
+      ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
         user: "u",
@@ -185,6 +186,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should use global delimiters", () => {
     const val = build({
+      ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
         user: "u",

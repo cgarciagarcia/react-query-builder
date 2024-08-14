@@ -63,6 +63,7 @@ const baseConfig = {
   includes: [],
   sorts: [],
   fields: [],
+  pruneConflictingFilters: {},
   delimiters: {
     global: ',',
     fields: null,
@@ -100,6 +101,38 @@ const builder = useQueryBuilder(baseConfig)
     .clearIncludes()
     .clearSorts()
 ```
+
+<h3 style="color:#cb3837;">Filters that don't work together</h3>
+
+Maybe your business logic has filters that won't work together, for example you could
+have filters like `date` filter and `between_dates` filter in your backend, but you can not filter
+by both at the same time, so you have to be sure to clear incompatibles filters 
+before to adding a new one. With this purpose the property `pruneConflictingFilters` 
+was created, you can define these incompatibilities in the base configuration and delegate
+the humdrum action to the library.
+
+Example:
+
+```js
+const builder = useQueryBuilder({
+  pruneConflictingFilters: {
+    date: ['between_dates']
+  },
+})
+
+builder.filter('date', today)
+    .build() // the result is ?filter[date]=2024-08-13
+    .filter('between_dates', [lastWeek, today])
+    .build() // the result in this line is ?filter[between_dates]=2024-08-06,2024-08-13
+```
+
+#### How does it work?
+
+When you define that `date` filter is not compatible with `between_dates`, internally
+the library define the bidirectional incompatibility for you. Too much magic? Don't
+worry, you still could define manually the inverse incompatibility to have explicit 
+declaration from your side.
+
 
 ## Next features
 

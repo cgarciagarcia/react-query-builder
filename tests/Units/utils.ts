@@ -6,6 +6,7 @@ export const initialState: GlobalState = {
   includes: [],
   sorts: [],
   fields: [],
+  pruneConflictingFilters: {},
   delimiters: {
     global: ",",
     fields: null,
