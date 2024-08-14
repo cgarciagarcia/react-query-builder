@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.0...v1.11.1) (2024-08-14)
+
+
+### Bug Fixes
+
+* config was overriding the reverseConflicts configuration, also remove empty object ([#36](https://github.com/cgarciagarcia/react-query-builder/issues/36)) ([57d08fb](https://github.com/cgarciagarcia/react-query-builder/commit/57d08fbbd8de761a5d352cbfbb5f5c3560fdd63b))
+
 ## [1.11.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.10.2...v1.11.0) (2024-08-14)
 
 
