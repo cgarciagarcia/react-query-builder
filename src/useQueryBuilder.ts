@@ -41,9 +41,7 @@ interface BaseConfig<AliasType> {
   };
 }
 
-export const useQueryBuilder = <
-  Aliases extends Record<string, string> = Record<string, never>,
->(
+export const useQueryBuilder = <Aliases extends Record<string, string>>(
   config: BaseConfig<Aliases> = {},
 ): QueryBuilder<Aliases> => {
   const [state, setState] = useState<GlobalState<Aliases>>(() => ({
@@ -52,10 +50,10 @@ export const useQueryBuilder = <
     includes: [],
     sorts: [],
     fields: [],
+    ...config,
     pruneConflictingFilters: reverseConflicts(
       config.pruneConflictingFilters ?? {},
     ),
-    ...config,
     delimiters: {
       global: ",",
       fields: null,
