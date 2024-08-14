@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.1...v1.11.2) (2024-08-14)
+
+
+### Bug Fixes
+
+* remove Record<string,never> ([705a9bb](https://github.com/cgarciagarcia/react-query-builder/commit/705a9bbb6e368d34239c4deb1ef7ab98d6cf5cee))
+* remove Record<string,never> ([#37](https://github.com/cgarciagarcia/react-query-builder/issues/37)) ([a04caa7](https://github.com/cgarciagarcia/react-query-builder/commit/a04caa7f1b59f395e52b997eab06451d1df0a470))
+
 ### [1.11.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.0...v1.11.1) (2024-08-14)
 
 
