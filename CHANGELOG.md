@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.10.2...v1.11.0) (2024-08-14)
+
+
+### Features
+
+* exclude uncompatible filters without remove them manually ([#35](https://github.com/cgarciagarcia/react-query-builder/issues/35)) ([62f9833](https://github.com/cgarciagarcia/react-query-builder/commit/62f983351955e375a8855121d673479a2e6f086b))
+
 ### [1.10.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.10.1...v1.10.2) (2024-08-10)
 
 ### [1.10.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.10.0...v1.10.1) (2024-08-09)
