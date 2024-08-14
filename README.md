@@ -130,7 +130,7 @@ builder.filter('date', today)
 
 When you define that `date` filter is not compatible with `between_dates`, internally
 the library define the bidirectional incompatibility for you. Too much magic? Don't
-worry, you still could define manually the inverse incompatibility to has explicit 
+worry, you still could define manually the inverse incompatibility to have explicit 
 declaration from your side.
 
 
