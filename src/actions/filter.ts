@@ -10,6 +10,7 @@ export const filterAction = <Al extends Alias<object>, Attr extends string>(
   attribute: Attr,
   value: FilterValue,
   state: GlobalState<Al>,
+  override: boolean = false,
 ) => {
   let prevFilter: Filter | undefined;
 
@@ -35,7 +36,7 @@ export const filterAction = <Al extends Alias<object>, Attr extends string>(
       ...allFilters,
       {
         attribute: attribute,
-        value: [...(prevFilter?.value ?? []), ...val],
+        value: override ? val : [...(prevFilter?.value ?? []), ...val],
       },
     ],
   };

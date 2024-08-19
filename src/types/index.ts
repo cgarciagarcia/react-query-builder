@@ -45,6 +45,7 @@ export interface QueryBuilder<AliasType> {
   filter: (
     attribute: AliasType extends object ? keyof AliasType | string : string,
     value: FilterValue,
+    override?: boolean,
   ) => QueryBuilder<AliasType>;
   removeFilter: (
     ...attribute: (AliasType extends object ? keyof AliasType : string)[]
