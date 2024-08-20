@@ -66,8 +66,8 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
   }));
 
   const builder: QueryBuilder<Aliases> = {
-    filter: (attribute, value) => {
-      setState((s) => filterAction(attribute, value, s));
+    filter: (attribute, value, override = false) => {
+      setState((s) => filterAction(attribute, value, s, override));
       return builder;
     },
     removeFilter: (...attribute) => {

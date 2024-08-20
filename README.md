@@ -44,8 +44,11 @@ builder
   .sort("age", 'desc') // sorting desc
   .include("posts", "comments")
 
-console.log(theQuery.build());
-// /users?fields[user]=name,fields=other,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
+function apiCall() {
+  console.log(builder.build());
+  // ?fields[user]=name,fields=other,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
+  return fetch("https://myapi.com/api/users" + builder.build()).then(response => response.json())
+}
 ```
 
 <h3 style="color:#cb3837;">Configurations</h3>
@@ -136,8 +139,9 @@ declaration from your side.
 
 ## Next features
 
-* Interaction with url query string
-
+* To have the possibility to attach foreign values to query string
+* Remove the question mark in base configuration
+* Interaction with url query params
 
 
 ## Consider supporting me

@@ -172,4 +172,33 @@ describe("Filter Action test: ", () => {
       },
     ]);
   });
+
+  it("should add filter override existing filter when overwrite is true", () => {
+    const state: GlobalState = {
+      ...initialState,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos"],
+        },
+        {
+          attribute: "last_name",
+          value: ["Garcia"],
+        },
+      ],
+    } as const;
+
+    const result = filterAction("name", ["Juan Perez"], state, true);
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "last_name",
+        value: ["Garcia"],
+      },
+      {
+        attribute: "name",
+        value: ["Juan Perez"],
+      },
+    ]);
+  });
 });
