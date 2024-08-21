@@ -66,6 +66,13 @@ export const build = <T>(state: GlobalState<T>): string => {
     );
   }
 
+  for (const [key, value] of Object.entries(state.params)) {
+    urlSearchParams.append(
+      key,
+      value.join(state.delimiters.appends ?? state.delimiters.global),
+    );
+  }
+
   const searchParamsString = urlSearchParams.toString();
 
   return searchParamsString

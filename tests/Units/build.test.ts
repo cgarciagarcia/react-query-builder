@@ -160,10 +160,14 @@ describe("Assert build method is working correctly", () => {
         { attribute: "name", direction: "asc" },
         { attribute: "id", direction: "desc" },
       ],
+      params: {
+        param1: [1, 2],
+        param2: ["string1", "string2"],
+      },
     });
 
     expect(val).toBe(
-      "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other",
+      "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other&param1=1:2&param2=string1:string2",
     );
   });
 
@@ -230,5 +234,23 @@ describe("Assert build method is working correctly", () => {
     });
 
     expect(val).toBe("filter[name]=Carlos+garcia");
+  });
+
+  it("should build with custom params", () => {
+    const val = build({
+      ...initialState,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos garcia"],
+        },
+      ],
+      params: {
+        page: [2],
+        limit: [10],
+      },
+    });
+
+    expect(val).toBe("?filter[name]=Carlos+garcia&page=2&limit=10");
   });
 });

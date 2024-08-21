@@ -14,6 +14,18 @@ describe("Param Action test: ", () => {
     expect(result.params).toEqual({ name: ["Carlos"] });
   });
 
+  it("should add a new param as string", () => {
+    const result = paramAction("name", "Carlos", initialState);
+
+    expect(result.params).toEqual({ name: ["Carlos"] });
+  });
+
+  it("should add a new param as number", () => {
+    const result = paramAction("age", 18, initialState);
+
+    expect(result.params).toEqual({ age: [18] });
+  });
+
   it("should add multiple params with the same key", () => {
     const result = paramAction("name", ["Carlos", "Juan"], initialState);
 
