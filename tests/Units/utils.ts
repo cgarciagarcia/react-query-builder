@@ -16,4 +16,5 @@ export const initialState: GlobalState = {
     appends: null,
   },
   useQuestionMark: true,
+  params: {},
 } as const;

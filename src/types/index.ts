@@ -40,6 +40,7 @@ export interface GlobalState<Al = Record<string, never>> {
     appends: string | null;
   };
   useQuestionMark: boolean;
+  params: Record<string, (string | number)[]>;
 }
 
 export interface QueryBuilder<AliasType> {
@@ -70,4 +71,10 @@ export interface QueryBuilder<AliasType> {
   tap: (
     callback: (state: GlobalState<AliasType>) => void,
   ) => QueryBuilder<AliasType>;
+  setParam: (
+    key: string,
+    value: (string | number)[] | string | number,
+  ) => QueryBuilder<AliasType>;
+  removeParam: (...key: string[]) => QueryBuilder<AliasType>;
+  clearParams: () => QueryBuilder<AliasType>;
 }

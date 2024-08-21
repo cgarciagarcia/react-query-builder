@@ -42,6 +42,7 @@ builder
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
+  .param("external_param", 123)
   .include("posts", "comments")
 
 function apiCall() {
@@ -76,6 +77,7 @@ const baseConfig = {
     appends: null,
   },
   useQuestionMark: false,
+  params: {}
 }
 ```
 
@@ -90,6 +92,7 @@ const builder = useQueryBuilder(baseConfig)
     .removeFilter('name', 'last_name')
     .removeSort('name', 'id')
     .removeInclude('address', 'documents')
+    .removeParam('param1', 'param2')
 ```
 
 <h3 style="color:#cb3837;">Clear Methods</h3>
@@ -104,6 +107,7 @@ const builder = useQueryBuilder(baseConfig)
     .clearFilters()
     .clearIncludes()
     .clearSorts()
+    .clearParams()
 ```
 
 <h3 style="color:#cb3837;">Filters that don't work together</h3>
@@ -140,7 +144,6 @@ declaration from your side.
 
 ## Next features
 
-* To have the possibility to attach foreign values to query string
 * Interaction with url query params
 
 

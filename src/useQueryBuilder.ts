@@ -14,6 +14,11 @@ import {
   sortAction,
 } from "@/actions";
 import { reverseConflicts } from "@/actions/conflict";
+import {
+  clearParamsAction,
+  paramAction,
+  removeParamAction,
+} from "@/actions/param";
 import { build } from "@/utils";
 import {
   type Alias,
@@ -40,6 +45,7 @@ interface BaseConfig<AliasType> {
     appends: string | null;
   };
   useQuestionMark?: boolean;
+  params?: Record<string, (string | number)[]>;
 }
 
 export const useQueryBuilder = <Aliases extends Record<string, string>>(
@@ -51,6 +57,8 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
     includes: [],
     sorts: [],
     fields: [],
+    params: {},
+    useQuestionMark: true,
     ...config,
     pruneConflictingFilters: reverseConflicts(
       config.pruneConflictingFilters ?? {},
@@ -64,7 +72,6 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
       appends: null,
       ...config.delimiters,
     },
-    useQuestionMark: config.useQuestionMark ?? true,
   }));
 
   const builder: QueryBuilder<Aliases> = {
@@ -121,6 +128,18 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
     build: () => build(state),
     tap: (callback) => {
       callback(state);
+      return builder;
+    },
+    setParam(key, value): QueryBuilder<Aliases> {
+      setState((s) => paramAction(key, value, s));
+      return builder;
+    },
+    removeParam(...keys): QueryBuilder<Aliases> {
+      setState((s) => removeParamAction(keys, s));
+      return builder;
+    },
+    clearParams(): QueryBuilder<Aliases> {
+      setState((s) => clearParamsAction(s));
       return builder;
     },
   };
