@@ -216,4 +216,19 @@ describe("Assert build method is working correctly", () => {
       "?filter[u]=1&fields[user]=name|age&sort=name|-id&include=address|other",
     );
   });
+
+  it("should remove question mark if useQuestionMark is false", () => {
+    const val = build({
+      ...initialState,
+      useQuestionMark: false,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos garcia"],
+        },
+      ],
+    });
+
+    expect(val).toBe("filter[name]=Carlos+garcia");
+  });
 });

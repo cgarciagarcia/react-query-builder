@@ -15,4 +15,5 @@ export const initialState: GlobalState = {
     includes: null,
     appends: null,
   },
+  useQuestionMark: true,
 } as const;

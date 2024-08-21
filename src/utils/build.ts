@@ -68,5 +68,8 @@ export const build = <T>(state: GlobalState<T>): string => {
 
   const searchParamsString = urlSearchParams.toString();
 
-  return searchParamsString ? "?" + decodeURIComponent(searchParamsString) : "";
+  return searchParamsString
+    ? (state.useQuestionMark ? "?" : "") +
+        decodeURIComponent(urlSearchParams.toString())
+    : "";
 };

@@ -39,6 +39,7 @@ interface BaseConfig<AliasType> {
     includes: string | null;
     appends: string | null;
   };
+  useQuestionMark?: boolean;
 }
 
 export const useQueryBuilder = <Aliases extends Record<string, string>>(
@@ -63,6 +64,7 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
       appends: null,
       ...config.delimiters,
     },
+    useQuestionMark: config.useQuestionMark ?? true,
   }));
 
   const builder: QueryBuilder<Aliases> = {
@@ -117,6 +119,10 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
       return builder;
     },
     build: () => build(state),
+    tap: (callback) => {
+      callback(state);
+      return builder;
+    },
   };
 
   return builder;
