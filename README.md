@@ -74,7 +74,8 @@ const baseConfig = {
     sorts: null,
     includes: null,
     appends: null,
-  }
+  },
+  useQuestionMark: false,
 }
 ```
 
@@ -140,7 +141,6 @@ declaration from your side.
 ## Next features
 
 * To have the possibility to attach foreign values to query string
-* Remove the question mark in base configuration
 * Interaction with url query params
 
 
