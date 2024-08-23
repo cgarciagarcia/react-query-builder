@@ -42,7 +42,7 @@ builder
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
-  .param("external_param", 123)
+  .setParam("external_param", 123)
   .include("posts", "comments")
 
 function apiCall() {
@@ -74,7 +74,7 @@ const baseConfig = {
     filters: null,
     sorts: null,
     includes: null,
-    appends: null,
+    params: null,
   },
   useQuestionMark: false,
   params: {}

@@ -1,3 +1,4 @@
+import { type GlobalState } from "@/types";
 import { build } from "@/utils";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
@@ -135,7 +136,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should use custom delimiters", () => {
-    const val = build({
+    const state: GlobalState<Record<string, string>> = {
       ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
@@ -154,7 +155,7 @@ describe("Assert build method is working correctly", () => {
         filters: ":",
         sorts: ":",
         includes: ":",
-        appends: ":",
+        params: ":",
       },
       sorts: [
         { attribute: "name", direction: "asc" },
@@ -164,7 +165,9 @@ describe("Assert build method is working correctly", () => {
         param1: [1, 2],
         param2: ["string1", "string2"],
       },
-    });
+    };
+
+    const val = build(state);
 
     expect(val).toBe(
       "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other&param1=1:2&param2=string1:string2",
@@ -181,7 +184,7 @@ describe("Assert build method is working correctly", () => {
         filters: ":",
         sorts: ":",
         includes: ":",
-        appends: ":",
+        params: ":",
       },
     });
 
@@ -189,7 +192,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should use global delimiters", () => {
-    const val = build({
+    const state: GlobalState<Record<string, string>> = {
       ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
@@ -208,13 +211,14 @@ describe("Assert build method is working correctly", () => {
         filters: null,
         sorts: null,
         includes: null,
-        appends: null,
+        params: null,
       },
       sorts: [
         { attribute: "name", direction: "asc" },
         { attribute: "id", direction: "desc" },
       ],
-    });
+    };
+    const val = build(state);
 
     expect(val).toBe(
       "?filter[u]=1&fields[user]=name|age&sort=name|-id&include=address|other",

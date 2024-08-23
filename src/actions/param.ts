@@ -1,6 +1,6 @@
-import { type Alias, type GlobalState } from "@/types";
+import { type GlobalState } from "@/types";
 
-export const paramAction = <Al extends Alias<object>>(
+export const paramAction = <Al>(
   key: string,
   value: (string | number)[] | string | number,
   state: GlobalState<Al>,
@@ -14,7 +14,7 @@ export const paramAction = <Al extends Alias<object>>(
   } satisfies GlobalState<Al>;
 };
 
-export const removeParamAction = <Al extends Alias<object>>(
+export const removeParamAction = <Al>(
   keys: string[],
   state: GlobalState<Al>,
 ) => {
@@ -27,9 +27,7 @@ export const removeParamAction = <Al extends Alias<object>>(
   } satisfies GlobalState<Al>;
 };
 
-export const clearParamsAction = <Al extends Alias<object>>(
-  state: GlobalState<Al>,
-) => {
+export const clearParamsAction = <Al>(state: GlobalState<Al>) => {
   return {
     ...state,
     params: {},

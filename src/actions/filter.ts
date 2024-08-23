@@ -1,12 +1,7 @@
-import {
-  type Alias,
-  type Filter,
-  type FilterValue,
-  type GlobalState,
-} from "@/types";
+import { type Filter, type FilterValue, type GlobalState } from "@/types";
 import { usingAlias } from "@/utils";
 
-export const filterAction = <Al extends Alias<object>, Attr extends string>(
+export const filterAction = <Al, Attr extends string>(
   attribute: Attr,
   value: FilterValue,
   state: GlobalState<Al>,
@@ -50,10 +45,7 @@ export const clearFiltersAction = <Al>(state: GlobalState<Al>) => {
   };
 };
 
-export const removeFilterAction = <
-  Al extends Alias<object>,
-  Attr extends string[],
->(
+export const removeFilterAction = <Al, Attr extends string[]>(
   attribute: Attr,
   state: GlobalState<Al>,
 ) => {

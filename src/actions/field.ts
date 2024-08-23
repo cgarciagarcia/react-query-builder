@@ -1,9 +1,6 @@
-import { type Alias, type Fields, type GlobalState } from "@/types";
+import { type Fields, type GlobalState } from "@/types";
 
-export const fieldAction = <Al extends Alias<object>>(
-  fields: Fields,
-  state: GlobalState<Al>,
-) => {
+export const fieldAction = <Al>(fields: Fields, state: GlobalState<Al>) => {
   return {
     ...state,
     fields: [
@@ -13,7 +10,7 @@ export const fieldAction = <Al extends Alias<object>>(
   } satisfies GlobalState<Al>;
 };
 
-export const removeFieldAction = <Al extends Alias<object>>(
+export const removeFieldAction = <Al>(
   fields: Fields,
   state: GlobalState<Al>,
 ) => {
@@ -23,9 +20,7 @@ export const removeFieldAction = <Al extends Alias<object>>(
   } satisfies GlobalState<Al>;
 };
 
-export const clearFieldsAction = <Al extends Alias<object>>(
-  state: GlobalState<Al>,
-) => {
+export const clearFieldsAction = <Al>(state: GlobalState<Al>) => {
   return {
     ...state,
     fields: [],

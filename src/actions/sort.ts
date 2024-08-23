@@ -1,9 +1,6 @@
-import { type Alias, type GlobalState, type Sort } from "@/types";
+import { type GlobalState, type Sort } from "@/types";
 
-export const sortAction = <T extends Alias<object>>(
-  sort: Sort,
-  state: GlobalState<T>,
-) => {
+export const sortAction = <T>(sort: Sort<T>, state: GlobalState<T>) => {
   return {
     ...state,
     sorts: [...state.sorts.filter((s) => s.attribute !== sort.attribute), sort],
@@ -11,7 +8,7 @@ export const sortAction = <T extends Alias<object>>(
 };
 
 export const removeSortAction = <T>(
-  attributes: string[],
+  attributes: (T extends object ? keyof T : string)[],
   state: GlobalState<T>,
 ) => {
   return {

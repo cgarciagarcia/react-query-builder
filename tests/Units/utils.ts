@@ -13,7 +13,7 @@ export const initialState: GlobalState = {
     filters: null,
     sorts: null,
     includes: null,
-    appends: null,
+    params: null,
   },
   useQuestionMark: true,
   params: {},
