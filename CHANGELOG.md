@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.3...v1.12.0) (2024-08-23)
+
+
+### Features
+
+* include useQuestionMark in the baseConfiguration and tap method to the hook ([#40](https://github.com/cgarciagarcia/react-query-builder/issues/40)) ([19edc9d](https://github.com/cgarciagarcia/react-query-builder/commit/19edc9d4c26609cccbd6eef35123967009b23122))
+
 ### [1.11.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.2...v1.11.3) (2024-08-20)
 
 ### [1.11.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.11.1...v1.11.2) (2024-08-14)
