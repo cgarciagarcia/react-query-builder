@@ -14,9 +14,13 @@ import {
   sortAction,
 } from "@/actions";
 import { reverseConflicts } from "@/actions/conflict";
+import {
+  clearParamsAction,
+  paramAction,
+  removeParamAction,
+} from "@/actions/param";
 import { build } from "@/utils";
 import {
-  type Alias,
   type ConflictMap,
   type Filters,
   type GlobalState,
@@ -25,10 +29,10 @@ import {
   type Sorts,
 } from "./types";
 
-interface BaseConfig<AliasType> {
+export interface BaseConfig<AliasType> {
   aliases?: AliasType;
   includes?: Includes;
-  sorts?: Sorts;
+  sorts?: Sorts<AliasType>;
   filters?: Filters;
   pruneConflictingFilters?: ConflictMap;
   delimiters?: {
@@ -37,19 +41,23 @@ interface BaseConfig<AliasType> {
     filters: string | null;
     sorts: string | null;
     includes: string | null;
-    appends: string | null;
+    params: string | null;
   };
+  useQuestionMark?: boolean;
+  params?: Record<string, (string | number)[]>;
 }
 
-export const useQueryBuilder = <Aliases extends Record<string, string>>(
+export const useQueryBuilder = <Aliases>(
   config: BaseConfig<Aliases> = {},
 ): QueryBuilder<Aliases> => {
   const [state, setState] = useState<GlobalState<Aliases>>(() => ({
-    aliases: {} as Alias<Aliases>,
+    aliases: {} as Aliases,
     filters: [],
     includes: [],
     sorts: [],
     fields: [],
+    params: {},
+    useQuestionMark: true,
     ...config,
     pruneConflictingFilters: reverseConflicts(
       config.pruneConflictingFilters ?? {},
@@ -60,7 +68,7 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
       filters: null,
       sorts: null,
       includes: null,
-      appends: null,
+      params: null,
       ...config.delimiters,
     },
   }));
@@ -117,6 +125,22 @@ export const useQueryBuilder = <Aliases extends Record<string, string>>(
       return builder;
     },
     build: () => build(state),
+    tap: (callback) => {
+      callback(state);
+      return builder;
+    },
+    setParam(key, value) {
+      setState((s) => paramAction(key, value, s));
+      return builder;
+    },
+    removeParam(...keys) {
+      setState((s) => removeParamAction(keys, s));
+      return builder;
+    },
+    clearParams() {
+      setState((s) => clearParamsAction(s));
+      return builder;
+    },
   };
 
   return builder;

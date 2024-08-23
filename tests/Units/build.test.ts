@@ -1,3 +1,4 @@
+import { type GlobalState } from "@/types";
 import { build } from "@/utils";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
@@ -135,7 +136,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should use custom delimiters", () => {
-    const val = build({
+    const state: GlobalState<Record<string, string>> = {
       ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
@@ -154,16 +155,22 @@ describe("Assert build method is working correctly", () => {
         filters: ":",
         sorts: ":",
         includes: ":",
-        appends: ":",
+        params: ":",
       },
       sorts: [
         { attribute: "name", direction: "asc" },
         { attribute: "id", direction: "desc" },
       ],
-    });
+      params: {
+        param1: [1, 2],
+        param2: ["string1", "string2"],
+      },
+    };
+
+    const val = build(state);
 
     expect(val).toBe(
-      "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other",
+      "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other&param1=1:2&param2=string1:string2",
     );
   });
 
@@ -177,7 +184,7 @@ describe("Assert build method is working correctly", () => {
         filters: ":",
         sorts: ":",
         includes: ":",
-        appends: ":",
+        params: ":",
       },
     });
 
@@ -185,7 +192,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should use global delimiters", () => {
-    const val = build({
+    const state: GlobalState<Record<string, string>> = {
       ...initialState,
       fields: ["user.name", "user.age"],
       aliases: {
@@ -204,16 +211,50 @@ describe("Assert build method is working correctly", () => {
         filters: null,
         sorts: null,
         includes: null,
-        appends: null,
+        params: null,
       },
       sorts: [
         { attribute: "name", direction: "asc" },
         { attribute: "id", direction: "desc" },
       ],
-    });
+    };
+    const val = build(state);
 
     expect(val).toBe(
       "?filter[u]=1&fields[user]=name|age&sort=name|-id&include=address|other",
     );
+  });
+
+  it("should remove question mark if useQuestionMark is false", () => {
+    const val = build({
+      ...initialState,
+      useQuestionMark: false,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos garcia"],
+        },
+      ],
+    });
+
+    expect(val).toBe("filter[name]=Carlos+garcia");
+  });
+
+  it("should build with custom params", () => {
+    const val = build({
+      ...initialState,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos garcia"],
+        },
+      ],
+      params: {
+        page: [2],
+        limit: [10],
+      },
+    });
+
+    expect(val).toBe("?filter[name]=Carlos+garcia&page=2&limit=10");
   });
 });
