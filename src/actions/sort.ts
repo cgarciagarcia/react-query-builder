@@ -8,7 +8,7 @@ export const sortAction = <T>(sort: Sort<T>, state: GlobalState<T>) => {
 };
 
 export const removeSortAction = <T>(
-  attributes: (T extends object ? keyof T : string)[],
+  attributes: (T extends object ? (keyof T & string) | string : string)[],
   state: GlobalState<T>,
 ) => {
   return {

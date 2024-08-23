@@ -3,7 +3,7 @@ export type Alias<Prop> = {
 };
 
 export interface Sort<T> {
-  attribute: T extends object ? keyof T & string : string;
+  attribute: T extends object ? (keyof T & string) | string : string;
   direction: "asc" | "desc";
 }
 
@@ -45,13 +45,15 @@ export interface GlobalState<Al = Record<string, string | undefined>> {
 
 export interface QueryBuilder<AliasType = unknown> {
   filter: (
-    attribute: AliasType extends object ? keyof AliasType & string : string,
+    attribute: AliasType extends object
+      ? (keyof AliasType & string) | string
+      : string,
     value: FilterValue,
     override?: boolean,
   ) => QueryBuilder<AliasType>;
   removeFilter: (
     ...attribute: (AliasType extends object
-      ? keyof AliasType & string
+      ? (keyof AliasType & string) | string
       : string)[]
   ) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
@@ -59,12 +61,14 @@ export interface QueryBuilder<AliasType = unknown> {
   removeInclude: (...include: Includes) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
   sort: (
-    attribute: AliasType extends object ? keyof AliasType & string : string,
+    attribute: AliasType extends object
+      ? (keyof AliasType & string) | string
+      : string,
     direction?: "asc" | "desc",
   ) => QueryBuilder<AliasType>;
   removeSort: (
     ...attribute: (AliasType extends object
-      ? keyof AliasType & string
+      ? (keyof AliasType & string) | string
       : string)[]
   ) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;

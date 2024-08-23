@@ -1,8 +1,8 @@
 import { type Filter, type FilterValue, type GlobalState } from "@/types";
 import { usingAlias } from "@/utils";
 
-export const filterAction = <Al, Attr extends string>(
-  attribute: Attr,
+export const filterAction = <Al>(
+  attribute: Al extends object ? (keyof Al & string) | string : string,
   value: FilterValue,
   state: GlobalState<Al>,
   override: boolean = false,
