@@ -6,55 +6,42 @@ export const filterAction = <Al>(
   value: FilterValue,
   state: GlobalState<Al>,
   override: boolean = false,
-) => {
-  let prevFilter: Filter | undefined;
-
-  const conflicts: string[] | undefined =
-    state.pruneConflictingFilters[attribute];
-  const allFilters = state.filters.reduce((filters, filter) => {
+): GlobalState<Al> => {
+  const conflicts = state.pruneConflictingFilters[attribute];
+  const allFilters = state.filters.reduce<Filter[]>((filters, filter) => {
     if (filter.attribute === attribute) {
-      prevFilter = filter;
       return filters;
     }
-    if (conflicts && conflicts.includes(filter.attribute)) {
+    if (conflicts?.includes(filter.attribute)) {
       return filters;
     }
-
     return [...filters, filter];
-  }, [] as Filter[]);
+  }, []);
 
   const val = Array.isArray(value) ? value : [value];
-
-  const newState: GlobalState<Al> = {
-    ...state,
-    filters: [
-      ...allFilters,
-      {
-        attribute: attribute,
-        value: override ? val : [...(prevFilter?.value ?? []), ...val],
-      },
-    ],
+  const newFilter: Filter = {
+    attribute,
+    value: override ? val : [...(state.filters.find(f => f.attribute === attribute)?.value ?? []), ...val],
   };
-  return newState;
-};
 
-export const clearFiltersAction = <Al>(state: GlobalState<Al>) => {
   return {
     ...state,
-    filters: [],
+    filters: [...allFilters, newFilter],
   };
 };
+
+export const clearFiltersAction = <Al>(state: GlobalState<Al>): GlobalState<Al> => ({
+  ...state,
+  filters: [],
+});
 
 export const removeFilterAction = <Al, Attr extends string[]>(
   attribute: Attr,
   state: GlobalState<Al>,
-) => {
-  const filterAliased = attribute.map((attr) => usingAlias(state, attr));
-  const newState: GlobalState<Al> = {
+): GlobalState<Al> => {
+  const filterAliased = attribute.map(attr => usingAlias(state, attr));
+  return {
     ...state,
-    filters: state.filters.filter(
-      (filter) => !filterAliased.includes(filter.attribute),
-    ),
+    filters: state.filters.filter(filter => !filterAliased.includes(filter.attribute)),
   };
-  return newState;
 };
