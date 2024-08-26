@@ -21,7 +21,13 @@ export const filterAction = <Al>(
   const val = Array.isArray(value) ? value : [value];
   const newFilter: Filter = {
     attribute,
-    value: override ? val : [...(state.filters.find(f => f.attribute === attribute)?.value ?? []), ...val],
+    value: override
+      ? val
+      : [
+          ...(state.filters.find((f) => f.attribute === attribute)?.value ??
+            []),
+          ...val,
+        ],
   };
 
   return {
@@ -30,7 +36,9 @@ export const filterAction = <Al>(
   };
 };
 
-export const clearFiltersAction = <Al>(state: GlobalState<Al>): GlobalState<Al> => ({
+export const clearFiltersAction = <Al>(
+  state: GlobalState<Al>,
+): GlobalState<Al> => ({
   ...state,
   filters: [],
 });
@@ -39,9 +47,11 @@ export const removeFilterAction = <Al, Attr extends string[]>(
   attribute: Attr,
   state: GlobalState<Al>,
 ): GlobalState<Al> => {
-  const filterAliased = attribute.map(attr => usingAlias(state, attr));
+  const filterAliased = attribute.map((attr) => usingAlias(state, attr));
   return {
     ...state,
-    filters: state.filters.filter(filter => !filterAliased.includes(filter.attribute)),
+    filters: state.filters.filter(
+      (filter) => !filterAliased.includes(filter.attribute),
+    ),
   };
 };
