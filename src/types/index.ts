@@ -85,4 +85,8 @@ export interface QueryBuilder<AliasType = unknown> {
   ) => QueryBuilder<AliasType>;
   removeParam: (...key: string[]) => QueryBuilder<AliasType>;
   clearParams: () => QueryBuilder<AliasType>;
+  when: (
+    condition: boolean,
+    callback: (state: GlobalState<AliasType>) => void,
+  ) => QueryBuilder<AliasType>;
 }
