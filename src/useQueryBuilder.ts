@@ -19,6 +19,7 @@ import {
   paramAction,
   removeParamAction,
 } from "@/actions/param";
+import { whenAction } from "@/actions/when";
 import { build } from "@/utils";
 import {
   type ConflictMap,
@@ -129,16 +130,20 @@ export const useQueryBuilder = <Aliases>(
       callback(state);
       return builder;
     },
-    setParam(key, value) {
+    setParam: (key, value) => {
       setState((s) => paramAction(key, value, s));
       return builder;
     },
-    removeParam(...keys) {
+    removeParam: (...keys) => {
       setState((s) => removeParamAction(keys, s));
       return builder;
     },
-    clearParams() {
+    clearParams: () => {
       setState((s) => clearParamsAction(s));
+      return builder;
+    },
+    when: (condition, callback) => {
+      whenAction(condition, callback, state);
       return builder;
     },
   };
