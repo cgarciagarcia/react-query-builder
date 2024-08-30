@@ -6,6 +6,7 @@ const config: JestConfigWithTsJest = {
   testEnvironment: "node",
   moduleFileExtensions: ["ts", "js"],
   rootDir: "./",
+  coverageProvider: "v8",
   moduleNameMapper: {
     "^@/actions/(.*)$": "<rootDir>/src/actions/$1",
     "^@/utils/(.*)$": "<rootDir>/src/utils/$1",
