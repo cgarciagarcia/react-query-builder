@@ -2,7 +2,8 @@
   "name": "@cgarciagarcia/react-query-builder",
   "version": "1.12.1",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "files": [
     "dist"
@@ -11,7 +12,9 @@
     "lint": "eslint --max-warnings 0 .",
     "clean": "rm -rf dist",
     "test": "jest",
-    "build": "npm run clean && tsc -p tsconfig.json && tsc-alias",
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/bundle.js",
+    "build:types": "tsc && tsc-alias",
     "tag:generate": "standard-version",
     "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
     "prepare": "husky",
@@ -36,6 +39,7 @@
     "@types/react": "^18.2.8",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
+    "esbuild": "^0.23.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
