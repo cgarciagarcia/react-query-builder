@@ -1,1 +1,1 @@
-npx tsc --noEmit
+npx tsc --noEmit --emitDeclarationOnly false

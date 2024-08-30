@@ -1,8 +1,9 @@
 {
   "name": "@cgarciagarcia/react-query-builder",
-  "version": "1.12.1",
+  "version": "1.12.2",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "files": [
     "dist"
@@ -38,6 +39,7 @@
     "@types/react": "^18.2.8",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
+    "esbuild": "^0.23.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
