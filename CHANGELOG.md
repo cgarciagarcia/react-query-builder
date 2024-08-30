@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.12.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.12.2...v1.12.3) (2024-08-30)
+
+
+### Bug Fixes
+
+* fix esbuild configuration ([#45](https://github.com/cgarciagarcia/react-query-builder/issues/45)) ([d9674af](https://github.com/cgarciagarcia/react-query-builder/commit/d9674af2d891619d82139e6b0e48b6a59d046b31))
+
 ### [1.12.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.12.1...v1.12.2) (2024-08-30)
 
 ### [1.12.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.12.0...v1.12.1) (2024-08-28)
