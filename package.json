@@ -13,7 +13,7 @@
     "clean": "rm -rf dist",
     "test": "jest",
     "build": "npm run build:js && npm run build:types",
-    "build:js": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/bundle.js",
+    "build:js": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/bundle.js --format=esm --external:react",
     "build:types": "tsc && tsc-alias",
     "tag:generate": "standard-version",
     "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
