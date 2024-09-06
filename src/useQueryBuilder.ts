@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  buildAction,
   clearFieldsAction,
   clearFiltersAction,
   clearIncludeAction,
@@ -12,6 +13,7 @@ import {
   removeIncludeAction,
   removeSortAction,
   sortAction,
+  toArray,
 } from "@/actions";
 import { reverseConflicts } from "@/actions/conflict";
 import {
@@ -20,7 +22,6 @@ import {
   removeParamAction,
 } from "@/actions/param";
 import { whenAction } from "@/actions/when";
-import { build } from "@/utils";
 import {
   type ConflictMap,
   type Filters,
@@ -125,7 +126,7 @@ export const useQueryBuilder = <Aliases>(
       setState((s) => clearFieldsAction(s));
       return builder;
     },
-    build: () => build(state),
+    build: () => buildAction(state),
     tap: (callback) => {
       callback(state);
       return builder;
@@ -146,6 +147,7 @@ export const useQueryBuilder = <Aliases>(
       whenAction(condition, callback, state);
       return builder;
     },
+    toArray: () => toArray(state),
   };
 
   return builder;
