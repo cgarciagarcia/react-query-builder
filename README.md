@@ -141,6 +141,59 @@ the library define the bidirectional incompatibility for you. Too much magic? Do
 worry, you still could define manually the inverse incompatibility to have explicit 
 declaration from your side.
 
+<h3 style="color:#cb3837;">Utilities</h3>
+
+You could use the builder with your [Tank Stack React query](https://tanstack.com/query/latest)
+implementation for example:
+
+#### toArray()
+
+```typescript
+
+import { getApiUsers } from "@/Api/users"
+import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
+
+const MyComponent = () => {
+
+  const builder = useQueryBuilder()
+
+  const useUserQuery = useQuery({
+    fnQuery: () => getApiUsers(builder),
+    queryKey: ['userQuery', ...builder.toArray()]
+  })
+
+  /* Rest of code */
+}
+
+```
+
+#### when()
+
+```typescript
+
+import { getApiUsers } from "@/Api/users"
+import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
+
+const MyComponent = () => {
+  
+  const builder = useQueryBuilder()
+
+  const useUserQuery = useQuery({
+    fnQuery: () => getApiUsers(builder),
+    queryKey: ['userQuery', ...builder.toArray()]
+  })
+  
+  const onClickButton = (id: number|null) => {
+    
+    builder.when(id !== null, (state) => {
+      console.log(state) // reveal internal state
+    })
+  }
+  
+  /* Rest of code */
+}
+
+```
 
 ## Next features
 

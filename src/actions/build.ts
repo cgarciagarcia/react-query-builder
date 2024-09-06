@@ -1,7 +1,7 @@
 import { type GlobalState } from "@/types";
 import { usingAlias } from "@/utils/alias";
 
-export const build = <T>(state: GlobalState<T>): string => {
+export const buildAction = <T>(state: GlobalState<T>): string => {
   const delimiter = (type: keyof GlobalState<T>["delimiters"]) =>
     state.delimiters[type] ?? state.delimiters.global;
 

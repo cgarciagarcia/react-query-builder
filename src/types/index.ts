@@ -89,4 +89,5 @@ export interface QueryBuilder<AliasType = unknown> {
     condition: boolean,
     callback: (state: GlobalState<AliasType>) => void,
   ) => QueryBuilder<AliasType>;
+  toArray: () => string[];
 }

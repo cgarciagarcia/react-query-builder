@@ -1,16 +1,16 @@
+import { buildAction } from "@/actions";
 import { type GlobalState } from "@/types";
-import { build } from "@/utils";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
 
 describe("Assert build method is working correctly", () => {
   it("should return a empty url", () => {
-    const val = build(initialState);
+    const val = buildAction(initialState);
     expect(val).toBe("");
   });
 
   it("should return a valid query with one filter", () => {
-    const val = build({
+    const val = buildAction({
       ...initialState,
       filters: [
         {
@@ -23,7 +23,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should return a valid query with multiple values for one filter", () => {
-    const val = build({
+    const val = buildAction({
       ...initialState,
       filters: [
         {
@@ -43,7 +43,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should return a valid query with include", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         includes: ["user"],
       }),
@@ -52,7 +52,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should return a valid query with multiple includes", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         includes: ["user", "works"],
       }),
@@ -61,7 +61,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should return a valid query with sorts ascending", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         sorts: [
           {
@@ -75,7 +75,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should return a valid query with sorts descending", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         sorts: [
           {
@@ -89,7 +89,7 @@ describe("Assert build method is working correctly", () => {
 
   it("should return a valid query string with filters, includes, and sorts", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         filters: [
           {
@@ -120,7 +120,7 @@ describe("Assert build method is working correctly", () => {
 
   it("Should return a valid query string filter using aliases", () => {
     expect(
-      build({
+      buildAction({
         ...initialState,
         aliases: {
           user: "u",
@@ -167,7 +167,7 @@ describe("Assert build method is working correctly", () => {
       },
     };
 
-    const val = build(state);
+    const val = buildAction(state);
 
     expect(val).toBe(
       "?filter[u]=1&fields[user]=name:age&sort=name:-id&include=address:other&param1=1:2&param2=string1:string2",
@@ -175,7 +175,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should use custom delimiter and fields with model and without model", () => {
-    const val = build({
+    const val = buildAction({
       ...initialState,
       fields: ["user.name", "asd", "dsa"],
       delimiters: {
@@ -218,7 +218,7 @@ describe("Assert build method is working correctly", () => {
         { attribute: "id", direction: "desc" },
       ],
     };
-    const val = build(state);
+    const val = buildAction(state);
 
     expect(val).toBe(
       "?filter[u]=1&fields[user]=name|age&sort=name|-id&include=address|other",
@@ -226,7 +226,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should remove question mark if useQuestionMark is false", () => {
-    const val = build({
+    const val = buildAction({
       ...initialState,
       useQuestionMark: false,
       filters: [
@@ -241,7 +241,7 @@ describe("Assert build method is working correctly", () => {
   });
 
   it("should build with custom params", () => {
-    const val = build({
+    const val = buildAction({
       ...initialState,
       filters: [
         {
