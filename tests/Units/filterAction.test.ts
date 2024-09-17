@@ -81,6 +81,34 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
+  it("Should possible to remove a filter with alias", () => {
+    const state: GlobalState = {
+      ...initialState,
+      aliases: {
+        name: "n",
+      },
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos Garcia", "Juan Perez"],
+        },
+        {
+          attribute: "age",
+          value: [28],
+        },
+      ],
+    };
+
+    const result = removeFilterAction(["name"], state);
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "age",
+        value: [28],
+      },
+    ]);
+  });
+
   it("Should be possible to remove multiple filters at the same time", () => {
     const state: GlobalState = {
       ...initialState,
