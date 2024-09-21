@@ -90,4 +90,17 @@ export interface QueryBuilder<AliasType = unknown> {
     callback: (state: GlobalState<AliasType>) => void,
   ) => QueryBuilder<AliasType>;
   toArray: () => string[];
+  hasFilter: (
+    ...attribute: (AliasType extends object
+      ? (keyof AliasType & string) | string
+      : string)[]
+  ) => boolean;
+  hasSort: (
+    ...attribute: (AliasType extends object
+      ? (keyof AliasType & string) | string
+      : string)[]
+  ) => boolean;
+  hasInclude: (...include: Includes) => boolean;
+  hasField: (...attribute: Fields) => boolean;
+  hasParam: (...key: string[]) => boolean;
 }

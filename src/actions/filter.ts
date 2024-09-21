@@ -43,7 +43,7 @@ export const clearFiltersAction = <Al>(
 });
 
 export const removeFilterAction = <Al>(
-  attributes: Al extends object ? ((keyof Al & string) | string)[] : string[],
+  attributes: string[],
   state: GlobalState<Al>,
 ): GlobalState<Al> => {
   return {
