@@ -195,6 +195,19 @@ const MyComponent = () => {
 
 ```
 
+### hasMethods() 
+
+
+```js
+const builder = useQueryBuilder()
+
+builder.hasFilter('filter', 'filter2', ...)
+  .hasInclude('include', 'include2', ...)
+  .hasParam('param1', 'param2', ...)
+  .hasField('field', ...)
+  .hasSort('sort', ...)
+
+```
 ## Next features
 
 * Interaction with url query params

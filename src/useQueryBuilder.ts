@@ -22,6 +22,7 @@ import {
   removeParamAction,
 } from "@/actions/param";
 import { whenAction } from "@/actions/when";
+import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
 import {
   type ConflictMap,
   type Filters,
@@ -148,6 +149,11 @@ export const useQueryBuilder = <Aliases>(
       return builder;
     },
     toArray: () => toArray(state),
+    hasFilter: (...filters) => hasFilter(filters, state),
+    hasSort: (...sorts) => hasSort(sorts, state),
+    hasInclude: (...includes) => hasInclude(includes, state),
+    hasField: (...fields) => hasField(fields, state),
+    hasParam: (...key) => hasParam(key, state),
   };
 
   return builder;

@@ -1,5 +1,4 @@
 import { type Filter, type FilterValue, type GlobalState } from "@/types";
-import { usingAlias } from "@/utils";
 
 export const filterAction = <Al>(
   attribute: Al extends object ? (keyof Al & string) | string : string,
@@ -43,15 +42,14 @@ export const clearFiltersAction = <Al>(
   filters: [],
 });
 
-export const removeFilterAction = <Al, Attr extends string[]>(
-  attribute: Attr,
+export const removeFilterAction = <Al>(
+  attributes: string[],
   state: GlobalState<Al>,
 ): GlobalState<Al> => {
-  const filterAliased = attribute.map((attr) => usingAlias(state, attr));
   return {
     ...state,
     filters: state.filters.filter(
-      (filter) => !filterAliased.includes(filter.attribute),
+      (filter) => !attributes.includes(filter.attribute),
     ),
   };
 };
