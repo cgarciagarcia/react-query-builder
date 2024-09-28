@@ -8,7 +8,7 @@ export const buildAction = <T>(state: GlobalState<T>): string => {
   const filters = Object.fromEntries(
     state.filters.map((filter) => [
       `filter[${usingAlias(state, filter.attribute)}]`,
-      filter.value.join(delimiter("filters")),
+      (filter.operator ?? "") + filter.value.join(delimiter("filters")),
     ]),
   );
 

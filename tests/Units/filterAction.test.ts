@@ -4,7 +4,7 @@ import {
   removeFilterAction,
 } from "@/actions";
 import { reverseConflicts } from "@/actions/conflict";
-import { type GlobalState } from "@/types";
+import { FilterOperator, type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
 
@@ -226,6 +226,130 @@ describe("Filter Action test: ", () => {
       {
         attribute: "name",
         value: ["Juan Perez"],
+      },
+    ]);
+  });
+
+  it("should add filter with operators", () => {
+    const state: GlobalState = {
+      ...initialState,
+    } as const;
+
+    const resultLessThan = filterAction("age", FilterOperator.LessThan, state, [
+      18,
+    ]);
+
+    expect(resultLessThan.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: "<",
+      },
+    ]);
+
+    const resultGreaterThan = filterAction(
+      "age",
+      FilterOperator.GreaterThan,
+      state,
+      [18],
+    );
+
+    expect(resultGreaterThan.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: ">",
+      },
+    ]);
+
+    const resultLessEqual = filterAction(
+      "age",
+      FilterOperator.LessThanOrEqual,
+      state,
+      [18],
+    );
+
+    expect(resultLessEqual.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: "<=",
+      },
+    ]);
+
+    const resultGreaterEqual = filterAction(
+      "age",
+      FilterOperator.GreaterThanOrEqual,
+      state,
+      [18],
+    );
+
+    expect(resultGreaterEqual.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: ">=",
+      },
+    ]);
+
+    const resultDistinct = filterAction("age", FilterOperator.Distinct, state, [
+      18,
+    ]);
+
+    expect(resultDistinct.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: "<>",
+      },
+    ]);
+  });
+
+  it("should not append when filter by operator", () => {
+    const state: GlobalState = {
+      ...initialState,
+    } as const;
+
+    const resultLessThanState = filterAction(
+      "age",
+      FilterOperator.LessThan,
+      state,
+      [18],
+    );
+
+    const resultLessThanEquals = filterAction(
+      "age",
+      FilterOperator.LessThanOrEqual,
+      resultLessThanState,
+      [20],
+    );
+
+    expect(resultLessThanEquals.filters).toEqual([
+      {
+        attribute: "age",
+        value: [20],
+        operator: "<=",
+      },
+    ]);
+  });
+
+  it("should work with value as operator sign", () => {
+    const state: GlobalState = {
+      ...initialState,
+    } as const;
+
+    const result = filterAction(
+      "condition",
+      FilterOperator.LessThan,
+      state,
+      false,
+    );
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "condition",
+        value: ["<"],
+        operator: undefined,
       },
     ]);
   });

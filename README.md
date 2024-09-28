@@ -39,6 +39,7 @@ const builder = useQueryBuilder(baseConfig)
 
 builder
   .fields('user.name', 'user.last_name', 'other')
+  .filter('salary', ">", 1000)
   .filter("age", 18)
   .sort("created_at") // by default sorting asc
   .sort("age", 'desc') // sorting desc
