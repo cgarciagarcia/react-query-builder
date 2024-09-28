@@ -10,11 +10,24 @@ export interface Sort<T> {
 export type Sorts<T> = Sort<T>[];
 export type Include = string;
 export type Includes = Include[];
+
 export type FilterValue = (string | number)[] | string | number;
+
+export const FilterOperator = {
+  Equals: "=",
+  LessThan: "<",
+  GreaterThan: ">",
+  LessThanOrEqual: "<=",
+  GreaterThanOrEqual: ">=",
+  Distinct: "<>",
+} as const;
+
+export type OperatorType = (typeof FilterOperator)[keyof typeof FilterOperator];
 
 export interface Filter {
   attribute: string;
   value: (string | number)[];
+  operator?: OperatorType;
 }
 
 export type Filters = Filter[];
@@ -49,7 +62,7 @@ export interface QueryBuilder<AliasType = unknown> {
       ? (keyof AliasType & string) | string
       : string,
     value: FilterValue,
-    override?: boolean,
+    override?: boolean | FilterValue,
   ) => QueryBuilder<AliasType>;
   removeFilter: (
     ...attribute: (AliasType extends object
