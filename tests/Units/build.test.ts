@@ -1,5 +1,5 @@
 import { buildAction } from "@/actions";
-import { type GlobalState } from "@/types";
+import { FilterOperator, type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
 
@@ -256,5 +256,72 @@ describe("Assert build method is working correctly", () => {
     });
 
     expect(val).toBe("?filter[name]=Carlos+garcia&page=2&limit=10");
+  });
+
+  it("should build with operators in filter", () => {
+    const greaterThan = buildAction({
+      ...initialState,
+      filters: [
+        {
+          attribute: "age",
+          value: [18],
+          operator: ">",
+        },
+      ],
+    });
+
+    expect(greaterThan).toBe("?filter[age]=>18");
+
+    const lessThan = buildAction({
+      ...initialState,
+      filters: [
+        {
+          attribute: "age",
+          value: [18],
+          operator: FilterOperator.LessThan,
+        },
+      ],
+    });
+
+    expect(lessThan).toBe("?filter[age]=<18");
+
+    const lessThanEqual = buildAction({
+      ...initialState,
+      filters: [
+        {
+          attribute: "age",
+          value: [18],
+          operator: "<=",
+        },
+      ],
+    });
+
+    expect(lessThanEqual).toBe("?filter[age]=<=18");
+
+    const greaterThanEqual = buildAction({
+      ...initialState,
+      filters: [
+        {
+          attribute: "age",
+          value: [18],
+          operator: ">=",
+        },
+      ],
+    });
+
+    expect(greaterThanEqual).toBe("?filter[age]=>=18");
+
+    const distinct = buildAction({
+      ...initialState,
+      filters: [
+        {
+          attribute: "age",
+          value: [18],
+          operator: "<>",
+        },
+      ],
+    });
+
+    expect(distinct).toBe("?filter[age]=<>18");
   });
 });
