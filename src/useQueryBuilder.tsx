@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react"
 import {
   buildAction,
   clearFieldsAction,
@@ -24,11 +24,15 @@ import {
 import { whenAction } from "@/actions/when";
 import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
 import {
+  type AttributeAlias,
   type ConflictMap,
+  type Filter,
   type Filters,
   type GlobalState,
+  type Include,
   type Includes,
   type QueryBuilder,
+  type Sort,
   type Sorts,
 } from "./types";
 
@@ -48,6 +52,32 @@ export interface BaseConfig<AliasType> {
   };
   useQuestionMark?: boolean;
   params?: Record<string, (string | number)[]>;
+  watcher?: {
+    filters?: Partial<
+      Record<
+        AttributeAlias<AliasType>,
+        (filter: Filter, builder: QueryBuilder<AliasType>) => void
+      >
+    >;
+    sorts?: Partial<
+      Record<
+        AttributeAlias<AliasType>,
+        (attribute: Sort<AliasType>, builder: QueryBuilder<AliasType>) => void
+      >
+    >;
+    includes?: Partial<
+      Record<
+        string,
+        (include: Include, builder: QueryBuilder<AliasType>) => void
+      >
+    >;
+    fields?: Partial<
+      Record<string, (param: string, builder: QueryBuilder<AliasType>) => void>
+    >;
+    params?: Partial<
+      Record<string, (param: string, builder: QueryBuilder<AliasType>) => void>
+    >;
+  };
 }
 
 export const useQueryBuilder = <Aliases>(
@@ -74,19 +104,27 @@ export const useQueryBuilder = <Aliases>(
       params: null,
       ...config.delimiters,
     },
+    watchers: {
+      filter: {},
+      sort: {},
+      include: {},
+      field: {},
+      param: {},
+      ...config.watcher,
+    },
   }));
 
   const builder: QueryBuilder<Aliases> = {
     filter: (attribute, value, override = false) => {
-      setState((s) => filterAction(attribute, value, s, override));
+      setState((s) => filterAction(attribute, value, s, override, builder));
       return builder;
     },
     removeFilter: (...attribute) => {
-      setState((s) => removeFilterAction(attribute, s));
+      setState((s) => removeFilterAction(attribute, s, builder));
       return builder;
     },
     clearFilters: () => {
-      setState((s) => clearFiltersAction(s));
+      setState((s) => clearFiltersAction(s, builder));
       return builder;
     },
     include: (...includes) => {
@@ -158,3 +196,53 @@ export const useQueryBuilder = <Aliases>(
 
   return builder;
 };
+
+const aliases = {
+  name: "n",
+  last_name: "ln",
+};
+
+const MyCompo = () => {
+  const queryBuilder = useQueryBuilder<typeof aliases>({
+    aliases: aliases,
+    pruneConflictingFilters: {
+      date: ["between_dates", "month"],
+      between_dates: ["month", "between_dates"],
+    },
+    watcher: {
+      filters: {
+        name: (filter, builder) => {
+          builder.when(builder.hasFilter("last_name"), () => {
+            console.log("name with last_name");
+          });
+        },
+      },
+    },
+  });
+
+
+
+  return <div>
+    <FilterImplementer builder={queryBuilder} />
+  </div>
+};
+
+
+const FilterImplementer = (builder: QueryBuilder<typeof aliases>) => {
+
+
+  const arrayStrings = builder.toArray// ['filter[name]=charly', '']
+
+  const name = builder.getFilter('name')
+
+  useEffect(() => {
+    builder.watchFilters('name', () => {
+      console.log('name watcher');
+    })
+    builder.watchSor
+    builder.watchIncludes
+  }, [])
+
+  return <div></div>
+}
+console.log(MyCompo);

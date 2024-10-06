@@ -6,11 +6,17 @@ import {
 import { reverseConflicts } from "@/actions/conflict";
 import { FilterOperator, type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
-import { initialState } from "@tests/Units/utils";
+import { initialState, MockQueryBuilder } from "@tests/Units/utils";
 
 describe("Filter Action test: ", () => {
   it("should add a new filter", () => {
-    const result = filterAction("name", "Carlos Garcia", initialState);
+    const result = filterAction(
+      "name",
+      "Carlos Garcia",
+      initialState,
+      false,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([
       {
@@ -31,7 +37,13 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = filterAction("name", ["Juan Perez"], state);
+    const result = filterAction(
+      "name",
+      ["Juan Perez"],
+      state,
+      false,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([
       {
@@ -46,6 +58,8 @@ describe("Filter Action test: ", () => {
       "name",
       ["Carlos Garcia", "Juan Perez"],
       initialState,
+      false,
+      new MockQueryBuilder(),
     );
 
     expect(result.filters).toEqual([
@@ -71,7 +85,7 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = removeFilterAction(["name"], state);
+    const result = removeFilterAction(["name"], state, new MockQueryBuilder());
 
     expect(result.filters).toEqual([
       {
@@ -99,7 +113,7 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = removeFilterAction(["name"], state);
+    const result = removeFilterAction(["name"], state, new MockQueryBuilder());
 
     expect(result.filters).toEqual([
       {
@@ -124,7 +138,11 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = removeFilterAction(["name", "age"], state);
+    const result = removeFilterAction(
+      ["name", "age"],
+      state,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([]);
   });
@@ -144,7 +162,7 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = clearFiltersAction(state);
+    const result = clearFiltersAction(state, new MockQueryBuilder());
 
     expect(result.filters).toEqual([]);
   });
@@ -163,7 +181,13 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = filterAction("last_name", "Garcia", state);
+    const result = filterAction(
+      "last_name",
+      "Garcia",
+      state,
+      false,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([
       {
@@ -191,7 +215,13 @@ describe("Filter Action test: ", () => {
       ],
     };
 
-    const result = filterAction("month", "01", state);
+    const result = filterAction(
+      "month",
+      "01",
+      state,
+      false,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([
       {
@@ -216,7 +246,13 @@ describe("Filter Action test: ", () => {
       ],
     } as const;
 
-    const result = filterAction("name", ["Juan Perez"], state, true);
+    const result = filterAction(
+      "name",
+      ["Juan Perez"],
+      state,
+      true,
+      new MockQueryBuilder(),
+    );
 
     expect(result.filters).toEqual([
       {
@@ -235,9 +271,13 @@ describe("Filter Action test: ", () => {
       ...initialState,
     } as const;
 
-    const resultLessThan = filterAction("age", FilterOperator.LessThan, state, [
-      18,
-    ]);
+    const resultLessThan = filterAction(
+      "age",
+      FilterOperator.LessThan,
+      state,
+      [18],
+      new MockQueryBuilder(),
+    );
 
     expect(resultLessThan.filters).toEqual([
       {
@@ -252,6 +292,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.GreaterThan,
       state,
       [18],
+      new MockQueryBuilder(),
     );
 
     expect(resultGreaterThan.filters).toEqual([
@@ -267,6 +308,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.LessThanOrEqual,
       state,
       [18],
+      new MockQueryBuilder(),
     );
 
     expect(resultLessEqual.filters).toEqual([
@@ -282,6 +324,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.GreaterThanOrEqual,
       state,
       [18],
+      new MockQueryBuilder(),
     );
 
     expect(resultGreaterEqual.filters).toEqual([
@@ -292,9 +335,13 @@ describe("Filter Action test: ", () => {
       },
     ]);
 
-    const resultDistinct = filterAction("age", FilterOperator.Distinct, state, [
-      18,
-    ]);
+    const resultDistinct = filterAction(
+      "age",
+      FilterOperator.Distinct,
+      state,
+      [18],
+      new MockQueryBuilder(),
+    );
 
     expect(resultDistinct.filters).toEqual([
       {
@@ -315,6 +362,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.LessThan,
       state,
       [18],
+      new MockQueryBuilder(),
     );
 
     const resultLessThanEquals = filterAction(
@@ -322,6 +370,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.LessThanOrEqual,
       resultLessThanState,
       [20],
+      new MockQueryBuilder(),
     );
 
     expect(resultLessThanEquals.filters).toEqual([
@@ -343,6 +392,7 @@ describe("Filter Action test: ", () => {
       FilterOperator.LessThan,
       state,
       false,
+      new MockQueryBuilder(),
     );
 
     expect(result.filters).toEqual([

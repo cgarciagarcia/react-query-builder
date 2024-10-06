@@ -54,35 +54,47 @@ export interface GlobalState<Al = Record<string, string | undefined>> {
   };
   useQuestionMark: boolean;
   params: Record<string, (string | number)[]>;
+  watchers: {
+    filter: Record<
+      AttributeAlias<Al>,
+      (filter: Filter, builder: QueryBuilder<Al>) => void
+    >;
+    sort: Record<
+      AttributeAlias<Al>,
+      (filter: Sort<Al>, builder: QueryBuilder<Al>) => void
+    >;
+    include: Record<
+      string,
+      (include: Include, builder: QueryBuilder<Al>) => void
+    >;
+    param: Record<string, (param: string, builder: QueryBuilder<Al>) => void>;
+    field: Record<string, (field: string, builder: QueryBuilder<Al>) => void>;
+  };
 }
+
+export type AttributeAlias<AliasType> = AliasType extends object
+  ? (keyof AliasType & string) | string
+  : string;
 
 export interface QueryBuilder<AliasType = unknown> {
   filter: (
-    attribute: AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string,
+    attribute: AttributeAlias<AliasType>,
     value: FilterValue,
     override?: boolean | FilterValue,
   ) => QueryBuilder<AliasType>;
   removeFilter: (
-    ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
+    ...attribute: AttributeAlias<AliasType>[]
   ) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
   include: (...includes: Includes) => QueryBuilder<AliasType>;
   removeInclude: (...include: Includes) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
   sort: (
-    attribute: AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string,
+    attribute: AttributeAlias<AliasType>,
     direction?: "asc" | "desc",
   ) => QueryBuilder<AliasType>;
   removeSort: (
-    ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
+    ...attribute: AttributeAlias<AliasType>[]
   ) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
@@ -103,16 +115,8 @@ export interface QueryBuilder<AliasType = unknown> {
     callback: (state: GlobalState<AliasType>) => void,
   ) => QueryBuilder<AliasType>;
   toArray: () => string[];
-  hasFilter: (
-    ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
-  ) => boolean;
-  hasSort: (
-    ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
-  ) => boolean;
+  hasFilter: (...attribute: AttributeAlias<AliasType>[]) => boolean;
+  hasSort: (...attribute: AttributeAlias<AliasType>[]) => boolean;
   hasInclude: (...include: Includes) => boolean;
   hasField: (...attribute: Fields) => boolean;
   hasParam: (...key: string[]) => boolean;
