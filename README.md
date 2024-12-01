@@ -6,6 +6,7 @@
 [![Test CI](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml/badge.svg)](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1f3f48abc84f4e3cba76e39e804786d6)](https://app.codacy.com/gh/cgarciagarcia/react-query-builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Downloads](https://img.shields.io/npm/d18m/@cgarciagarcia/react-query-builder?style=flat-square)](https://www.npmjs.com/package/@cgarciagarcia/react-query-builder)
 
 ## Installation
 
@@ -98,7 +99,7 @@ const builder = useQueryBuilder(baseConfig)
 
 <h3 style="color:#cb3837;">Clear Methods</h3>
 
-You can use the clear methods for delete the entire data group  
+You can use the clear methods for delete the entire data group
 
 ```js
 const builder = useQueryBuilder(baseConfig)
@@ -115,8 +116,8 @@ const builder = useQueryBuilder(baseConfig)
 
 Maybe your business logic has filters that won't work together, for example you could
 have filters like `date` filter and `between_dates` filter in your backend, but you can not filter
-by both at the same time, so you have to be sure to clear incompatibles filters 
-before to adding a new one. With this purpose the property `pruneConflictingFilters` 
+by both at the same time, so you have to be sure to clear incompatibles filters
+before to adding a new one. With this purpose the property `pruneConflictingFilters`
 was created, you can define these incompatibilities in the base configuration and delegate
 the humdrum action to the library.
 
@@ -139,7 +140,7 @@ builder.filter('date', today)
 
 When you define that `date` filter is not compatible with `between_dates`, internally
 the library define the bidirectional incompatibility for you. Too much magic? Don't
-worry, you still could define manually the inverse incompatibility to have explicit 
+worry, you still could define manually the inverse incompatibility to have explicit
 declaration from your side.
 
 <h3 style="color:#cb3837;">Utilities</h3>
@@ -196,7 +197,7 @@ const MyComponent = () => {
 
 ```
 
-### hasMethods() 
+### hasMethods()
 
 
 ```js
@@ -209,9 +210,9 @@ builder.hasFilter('filter', 'filter2', ...)
   .hasSort('sort', ...)
 
 ```
-## Next features
+## Do you have question how to implement it?
 
-* Interaction with url query params
+Feel free to generate a discussion in the github repository I will help you
 
 
 ## Consider supporting me
