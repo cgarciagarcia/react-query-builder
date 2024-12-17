@@ -61,7 +61,12 @@
   "keywords": [
     "react",
     "query-builder",
-    "laravel-query-builder"
+    "laravel-query-builder",
+    "rest",
+    "query",
+    "api",
+    "builder",
+    "laravel"
   ],
   "author": "Carlos Garcia",
   "license": "MIT",
