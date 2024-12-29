@@ -324,4 +324,16 @@ describe("Assert build method is working correctly", () => {
 
     expect(distinct).toBe("?filter[age]=<>18");
   });
+
+  it("should build with pagination", () => {
+    const val = buildAction({
+      ...initialState,
+      pagination: {
+        page: 2,
+        limit: 10,
+      },
+    });
+
+    expect(val).toBe("?page=2&limit=10");
+  });
 });

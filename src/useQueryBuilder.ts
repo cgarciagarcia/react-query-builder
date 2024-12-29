@@ -16,6 +16,7 @@ import {
   toArray,
 } from "@/actions";
 import { reverseConflicts } from "@/actions/conflict";
+import { limitAction, pageAction } from "@/actions/pagination";
 import {
   clearParamsAction,
   paramAction,
@@ -48,6 +49,10 @@ export interface BaseConfig<AliasType> {
   };
   useQuestionMark?: boolean;
   params?: Record<string, (string | number)[]>;
+  pagination?: {
+    page: number;
+    limit?: number;
+  };
 }
 
 export const useQueryBuilder = <Aliases>(
@@ -61,6 +66,7 @@ export const useQueryBuilder = <Aliases>(
     fields: [],
     params: {},
     useQuestionMark: true,
+    pagination: {},
     ...config,
     pruneConflictingFilters: reverseConflicts(
       config.pruneConflictingFilters ?? {},
@@ -154,6 +160,29 @@ export const useQueryBuilder = <Aliases>(
     hasInclude: (...includes) => hasInclude(includes, state),
     hasField: (...fields) => hasField(fields, state),
     hasParam: (...key) => hasParam(key, state),
+    getCurrentPage: () => {
+      return state.pagination?.page ?? undefined;
+    },
+    page: (page) => {
+      setState((s) => pageAction(page, s));
+      return builder;
+    },
+    limit: (limit) => {
+      setState((s) => limitAction(limit, s));
+      return builder;
+    },
+    nextPage: () => {
+      setState((s) =>
+        s.pagination?.page ? pageAction(s.pagination.page + 1, s) : s,
+      );
+      return builder;
+    },
+    previousPage: () => {
+      setState((s) =>
+        s.pagination?.page ? pageAction(s.pagination.page - 1, s) : s,
+      );
+      return builder;
+    },
   };
 
   return builder;

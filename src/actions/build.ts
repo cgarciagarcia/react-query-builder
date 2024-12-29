@@ -54,6 +54,10 @@ export const buildAction = <T>(state: GlobalState<T>): string => {
     urlSearchParams.append(key, value.join(delimiter("params")));
   }
 
+  for (const [key, value] of Object.entries(state.pagination ?? {})) {
+    urlSearchParams.append(key, `${value}`);
+  }
+
   const searchParamsString = urlSearchParams.toString();
 
   return searchParamsString

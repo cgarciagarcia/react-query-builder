@@ -17,4 +17,5 @@ export const initialState: GlobalState = {
   },
   useQuestionMark: true,
   params: {},
+  pagination: {},
 } as const;

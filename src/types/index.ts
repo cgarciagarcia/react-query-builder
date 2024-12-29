@@ -54,6 +54,10 @@ export interface GlobalState<Al = Record<string, string | undefined>> {
   };
   useQuestionMark: boolean;
   params: Record<string, (string | number)[]>;
+  pagination?: {
+    page?: number;
+    limit?: number;
+  };
 }
 
 export interface QueryBuilder<AliasType = unknown> {
@@ -116,4 +120,9 @@ export interface QueryBuilder<AliasType = unknown> {
   hasInclude: (...include: Includes) => boolean;
   hasField: (...attribute: Fields) => boolean;
   hasParam: (...key: string[]) => boolean;
+  page: (page: number) => QueryBuilder<AliasType>;
+  limit: (limit: number) => QueryBuilder<AliasType>;
+  nextPage: () => QueryBuilder<AliasType>;
+  previousPage: () => QueryBuilder<AliasType>;
+  getCurrentPage: () => number | undefined;
 }
