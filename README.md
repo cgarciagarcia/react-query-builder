@@ -46,6 +46,8 @@ builder
   .sort("age", 'desc') // sorting desc
   .setParam("external_param", 123) // you can define it in the baseConfig
   .include("posts", "comments")
+  .page(1)
+  .limit(10)
 
 function apiCall() {
   console.log(builder.build());
@@ -210,6 +212,35 @@ builder.hasFilter('filter', 'filter2', ...)
   .hasSort('sort', ...)
 
 ```
+
+<h3 style="color:#cb3837">Pagination</h3>
+
+this package also support pagination to provide a verbose and well explained interaction
+
+```typescript
+
+const builder = useQueryBuilder({
+  pagination: {
+    page: 1,
+    limit: 10
+  }
+})
+
+const onPressNextPage = () => builder.nexPage()
+
+const onPressPreviousPage = () => builder.previousPage()
+
+// Go to specific page
+const goToFirstPage = () => builder.page(1)
+
+const goToLastPage = () => builder.page(MY_LAST_PAGE)
+
+// Change the limit of pagination
+const onChangeLimit = (newLimit: number) => builder.limit(newLimit)
+
+```
+
+
 ## Do you have question how to implement it?
 
 Feel free to generate a discussion in the github repository I will help you
