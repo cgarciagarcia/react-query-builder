@@ -87,7 +87,9 @@ export const useQueryBuilder = <Aliases>(
     filter: (attribute, value, override = false) => {
       const filter = state.filters.find((f) => f.attribute === attribute);
 
-      if (!_.isEqual(filter?.value, value)) {
+      if (
+        !_.isEqual(filter?.value, typeof value === "object" ? value : [value])
+      ) {
         setState((s) => filterAction(attribute, value, s, override));
       }
 
