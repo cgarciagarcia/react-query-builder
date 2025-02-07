@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.16.1...v1.16.2) (2025-02-07)
+
+
+### Bug Fixes
+
+* adjusting condition for non-array elements ([b3e0360](https://github.com/cgarciagarcia/react-query-builder/commit/b3e0360ac291966354134de4a8a72c2e67d7ee8e))
+
 ### [1.16.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.16.0...v1.16.1) (2025-02-07)
 
 
