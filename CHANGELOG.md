@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.16.0...v1.16.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* avoid re-renders when use builder in useEffect and the current state it's the same for filters ([b5fd32e](https://github.com/cgarciagarcia/react-query-builder/commit/b5fd32e330062a370d786167d1f95b348c8d07cc))
+
 ## [1.16.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.15.2...v1.16.0) (2024-12-29)
 
 
