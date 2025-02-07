@@ -24,6 +24,7 @@ import {
 } from "@/actions/param";
 import { whenAction } from "@/actions/when";
 import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
+import _ from "lodash/fp";
 import {
   type ConflictMap,
   type Filters,
@@ -84,7 +85,12 @@ export const useQueryBuilder = <Aliases>(
 
   const builder: QueryBuilder<Aliases> = {
     filter: (attribute, value, override = false) => {
-      setState((s) => filterAction(attribute, value, s, override));
+      const filter = state.filters.find((f) => f.attribute === attribute);
+
+      if (!_.isEqual(filter?.value, value)) {
+        setState((s) => filterAction(attribute, value, s, override));
+      }
+
       return builder;
     },
     removeFilter: (...attribute) => {
@@ -108,9 +114,12 @@ export const useQueryBuilder = <Aliases>(
       return builder;
     },
     sort: (attribute, direction) => {
-      setState((s) =>
-        sortAction({ attribute, direction: direction ?? "asc" }, s),
-      );
+      const currentSort = state.sorts.find((f) => f.attribute === attribute);
+      if (currentSort?.direction !== direction) {
+        setState((s) =>
+          sortAction({ attribute, direction: direction ?? "asc" }, s),
+        );
+      }
       return builder;
     },
     removeSort: (...attribute) => {
