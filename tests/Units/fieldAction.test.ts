@@ -63,4 +63,14 @@ describe("Field action tests", () => {
     const newState = clearFieldsAction(state);
     expect(newState.fields).toEqual([]);
   });
+
+  it("should not duplicate fields when adding the same field multiple times", () => {
+    const state: GlobalState = {
+      ...initialState,
+      fields: ["name"],
+    };
+
+    const newState = fieldAction(["name", "name", "name"], state);
+    expect(newState.fields).toEqual(["name"]);
+  });
 });

@@ -40,7 +40,7 @@ export const filterAction = <Al>(
   const shouldOverride =
     (typeof override === "boolean" && override) || isFilterValue(override);
 
-  const newFilter: Filter = {
+  const newFilter: Filter<Al> = {
     attribute,
     value: shouldOverride
       ? val

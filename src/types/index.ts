@@ -24,23 +24,20 @@ export const FilterOperator = {
 
 export type OperatorType = (typeof FilterOperator)[keyof typeof FilterOperator];
 
-export interface Filter {
-  attribute: string;
+export interface Filter<Al> {
+  attribute: Al extends object ? (keyof Al & string) | string : string;
   value: (string | number)[];
   operator?: OperatorType;
 }
 
-export type Filters = Filter[];
-
 export type Field = string;
-export type Fields = Field[];
 
 export type ConflictMap = Record<string, string[]> | Record<string, never>;
 
 export interface GlobalState<Al = Record<string, string | undefined>> {
   aliases: Al;
-  fields: Fields;
-  filters: Filter[];
+  fields: Field[];
+  filters: Filter<Al>[];
   includes: Includes;
   sorts: Sorts<Al>;
   pruneConflictingFilters: ConflictMap;
@@ -118,7 +115,7 @@ export interface QueryBuilder<AliasType = unknown> {
       : string)[]
   ) => boolean;
   hasInclude: (...include: Includes) => boolean;
-  hasField: (...attribute: Fields) => boolean;
+  hasField: (...attribute: Field[]) => boolean;
   hasParam: (...key: string[]) => boolean;
   page: (page: number) => QueryBuilder<AliasType>;
   limit: (limit: number) => QueryBuilder<AliasType>;
