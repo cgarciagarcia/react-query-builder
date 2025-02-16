@@ -32,22 +32,28 @@ import {
 import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
 import _ from "lodash/fp";
 
+function uniqueID() {
+  return Math.floor(Math.random() * Date.now());
+}
 export class Builder<Aliases> implements QueryBuilder<Aliases> {
   private state: GlobalState<Aliases>;
 
-  private subscribers: ((state: GlobalState<Aliases>) => void)[] = [];
+  private subscribers: Record<string, (state: GlobalState<Aliases>) => void> =
+    {};
 
   private triggerSubscribers() {
-    this.subscribers.forEach((fn) => fn(this.state));
+    Object.values(this.subscribers).forEach((fn) => fn(this.state));
   }
 
   public addSubscriber(fn: (state: GlobalState<Aliases>) => void) {
-    this.subscribers.push(fn);
+    const id = uniqueID();
+    this.subscribers[id] = fn;
+    return id;
   }
 
-  public removeSubscriber(fn: (state: GlobalState<Aliases>) => void) {
-    this.subscribers = this.subscribers.filter((sub) => sub !== fn);
-  }
+  public removeSubscriber = (id: number): void => {
+    delete this.subscribers[id];
+  };
 
   constructor(config: NonNullable<BaseConfig<Aliases>>) {
     this.state = {
