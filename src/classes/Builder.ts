@@ -130,9 +130,11 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
   }
 
   filter(
-    attribute: Aliases extends object ? keyof Aliases & string : string,
+    attribute: Aliases extends object
+      ? (keyof Aliases & string) | string
+      : string,
     value: FilterValue,
-    override: boolean | FilterValue | undefined,
+    override?: boolean | FilterValue,
   ): QueryBuilder<Aliases> {
     const filter = this.state.filters.find((f) => f.attribute === attribute);
     const uniqueValues = Array.isArray(value)
@@ -232,9 +234,9 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
   }
 
   removeFilter(
-    filtersToRemove: (Aliases extends object
+    ...filtersToRemove: (Aliases extends object
       ? (keyof Aliases & string) | string
-      : string)[],
+      : string)[]
   ): QueryBuilder<Aliases> {
     if (
       this.state.filters.some((filter) =>

@@ -8,11 +8,11 @@ export const useQueryBuilder = <Aliases>(
 ): QueryBuilder<Aliases> => {
   const builder = useRef(new Builder<Aliases>(config));
 
-  const [, setReRenders] = useState(0);
+  const [, setReRendersCounter] = useState(0);
 
   useMount(() => {
     builder.current.addSubscriber(() => {
-      setReRenders((r) => r + 1);
+      setReRendersCounter((r) => r + 1);
     });
   });
 

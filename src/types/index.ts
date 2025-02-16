@@ -124,11 +124,12 @@ export interface QueryBuilder<AliasType = unknown> {
   getCurrentPage: () => number | undefined;
 }
 
-export interface BaseConfig<AliasType> {
+export interface BaseConfig<AliasType = NonNullable<Record<string, string>>> {
   aliases?: AliasType;
   includes?: Includes;
   sorts?: Sorts<AliasType>;
   filters?: Filter<AliasType>[];
+  fields?: Field[];
   /**
    * Create a map of filters that don't work together
    */
