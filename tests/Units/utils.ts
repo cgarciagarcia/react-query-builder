@@ -37,4 +37,5 @@ export const initialConfig: BaseConfig = {
   useQuestionMark: true,
   params: {},
   pagination: undefined,
+  fields: [],
 };

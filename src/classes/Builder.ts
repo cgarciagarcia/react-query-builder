@@ -289,11 +289,11 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
     key: string,
     value: (string | number)[] | string | number,
   ): QueryBuilder<Aliases> {
-    const uniqueValues = Array.isArray(value) ? value : [value];
+    const val = Array.isArray(value) ? value : [value];
     const areNotEquals =
-      _.difference(this.state.params[key] ?? [], uniqueValues).length !== 0;
+      _.difference(this.state.params[key] ?? [], val).length !== 0;
     if (areNotEquals || !this.state.params[key]) {
-      this.setState((s) => paramAction(key, uniqueValues, s));
+      this.setState((s) => paramAction(key, val, s));
     }
     return this;
   }
