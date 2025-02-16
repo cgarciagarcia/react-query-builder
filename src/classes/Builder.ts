@@ -1,26 +1,29 @@
+import { buildAction } from "@/actions/build";
+import { reverseConflicts } from "@/actions/conflict";
 import {
-  buildAction,
   clearFieldsAction,
-  clearFiltersAction,
-  clearIncludeAction,
-  clearParamsAction,
-  clearSortsAction,
   fieldAction,
-  filterAction,
-  includeAction,
-  limitAction,
-  pageAction,
-  paramAction,
   removeFieldAction,
+} from "@/actions/field";
+import {
+  clearFiltersAction,
+  filterAction,
   removeFilterAction,
+} from "@/actions/filter";
+import {
+  clearIncludeAction,
+  includeAction,
   removeIncludeAction,
+} from "@/actions/include";
+import { limitAction, pageAction } from "@/actions/pagination";
+import {
+  clearParamsAction,
+  paramAction,
   removeParamAction,
-  removeSortAction,
-  reverseConflicts,
-  sortAction,
-  toArray,
-  whenAction,
-} from "@/actions";
+} from "@/actions/param";
+import { toArray } from "@/actions/presenter";
+import { clearSortsAction, removeSortAction, sortAction } from "@/actions/sort";
+import { whenAction } from "@/actions/when";
 import {
   type BaseConfig,
   type Field,
@@ -29,13 +32,22 @@ import {
   type Include,
   type QueryBuilder,
 } from "@/types";
-import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
+import {
+  hasField,
+  hasFilter,
+  hasInclude,
+  hasParam,
+  hasSort,
+} from "@/utils/state";
 import _ from "lodash/fp";
 
 function uniqueID() {
   return Math.floor(Math.random() * Date.now());
 }
-export class Builder<Aliases> implements QueryBuilder<Aliases> {
+export class Builder<
+  Aliases extends NonNullable<Record<string, string>> = NonNullable<unknown>,
+> implements QueryBuilder<Aliases>
+{
   private state: GlobalState<Aliases>;
 
   private subscribers: Record<string, (state: GlobalState<Aliases>) => void> =
@@ -55,7 +67,7 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
     delete this.subscribers[id];
   };
 
-  constructor(config: NonNullable<BaseConfig<Aliases>>) {
+  constructor(config?: BaseConfig<Aliases>) {
     this.state = {
       aliases: {} as Aliases,
       filters: [],
@@ -65,9 +77,9 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
       params: {},
       useQuestionMark: true,
       pagination: {},
-      ...config,
+      ...(config ?? {}),
       pruneConflictingFilters: reverseConflicts(
-        config.pruneConflictingFilters ?? {},
+        config?.pruneConflictingFilters ?? {},
       ),
       delimiters: {
         global: ",",
@@ -76,7 +88,7 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
         sorts: null,
         includes: null,
         params: null,
-        ...config.delimiters,
+        ...(config?.delimiters ?? {}),
       },
     };
   }
@@ -143,14 +155,11 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
     override?: boolean | FilterValue,
   ): QueryBuilder<Aliases> {
     const filter = this.state.filters.find((f) => f.attribute === attribute);
-    const uniqueValues = Array.isArray(value)
-      ? Array.from(new Set(value))
-      : [value];
-
-    const areEquals = _.isEmpty(_.xor(filter?.value, uniqueValues));
+    const filterValues = Array.isArray(value) ? value : [value];
+    const areEquals = _.isEmpty(_.xor(filter?.value, filterValues));
 
     if (!areEquals) {
-      this.setState((s) => filterAction(attribute, uniqueValues, s, override));
+      this.setState((s) => filterAction(attribute, filterValues, s, override));
     }
 
     return this;
@@ -165,9 +174,7 @@ export class Builder<Aliases> implements QueryBuilder<Aliases> {
   }
 
   hasFilter(
-    ...filters: (Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string)[]
+    ...filters: (Aliases extends object ? keyof Aliases | string : string)[]
   ): boolean {
     return hasFilter(filters, this.state);
   }

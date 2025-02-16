@@ -1,4 +1,8 @@
-import { clearFieldsAction, fieldAction, removeFieldAction } from "@/actions";
+import {
+  clearFieldsAction,
+  fieldAction,
+  removeFieldAction,
+} from "@/actions/field";
 import { type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";

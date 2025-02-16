@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import { Builder } from "@/classes/Builder";
-import { useMount } from "@/utils/useMount";
-import { type BaseConfig, type QueryBuilder } from "./types";
+import { useMount } from "@/hooks/useMount";
+import { type BaseConfig, type QueryBuilder } from "src/types";
 
-export const useQueryBuilder = <Aliases>(
+export const useQueryBuilder = <
+  Aliases extends Record<string, string> | undefined,
+>(
   config: BaseConfig<Aliases> = {},
 ): QueryBuilder<Aliases> => {
   const builder = useRef(new Builder<Aliases>(config));

@@ -11,7 +11,6 @@ describe("Testing the class Builder", () => {
 
   it("should be possible to add a field", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name"] });
-
     expect(builder.build()).toBe("?fields=name");
   });
 
@@ -80,6 +79,11 @@ describe("Testing the class Builder", () => {
     builder.clearParams();
     expect(builder.build()).toBe("");
   });
+  it("should be possible to clear params when them are empty", () => {
+    const builder = new Builder(initialConfig);
+    builder.clearParams();
+    expect(builder.build()).toBe("");
+  });
   it("should be possible to clear sorts", () => {
     const builder = new Builder({
       ...initialConfig,
@@ -113,7 +117,7 @@ describe("Testing the class Builder", () => {
 
   it("should be possible to check if an include is present", () => {
     const builder = new Builder({ ...initialConfig, includes: ["address"] });
-    expect(builder.hasInclude("address")).toBe(true);
+    expect(builder.hasInclude("address", "dsa")).toBe(true);
   });
 
   it("should be possible to check if a param is present", () => {
@@ -280,5 +284,46 @@ describe("Testing the class Builder", () => {
       expect(state).toEqual(initialConfig);
     });
     expect(called).toBe(true);
+  });
+  it("should notify to subscribers when state changes", () => {
+    const builder = new Builder({ ...initialConfig });
+    let called = false;
+    builder.addSubscriber(() => {
+      called = true;
+    });
+    builder.filter("name", "John Doe");
+    expect(called).toBe(true);
+  });
+
+  it("should be possible to unsubscribe from state changes", () => {
+    const builder = new Builder({ ...initialConfig });
+    const subscriber = jest.fn();
+    const subscriptionId = builder.addSubscriber(subscriber);
+    builder.removeSubscriber(subscriptionId);
+    builder.filter("name", "John Doe");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it("should be possible has filter using aliases", () => {
+    const builder = new Builder<{ name: "full_name" }>({
+      ...initialConfig,
+      aliases: {
+        name: "full_name",
+      },
+      filters: [
+        {
+          attribute: "name",
+          value: ["John Doe"],
+        },
+      ],
+    });
+
+    expect(builder.hasFilter("name")).toBe(true);
+  });
+  it("Should instanciate builder without config", () => {
+    const builder = new Builder();
+    expect(builder.build()).toBe("");
+    const builder2 = new Builder({});
+    expect(builder2.build()).toBe("");
   });
 });

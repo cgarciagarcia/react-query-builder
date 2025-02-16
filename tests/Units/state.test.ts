@@ -1,5 +1,11 @@
 import { type GlobalState } from "@/types";
-import { hasField, hasFilter, hasInclude, hasParam, hasSort } from "@/utils";
+import {
+  hasField,
+  hasFilter,
+  hasInclude,
+  hasParam,
+  hasSort,
+} from "@/utils/state";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
 

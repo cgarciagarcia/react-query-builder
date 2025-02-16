@@ -1,15 +1,9 @@
-export type Alias<Prop> = {
-  [key in keyof Prop]: string;
-};
-
 export interface Sort<T> {
   attribute: T extends object ? (keyof T & string) | string : string;
   direction: "asc" | "desc";
 }
 
-export type Sorts<T> = Sort<T>[];
 export type Include = string;
-export type Includes = Include[];
 
 export type FilterValue = (string | number)[] | string | number;
 
@@ -32,14 +26,14 @@ export interface Filter<Al> {
 
 export type Field = string;
 
-export type ConflictMap = Record<string, string[]> | Record<string, never>;
+export type ConflictMap = Record<string, string[]>;
 
 export interface GlobalState<Al = Record<string, string | undefined>> {
   aliases: Al;
   fields: Field[];
   filters: Filter<Al>[];
-  includes: Includes;
-  sorts: Sorts<Al>;
+  includes: Include[];
+  sorts: Sort<Al>[];
   pruneConflictingFilters: ConflictMap;
   delimiters: {
     global: string;
@@ -57,7 +51,9 @@ export interface GlobalState<Al = Record<string, string | undefined>> {
   };
 }
 
-export interface QueryBuilder<AliasType = unknown> {
+export interface QueryBuilder<
+  AliasType extends NonNullable<Record<string, string>> = NonNullable<unknown>,
+> {
   filter: (
     attribute: AliasType extends object
       ? (keyof AliasType & string) | string
@@ -71,8 +67,8 @@ export interface QueryBuilder<AliasType = unknown> {
       : string)[]
   ) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
-  include: (...includes: Includes) => QueryBuilder<AliasType>;
-  removeInclude: (...includesToRemove: Includes) => QueryBuilder<AliasType>;
+  include: (...includes: Include[]) => QueryBuilder<AliasType>;
+  removeInclude: (...includesToRemove: Include[]) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
   sort: (
     attribute: AliasType extends object
@@ -106,7 +102,7 @@ export interface QueryBuilder<AliasType = unknown> {
   toArray: () => string[];
   hasFilter: (
     ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
+      ? keyof AliasType | string
       : string)[]
   ) => boolean;
   hasSort: (
@@ -114,7 +110,7 @@ export interface QueryBuilder<AliasType = unknown> {
       ? (keyof AliasType & string) | string
       : string)[]
   ) => boolean;
-  hasInclude: (...includes: Includes) => boolean;
+  hasInclude: (...includes: Include[]) => boolean;
   hasField: (...fields: Field[]) => boolean;
   hasParam: (...key: string[]) => boolean;
   page: (page: number) => QueryBuilder<AliasType>;
@@ -126,8 +122,8 @@ export interface QueryBuilder<AliasType = unknown> {
 
 export interface BaseConfig<AliasType = NonNullable<Record<string, string>>> {
   aliases?: AliasType;
-  includes?: Includes;
-  sorts?: Sorts<AliasType>;
+  includes?: Include[];
+  sorts?: Sort<AliasType>[];
   filters?: Filter<AliasType>[];
   fields?: Field[];
   /**

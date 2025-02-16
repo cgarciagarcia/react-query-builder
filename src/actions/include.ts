@@ -1,7 +1,7 @@
-import { type GlobalState, type Includes } from "@/types";
+import { type GlobalState, type Include } from "@/types";
 
 export const includeAction = <T>(
-  includes: Includes,
+  includes: Include[],
   state: GlobalState<T>,
 ): GlobalState<T> => {
   const uniqueIncludes = Array.from(new Set(includes));
@@ -16,7 +16,7 @@ export const includeAction = <T>(
 };
 
 export const removeIncludeAction = <T>(
-  includes: Includes,
+  includes: Include[],
   state: GlobalState<T>,
 ): GlobalState<T> => ({
   ...state,

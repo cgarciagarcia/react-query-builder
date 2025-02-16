@@ -8,10 +8,6 @@ const config: JestConfigWithTsJest = {
   rootDir: "./",
   coverageProvider: "v8",
   moduleNameMapper: {
-    "^@/actions/(.*)$": "<rootDir>/src/actions/$1",
-    "^@/utils/(.*)$": "<rootDir>/src/utils/$1",
-    "^@/types/(.*)$": "<rootDir>/src/types/$1",
-    "^@/classes/(.*)$": "<rootDir>/src/classes/$1",
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@tests/(.*)$": "<rootDir>/tests/$1",
   },
