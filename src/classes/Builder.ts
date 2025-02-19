@@ -45,7 +45,7 @@ function uniqueID() {
   return Math.floor(Math.random() * Date.now());
 }
 export class Builder<
-  Aliases extends NonNullable<Record<string, string>> = NonNullable<unknown>,
+  Aliases extends NonNullable<Record<string, string>> | undefined = undefined,
 > implements QueryBuilder<Aliases>
 {
   private state: GlobalState<Aliases>;

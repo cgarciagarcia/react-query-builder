@@ -28,7 +28,7 @@ export type Field = string;
 
 export type ConflictMap = Record<string, string[]>;
 
-export interface GlobalState<Al = Record<string, string | undefined>> {
+export interface GlobalState<Al = NonNullable<Record<string, string>>> {
   aliases: Al;
   fields: Field[];
   filters: Filter<Al>[];
@@ -52,7 +52,7 @@ export interface GlobalState<Al = Record<string, string | undefined>> {
 }
 
 export interface QueryBuilder<
-  AliasType extends NonNullable<Record<string, string>> = NonNullable<unknown>,
+  AliasType extends NonNullable<Record<string, string>> | undefined = undefined,
 > {
   filter: (
     attribute: AliasType extends object

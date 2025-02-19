@@ -320,7 +320,7 @@ describe("Testing the class Builder", () => {
 
     expect(builder.hasFilter("name")).toBe(true);
   });
-  it("Should instanciate builder without config", () => {
+  it("Should instantiate the builder without config", () => {
     const builder = new Builder();
     expect(builder.build()).toBe("");
     const builder2 = new Builder({});
