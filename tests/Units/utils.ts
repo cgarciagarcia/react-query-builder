@@ -20,7 +20,7 @@ export const initialState: GlobalState = {
   pagination: {},
 } as const;
 
-export const initialConfig: BaseConfig = {
+export const initialConfig: BaseConfig<NonNullable<unknown>> = {
   aliases: {},
   includes: [],
   sorts: [],

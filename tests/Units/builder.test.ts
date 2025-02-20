@@ -296,7 +296,7 @@ describe("Testing the class Builder", () => {
   });
 
   it("should be possible to unsubscribe from state changes", () => {
-    const builder = new Builder({ ...initialConfig });
+    const builder = new Builder(initialConfig);
     const subscriber = jest.fn();
     const subscriptionId = builder.addSubscriber(subscriber);
     builder.removeSubscriber(subscriptionId);

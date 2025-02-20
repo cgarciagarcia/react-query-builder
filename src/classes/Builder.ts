@@ -44,6 +44,7 @@ import _ from "lodash/fp";
 function uniqueID() {
   return Math.floor(Math.random() * Date.now());
 }
+
 export class Builder<
   Aliases extends NonNullable<Record<string, string>> | undefined = undefined,
 > implements QueryBuilder<Aliases>
@@ -67,8 +68,9 @@ export class Builder<
     delete this.subscribers[id];
   };
 
-  constructor(config?: BaseConfig<Aliases>) {
+  constructor(config?: BaseConfig<Aliases> | BaseConfig<unknown>) {
     this.state = {
+      //@ts-expect-error: Type 'unknown' is not assignable to type 'Aliases'
       aliases: {} as Aliases,
       filters: [],
       includes: [],

@@ -6,7 +6,7 @@ import { type BaseConfig, type QueryBuilder } from "src/types";
 export const useQueryBuilder = <
   Aliases extends Record<string, string> | undefined,
 >(
-  config: BaseConfig<Aliases> = {},
+  config?: BaseConfig<Aliases>,
 ): QueryBuilder<Aliases> => {
   const builder = useRef(new Builder<Aliases>(config));
 

@@ -51,9 +51,7 @@ export interface GlobalState<Al = NonNullable<Record<string, string>>> {
   };
 }
 
-export interface QueryBuilder<
-  AliasType extends NonNullable<Record<string, string>> | undefined = undefined,
-> {
+export interface QueryBuilder<AliasType> {
   filter: (
     attribute: AliasType extends object
       ? (keyof AliasType & string) | string
@@ -120,7 +118,7 @@ export interface QueryBuilder<
   getCurrentPage: () => number | undefined;
 }
 
-export interface BaseConfig<AliasType = NonNullable<Record<string, string>>> {
+export interface BaseConfig<AliasType = undefined> {
   aliases?: AliasType;
   includes?: Include[];
   sorts?: Sort<AliasType>[];
