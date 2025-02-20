@@ -1,9 +1,9 @@
+import { reverseConflicts } from "@/actions/conflict";
 import {
   clearFiltersAction,
   filterAction,
   removeFilterAction,
-} from "@/actions";
-import { reverseConflicts } from "@/actions/conflict";
+} from "@/actions/filter";
 import { FilterOperator, type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
@@ -20,7 +20,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should update an existing filter", () => {
+  it("Should append a new value to an existing filter", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [

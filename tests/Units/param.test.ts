@@ -87,4 +87,15 @@ describe("Param Action test: ", () => {
 
     expect(result.params).toEqual({});
   });
+
+  it("should allow multiple values for the same key", () => {
+    const state: GlobalState = {
+      ...initialState,
+      params: { name: ["Carlos"] },
+    };
+
+    const result = paramAction("name", ["Carlos", "Garcia"], state);
+
+    expect(result.params).toEqual({ name: ["Carlos", "Garcia"] });
+  });
 });

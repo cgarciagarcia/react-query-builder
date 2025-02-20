@@ -1,18 +1,22 @@
-import { type Fields, type GlobalState } from "@/types";
+import { type Field, type GlobalState } from "@/types";
 
 export const fieldAction = <Al>(
-  fields: Fields,
+  fields: Field[],
   state: GlobalState<Al>,
-): GlobalState<Al> => ({
-  ...state,
-  fields: [
-    ...state.fields.filter((field) => !fields.includes(field)),
-    ...fields,
-  ],
-});
+): GlobalState<Al> => {
+  const uniqueFields = Array.from(new Set(fields));
+
+  return {
+    ...state,
+    fields: [
+      ...state.fields.filter((field) => !uniqueFields.includes(field)),
+      ...uniqueFields,
+    ],
+  };
+};
 
 export const removeFieldAction = <Al>(
-  fields: Fields,
+  fields: Field[],
   state: GlobalState<Al>,
 ): GlobalState<Al> => ({
   ...state,

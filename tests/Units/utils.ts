@@ -1,4 +1,4 @@
-import { type GlobalState } from "@/types";
+import { type BaseConfig, type GlobalState } from "@/types";
 
 export const initialState: GlobalState = {
   aliases: {},
@@ -19,3 +19,23 @@ export const initialState: GlobalState = {
   params: {},
   pagination: {},
 } as const;
+
+export const initialConfig: BaseConfig<NonNullable<unknown>> = {
+  aliases: {},
+  includes: [],
+  sorts: [],
+  filters: [],
+  pruneConflictingFilters: {},
+  delimiters: {
+    global: ",",
+    fields: null,
+    filters: null,
+    sorts: null,
+    includes: null,
+    params: null,
+  },
+  useQuestionMark: true,
+  params: {},
+  pagination: undefined,
+  fields: [],
+};

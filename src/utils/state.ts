@@ -1,4 +1,4 @@
-import { type Fields, type GlobalState, type Includes } from "@/types";
+import { type Field, type GlobalState, type Include } from "@/types";
 
 export const hasFilter = <T>(
   attributes: string[],
@@ -10,11 +10,11 @@ export const hasSort = <T>(sorts: string[], state: GlobalState<T>): boolean =>
   state.sorts.some((sort) => sorts.includes(sort.attribute));
 
 export const hasInclude = <T>(
-  includes: Includes,
+  includes: Include[],
   state: GlobalState<T>,
 ): boolean => state.includes.some((include) => includes.includes(include));
 
-export const hasField = <T>(fields: Fields, state: GlobalState<T>): boolean =>
+export const hasField = <T>(fields: Field[], state: GlobalState<T>): boolean =>
   state.fields.some((field) => fields.includes(field));
 
 export const hasParam = <T>(params: string[], state: GlobalState<T>): boolean =>

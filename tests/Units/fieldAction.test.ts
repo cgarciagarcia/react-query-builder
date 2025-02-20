@@ -1,4 +1,8 @@
-import { clearFieldsAction, fieldAction, removeFieldAction } from "@/actions";
+import {
+  clearFieldsAction,
+  fieldAction,
+  removeFieldAction,
+} from "@/actions/field";
 import { type GlobalState } from "@/types";
 import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
@@ -62,5 +66,15 @@ describe("Field action tests", () => {
 
     const newState = clearFieldsAction(state);
     expect(newState.fields).toEqual([]);
+  });
+
+  it("should not duplicate fields when adding the same field multiple times", () => {
+    const state: GlobalState = {
+      ...initialState,
+      fields: ["name"],
+    };
+
+    const newState = fieldAction(["name", "name", "name"], state);
+    expect(newState.fields).toEqual(["name"]);
   });
 });
