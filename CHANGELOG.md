@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.16.2...v1.17.0) (2025-02-20)
+
+
+### Features
+
+* implement class to reduce the coupling with the hook and promote the testing ([e8c522c](https://github.com/cgarciagarcia/react-query-builder/commit/e8c522c5d95ea3918c09020f4cd6539cfcdf243a))
+* improve typescript consistency with hook configuration ([607b5ad](https://github.com/cgarciagarcia/react-query-builder/commit/607b5ad9baa649d9526f8a71abe31a8c9785dd47))
+* **refactor:** make the following improvements: ([04e2f4e](https://github.com/cgarciagarcia/react-query-builder/commit/04e2f4e628b1b8cdf809bc363ab1d453458ef477))
+
+
+### Bug Fixes
+
+* fix nexPageMethod and not unify the values on setParam ([b7c6ced](https://github.com/cgarciagarcia/react-query-builder/commit/b7c6ced002f913dcb92a04a8ee80ed768fffdeb0))
+* index subscriber using id insteadof array of collection ([0beaea8](https://github.com/cgarciagarcia/react-query-builder/commit/0beaea8a1b7c01328735889c56399fac6fbfa652))
+
 ### [1.16.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.16.1...v1.16.2) (2025-02-07)
 
 
