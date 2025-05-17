@@ -4,7 +4,7 @@ import { useMount } from "@/hooks/useMount";
 import { type BaseConfig, type QueryBuilder } from "src/types";
 
 export const useQueryBuilder = <
-  Aliases extends Record<string, string> | undefined,
+  Aliases extends Record<string, string> | undefined = undefined,
 >(
   config?: BaseConfig<Aliases>,
 ): QueryBuilder<Aliases> => {

@@ -55,6 +55,7 @@ const config = {
     "*.config.cjs",
     "*.config.ts",
     "coverage",
+    "examples",
   ],
   reportUnusedDisableDirectives: true,
   globals: {

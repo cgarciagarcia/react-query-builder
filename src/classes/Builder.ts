@@ -68,9 +68,8 @@ export class Builder<
     delete this.subscribers[id];
   };
 
-  constructor(config?: BaseConfig<Aliases> | BaseConfig<unknown>) {
+  constructor(config?: BaseConfig<Aliases>) {
     this.state = {
-      //@ts-expect-error: Type 'unknown' is not assignable to type 'Aliases'
       aliases: {} as Aliases,
       filters: [],
       includes: [],
