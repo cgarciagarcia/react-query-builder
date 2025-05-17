@@ -33,6 +33,7 @@
     "node_modules",
     "*.config.cjs",
     "jest.config.ts",
-    "commitlint.config.js"
+    "commitlint.config.js",
+    "examples"
   ]
 }
