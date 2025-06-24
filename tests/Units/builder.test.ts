@@ -26,7 +26,25 @@ describe("Testing the class Builder", () => {
     });
     expect(builder.build()).toBe("?sort=name");
   });
-  it("shoul be possible to sort descending", () => {
+
+  it("should be possible to sort ascending using default sort direction", () => {
+    const builder = new Builder({
+      ...initialConfig,
+    });
+    builder.sort("name");
+    expect(builder.build()).toBe("?sort=name");
+  });
+
+  it("should be possible to sort ascending using sort direction asc and desc", () => {
+    const builder = new Builder({
+      ...initialConfig,
+    });
+    builder.sort("name", "asc");
+    builder.sort("last_name", "desc");
+    expect(builder.build()).toBe("?sort=name,-last_name");
+  });
+
+  it("should be possible to sort descending", () => {
     const builder = new Builder({
       ...initialConfig,
       sorts: [

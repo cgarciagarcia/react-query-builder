@@ -316,10 +316,10 @@ export class Builder<
     attribute: Aliases extends object
       ? (keyof Aliases & string) | string
       : string,
-    direction: "asc" | "desc" | undefined,
+    direction?: "asc" | "desc",
   ): QueryBuilder<Aliases> {
     const currentSort = this.state.sorts.find((f) => f.attribute === attribute);
-    if (currentSort?.direction !== direction) {
+    if (!currentSort || currentSort?.direction !== direction) {
       this.setState((s) =>
         sortAction({ attribute, direction: direction ?? "asc" }, s),
       );
