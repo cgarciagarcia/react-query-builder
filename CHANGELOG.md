@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.18.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.18.2...v1.18.3) (2025-06-24)
+
+
+### Bug Fixes
+
+* sorting is no taking impact if direction is not set, and fix parameters to match with interface ([4617dec](https://github.com/cgarciagarcia/react-query-builder/commit/4617dec8e1d1bf1b3372ce2032d372e0426af362))
+
 ### [1.18.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.18.1...v1.18.2) (2025-05-17)
 
 
