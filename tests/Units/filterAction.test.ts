@@ -353,4 +353,42 @@ describe("Filter Action test: ", () => {
       },
     ]);
   });
+
+  it("should remove filter in case filter value is empty string", () => {
+    const state: GlobalState = {
+      ...initialState,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos"],
+        },
+      ],
+    } as const;
+
+    const result = filterAction("name", ["", "", ""], state);
+
+    expect(result.filters).toEqual([]);
+  });
+
+  it("should remove only empty filters", () => {
+    const state: GlobalState = {
+      ...initialState,
+      filters: [
+        {
+          attribute: "name",
+          value: ["Carlos"],
+        },
+      ],
+    } as const;
+
+    const result = filterAction("name", ["", "eduardo"], state);
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "name",
+        value: ["Carlos", "eduardo"],
+        operator: undefined,
+      },
+    ]);
+  });
 });
