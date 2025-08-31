@@ -1,10 +1,6 @@
 name: Release version and NPM publish manually
 
 on:
-  pull_request:
-    types:
-      - closed
-    branches: [main]
   workflow_dispatch:
 
 permissions:
