@@ -167,7 +167,10 @@ export class Builder<
   }
 
   getCurrentPage(): number | undefined {
-    return this.state.pagination?.page ?? undefined;
+    return this.state.pagination?.page;
+  }
+  getLimit(): number | undefined {
+    return this.state.pagination?.limit;
   }
 
   hasField(...fields: Field[]): boolean {
