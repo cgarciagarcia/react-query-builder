@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.18.3...v1.19.0) (2025-08-31)
+
+
+### Features
+
+* include function to get pagination limit ([4517170](https://github.com/cgarciagarcia/react-query-builder/commit/451717052a484fe0d69530a56a9abf7a6a4b6af5))
+
 ### [1.18.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.18.2...v1.18.3) (2025-06-24)
 
 
