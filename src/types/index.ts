@@ -120,6 +120,7 @@ export interface QueryBuilder<
   nextPage: () => QueryBuilder<AliasType>;
   previousPage: () => QueryBuilder<AliasType>;
   getCurrentPage: () => number | undefined;
+  getLimit: () => number | undefined;
 }
 
 export interface BaseConfig<

@@ -116,6 +116,12 @@ describe("Testing the class Builder", () => {
     });
     expect(builder.getCurrentPage()).toBe(2);
   });
+  it("should be possible to get the current limit", () => {
+    const builder = new Builder({
+      pagination: { page: 2, limit: 30 },
+    });
+    expect(builder.getLimit()).toBe(30);
+  });
   it("should be possible to check if a field is present", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name", "age"] });
     expect(builder.hasField("name", "age")).toBe(true);
