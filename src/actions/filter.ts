@@ -23,6 +23,18 @@ export const filterAction = <Al>(
   state: GlobalState<Al>,
   override: boolean | FilterValue = false,
 ): GlobalState<Al> => {
+  value = Array.isArray(value)
+    ? value.filter((val) => `${val}`.length !== 0)
+    : value;
+
+  const isEmpty = Array.isArray(value)
+    ? value.length === 0
+    : `${value}`.length === 0;
+
+  if (isEmpty) {
+    return removeFilterAction([attribute], state);
+  }
+
   const conflicts = state.pruneConflictingFilters[attribute];
   const allFilters = state.filters.filter(
     (filter) =>
