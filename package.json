@@ -75,5 +75,9 @@
   "bugs": {
     "url": "https://github.com/cgarciagarcia/react-query-builder/issues"
   },
-  "homepage": "https://github.com/cgarciagarcia/react-query-builder#readme"
+  "homepage": "https://github.com/cgarciagarcia/react-query-builder#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }
