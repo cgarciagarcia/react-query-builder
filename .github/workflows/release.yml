@@ -16,12 +16,12 @@ jobs:
     if: ${{ github.event.pull_request.merged == true }}
     steps:
       - name: 'Checkout Project'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
         with:
           fetch-depth: 0
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: 'actions/setup-node@v4'
+        uses: 'actions/setup-node@v6'
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
@@ -33,14 +33,11 @@ jobs:
 
       - name: 'Install Dependencies'
         run: 'npm install'
-
       - name: 'Releasing app'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm run tag:generate
-          git push --follow-tags origin main
-          npm run release
+            npm run tag:generate
+            git push --follow-tags origin main
+            npm run release
       - name: 'Trigger badged'
         uses: peter-evans/repository-dispatch@v3
         with:
