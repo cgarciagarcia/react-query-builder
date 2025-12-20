@@ -1,6 +1,6 @@
 {
   "name": "@cgarciagarcia/react-query-builder",
-  "version": "1.19.5",
+  "version": "1.19.6",
   "description": "",
   "main": "dist/bundle.js",
   "types": "dist/index.d.ts",

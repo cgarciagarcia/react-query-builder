@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.19.6](https://github.com/cgarciagarcia/react-query-builder/compare/v1.19.5...v1.19.6) (2025-12-20)
+
+
+### Bug Fixes
+
+* dynamic filters are not working for builder class, improve type for dynamics filters ([9237321](https://github.com/cgarciagarcia/react-query-builder/commit/9237321bc5002344c89d46aa44e6359e45e86784))
+
 ### [1.19.5](https://github.com/cgarciagarcia/react-query-builder/compare/v1.19.4...v1.19.5) (2025-12-09)
 
 ### [1.19.4](https://github.com/cgarciagarcia/react-query-builder/compare/v1.19.3...v1.19.4) (2025-12-09)
