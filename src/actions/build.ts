@@ -1,4 +1,4 @@
-import { type GlobalState } from "@/types";
+import { FilterOperator, type GlobalState } from "@/types";
 import { usingAlias } from "@/utils/alias";
 
 export const buildAction = <T>(state: GlobalState<T>): string => {
@@ -8,7 +8,9 @@ export const buildAction = <T>(state: GlobalState<T>): string => {
   const filters = Object.fromEntries(
     state.filters.map((filter) => [
       `filter[${usingAlias(state, filter.attribute)}]`,
-      (filter.operator ?? "") + filter.value.join(delimiter("filters")),
+      (filter.operator && filter.operator != FilterOperator.Equals
+        ? filter.operator
+        : "") + filter.value.join(delimiter("filters")),
     ]),
   );
 

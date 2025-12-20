@@ -8,6 +8,7 @@ import {
 import {
   clearFiltersAction,
   filterAction,
+  isOperator,
   removeFilterAction,
 } from "@/actions/filter";
 import {
@@ -25,6 +26,7 @@ import { toArray } from "@/actions/presenter";
 import { clearSortsAction, removeSortAction, sortAction } from "@/actions/sort";
 import { whenAction } from "@/actions/when";
 import {
+  type OperatorType,
   type BaseConfig,
   type Field,
   type FilterValue,
@@ -148,19 +150,55 @@ export class Builder<
     return this;
   }
 
-  filter(
+  filter<TFilter extends FilterValue>(
     attribute: Aliases extends object
       ? (keyof Aliases & string) | string
       : string,
-    value: FilterValue,
-    override?: boolean | FilterValue,
+    value: TFilter,
+    ...args: TFilter extends OperatorType
+      ? [override: FilterValue]
+      : [override?: boolean]
   ): QueryBuilder<Aliases> {
+    const overrideValue = args[0];
     const filter = this.state.filters.find((f) => f.attribute === attribute);
-    const filterValues = Array.isArray(value) ? value : [value];
-    const areEquals = _.isEmpty(_.xor(filter?.value, filterValues));
+    let filterValues: FilterValue;
+    let shouldUpdate: boolean;
 
-    if (!areEquals) {
-      this.setState((s) => filterAction(attribute, filterValues, s, override));
+    if (isOperator(value)) {
+      if (overrideValue === undefined || _.isBoolean(overrideValue)) {
+        throw new Error(
+          `The third argument is required when using an operator value received: '${overrideValue}'`,
+        );
+      }
+      filterValues = Array.isArray(overrideValue)
+        ? overrideValue
+        : [overrideValue];
+      shouldUpdate =
+        filter?.operator !== value ||
+        !_.isEmpty(_.xor(filter?.value, filterValues));
+    } else {
+      filterValues = Array.isArray(value) ? value : [value];
+      const shouldOverride = overrideValue === true;
+
+      if (shouldOverride) {
+        shouldUpdate = !_.isEmpty(_.xor(filter?.value, filterValues));
+      } else {
+        // Append mode: check if there are new values to add
+        const currentValues = filter?.value ?? [];
+        const newValues = _.difference(filterValues, currentValues);
+        shouldUpdate = newValues.length > 0;
+      }
+    }
+
+    if (shouldUpdate) {
+      this.setState((s) => {
+        return filterAction(
+          attribute,
+          isOperator(value) ? value : filterValues,
+          s,
+          isOperator(value) ? filterValues : (overrideValue ?? false),
+        );
+      });
     }
 
     return this;
@@ -345,5 +383,8 @@ export class Builder<
   ): QueryBuilder<Aliases> {
     whenAction(condition, callback, this.state);
     return this;
+  }
+  hasPagination(): boolean {
+    return !!this.state.pagination;
   }
 }
