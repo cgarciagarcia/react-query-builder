@@ -26,12 +26,12 @@ import { toArray } from "@/actions/presenter";
 import { clearSortsAction, removeSortAction, sortAction } from "@/actions/sort";
 import { whenAction } from "@/actions/when";
 import {
-  type OperatorType,
   type BaseConfig,
   type Field,
   type FilterValue,
   type GlobalState,
   type Include,
+  type OperatorType,
   type QueryBuilder,
 } from "@/types";
 import {
