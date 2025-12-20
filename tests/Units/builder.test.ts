@@ -30,7 +30,7 @@ describe("Testing the class Builder", () => {
     expect(builder.build()).toBe("?filter[name]=John+Doe&filter[age]=>=18");
   });
 
-  it("should be possible to filter with dynamics attributess", () => {
+  it("should throw exceptions when use filter with bad arguments", () => {
     const builder = new Builder(initialConfig);
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
