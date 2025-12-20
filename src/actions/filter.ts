@@ -5,7 +5,7 @@ import {
   type OperatorType,
 } from "@/types";
 
-const isOperator = (value: FilterValue): value is OperatorType => {
+export const isOperator = (value: FilterValue): value is OperatorType => {
   return (
     typeof value === "string" &&
     value.length <= 2 &&
@@ -51,7 +51,6 @@ export const filterAction = <Al>(
 
   const shouldOverride =
     (typeof override === "boolean" && override) || isFilterValue(override);
-
   const newFilter: Filter<Al> = {
     attribute,
     value: shouldOverride

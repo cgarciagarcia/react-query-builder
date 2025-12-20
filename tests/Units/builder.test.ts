@@ -9,6 +9,48 @@ describe("Testing the class Builder", () => {
     expect(builder.build()).toBe("?filter[name]=John+Doe");
   });
 
+  it("should be possible to filter with dynamics attributes", () => {
+    const builder = new Builder(initialConfig);
+    builder.filter("name", "<>", "John Doe");
+    expect(builder.build()).toBe("?filter[name]=<>John+Doe");
+
+    builder.filter("name", "=", "John Doe");
+    expect(builder.build()).toBe("?filter[name]=John+Doe");
+
+    builder.filter("age", ">", 18);
+    expect(builder.build()).toBe("?filter[name]=John+Doe&filter[age]=>18");
+
+    builder.filter("age", "<", 18);
+    expect(builder.build()).toBe("?filter[name]=John+Doe&filter[age]=<18");
+
+    builder.filter("age", "<=", 18);
+    expect(builder.build()).toBe("?filter[name]=John+Doe&filter[age]=<=18");
+
+    builder.filter("age", ">=", 18);
+    expect(builder.build()).toBe("?filter[name]=John+Doe&filter[age]=>=18");
+  });
+
+  it("should throw exceptions when use filter with bad arguments", () => {
+    const builder = new Builder(initialConfig);
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      builder.filter("name", "<>", undefined);
+    }).toThrowError();
+
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      builder.filter("name", "<>");
+    }).toThrowError();
+
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      builder.filter("name", "<", true);
+    }).toThrowError();
+  });
+
   it("should be possible to add a field", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name"] });
     expect(builder.build()).toBe("?fields=name");

@@ -56,12 +56,14 @@ export interface QueryBuilder<
     | Record<string, string>
     | undefined,
 > {
-  filter: (
+  filter: <TFilter extends FilterValue>(
     attribute: AliasType extends object
       ? (keyof AliasType & string) | string
       : string,
-    value: FilterValue,
-    override?: boolean | FilterValue,
+    value: TFilter,
+    ...override: TFilter extends OperatorType
+      ? [override: FilterValue]
+      : [override?: boolean]
   ) => QueryBuilder<AliasType>;
   removeFilter: (
     ...filtersToRemove: (AliasType extends object
