@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.19.7](https://github.com/cgarciagarcia/react-query-builder/compare/v1.19.6...v1.19.7) (2025-12-31)
+
+
+### Bug Fixes
+
+* move react from dependency to peerDependency (closes [#69](https://github.com/cgarciagarcia/react-query-builder/issues/69)) ([5bea368](https://github.com/cgarciagarcia/react-query-builder/commit/5bea368c5bc89b69bb4808612c6685bf82be875d))
+
 ### [1.19.6](https://github.com/cgarciagarcia/react-query-builder/compare/v1.19.5...v1.19.6) (2025-12-20)
 
 
