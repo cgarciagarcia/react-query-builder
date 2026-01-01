@@ -20,7 +20,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should append a new value to an existing filter", () => {
+  it("should append a new value to an existing filter", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
@@ -41,7 +41,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should be possible to add multiple filter with the same attribute", () => {
+  it("should be possible to add multiple filter with the same attribute", () => {
     const result = filterAction(
       "name",
       ["Carlos Garcia", "Juan Perez"],
@@ -56,7 +56,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should possible to remove a filter", () => {
+  it("should possible to remove a filter", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
@@ -81,7 +81,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should possible to remove a filter with alias", () => {
+  it("should possible to remove a filter with alias", () => {
     const state: GlobalState = {
       ...initialState,
       aliases: {
@@ -109,7 +109,7 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
-  it("Should be possible to remove multiple filters at the same time", () => {
+  it("should be possible to remove multiple filters at the same time", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
@@ -129,7 +129,7 @@ describe("Filter Action test: ", () => {
     expect(result.filters).toEqual([]);
   });
 
-  it("Should clear all filters at once", () => {
+  it("should clear all filters at once", () => {
     const state: GlobalState = {
       ...initialState,
       filters: [
@@ -149,7 +149,7 @@ describe("Filter Action test: ", () => {
     expect(result.filters).toEqual([]);
   });
 
-  it("Should be possible to add a new filter with an alias", () => {
+  it("should be possible to add a new filter with an alias", () => {
     const state: GlobalState = {
       ...initialState,
       aliases: {
@@ -235,9 +235,12 @@ describe("Filter Action test: ", () => {
       ...initialState,
     } as const;
 
-    const resultLessThan = filterAction("age", FilterOperator.LessThan, state, [
-      18,
-    ]);
+    const resultLessThan = filterAction(
+      "age",
+      FilterOperator.LessThan,
+      state,
+      [18],
+    );
 
     expect(resultLessThan.filters).toEqual([
       {
@@ -292,9 +295,12 @@ describe("Filter Action test: ", () => {
       },
     ]);
 
-    const resultDistinct = filterAction("age", FilterOperator.Distinct, state, [
-      18,
-    ]);
+    const resultDistinct = filterAction(
+      "age",
+      FilterOperator.Distinct,
+      state,
+      [18],
+    );
 
     expect(resultDistinct.filters).toEqual([
       {
