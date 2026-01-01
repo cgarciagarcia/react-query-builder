@@ -49,8 +49,7 @@ function uniqueID() {
 
 export class Builder<
   Aliases extends NonNullable<Record<string, string>> | undefined = undefined,
-> implements QueryBuilder<Aliases>
-{
+> implements QueryBuilder<Aliases> {
   private state: GlobalState<Aliases>;
 
   private subscribers: Record<string, (state: GlobalState<Aliases>) => void> =
@@ -114,7 +113,11 @@ export class Builder<
 
   clearFilters(): QueryBuilder<Aliases> {
     if (this.state.filters.length > 0) {
-      this.setState((s) => clearFiltersAction(s));
+      this.setState((s) => {
+        const state = this.shouldResetPage() ? pageAction(1, s) : s;
+
+        return clearFiltersAction(state);
+      });
     }
     return this;
   }
@@ -192,10 +195,11 @@ export class Builder<
 
     if (shouldUpdate) {
       this.setState((s) => {
+        const state = this.shouldResetPage() ? pageAction(1, s) : s;
         return filterAction(
           attribute,
           isOperator(value) ? value : filterValues,
-          s,
+          state,
           isOperator(value) ? filterValues : (overrideValue ?? false),
         );
       });
@@ -248,7 +252,10 @@ export class Builder<
 
   limit(limit: number): QueryBuilder<Aliases> {
     if (this.state.pagination && limit != this.state.pagination?.limit) {
-      this.setState((s) => limitAction(limit, s));
+      this.setState((s) => {
+        const state = this.shouldResetPage() ? pageAction(1, s) : s;
+        return limitAction(limit, state);
+      });
     }
 
     return this;
@@ -301,7 +308,10 @@ export class Builder<
         filtersToRemove.includes(filter.attribute),
       )
     ) {
-      this.setState((s) => removeFilterAction(filtersToRemove, s));
+      this.setState((s) => {
+        const state = this.shouldResetPage() ? pageAction(1, s) : s;
+        return removeFilterAction(filtersToRemove, state);
+      });
     }
     return this;
   }
@@ -386,5 +396,13 @@ export class Builder<
   }
   hasPagination(): boolean {
     return !!this.state.pagination;
+  }
+
+  private shouldResetPage(): boolean {
+    return (
+      Boolean(this.state.pagination) &&
+      Boolean(this.state.pagination?.page) &&
+      this.state.pagination?.page !== 1
+    );
   }
 }
