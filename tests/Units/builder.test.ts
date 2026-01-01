@@ -395,6 +395,7 @@ describe("Testing the class Builder", () => {
 
   it("should reset the pagination page when pagination is set and add a new filter", () => {
     const builder = new Builder({
+      ...initialConfig,
       pagination: { page: 2, limit: 10 },
       filters: [{ attribute: "name", value: ["John Doe"] }],
     });
@@ -404,6 +405,7 @@ describe("Testing the class Builder", () => {
 
   it("should reset the pagination limit when pagination is set and limit changes", () => {
     const builder = new Builder({
+      ...initialConfig,
       pagination: { page: 2, limit: 10 },
     });
     builder.limit(50);
@@ -412,6 +414,7 @@ describe("Testing the class Builder", () => {
 
   it("should reset the pagination page when pagination is set and filter is removed", () => {
     const builder = new Builder({
+      ...initialConfig,
       pagination: { page: 3, limit: 10 },
       filters: [
         {
@@ -426,6 +429,7 @@ describe("Testing the class Builder", () => {
 
   it("should reset the pagination page when all filters are removed", () => {
     const builder = new Builder({
+      ...initialConfig,
       pagination: { page: 4, limit: 10 },
       filters: [
         {
@@ -443,17 +447,26 @@ describe("Testing the class Builder", () => {
   });
 
   it("should no set pagination page when page is not set and filter is added", () => {
-    const builder = new Builder();
+    const builder = new Builder(initialConfig);
     builder.filter("name", ["John Doe"]);
     expect(builder.getCurrentPage()).toBeUndefined();
   });
   it("should no set pagination page when page is not set and filter is removed", () => {
-    const builder = new Builder();
+    const builder = new Builder({
+      ...initialConfig,
+      filters: [
+        {
+          attribute: "name",
+          value: ["John Doe"],
+        },
+      ],
+    });
     builder.removeFilter("name");
     expect(builder.getCurrentPage()).toBeUndefined();
   });
   it("should no set pagination page when page is not set and all filters are removed", () => {
     const builder = new Builder({
+      ...initialConfig,
       filters: [
         {
           attribute: "name",
@@ -465,7 +478,7 @@ describe("Testing the class Builder", () => {
     expect(builder.getCurrentPage()).toBeUndefined();
   });
   it("should no set pagination page when page is not set and limit changes", () => {
-    const builder = new Builder();
+    const builder = new Builder(initialConfig);
     builder.limit(50);
     expect(builder.getCurrentPage()).toBeUndefined();
   });
