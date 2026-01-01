@@ -482,4 +482,18 @@ describe("Testing the class Builder", () => {
     builder.limit(50);
     expect(builder.getCurrentPage()).toBeUndefined();
   });
+  it('should reset the pagination page when a current filter changes the value', () => {
+    const builder = new Builder({
+      ...initialConfig,
+      pagination: { page: 3, limit: 10 },
+      filters: [
+        {
+          attribute: "name",
+          value: ["John Doe"],
+        },
+      ],
+    });
+    builder.filter("name", ["Jane Doe"]);
+    expect(builder.getCurrentPage()).toBe(1);
+  })
 });
