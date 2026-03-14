@@ -1,0 +1,216 @@
+# @cgarciagarcia/react-query-builder
+
+> A TypeScript React hook that builds query strings compatible with spatie/laravel-query-builder.
+> Version: 1.20.1 | License: MIT | React 17/18/19
+
+## Install
+
+```bash
+npm install @cgarciagarcia/react-query-builder
+# or: yarn add / pnpm add
+```
+
+## Core Usage
+
+```ts
+import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
+
+// Inside a React component:
+const builder = useQueryBuilder(config?)
+
+// Build the query string
+const queryString = builder.build()  // e.g. "?filter[age]=18&sort=name"
+```
+
+The hook returns a `QueryBuilder` instance. All mutation methods are chainable and trigger re-renders.
+
+## Config (all fields optional)
+
+```ts
+interface BaseConfig {
+  aliases?: Record<string, string>        // map frontend keys → backend keys
+  filters?: Filter[]
+  includes?: string[]
+  sorts?: Sort[]
+  fields?: string[]
+  params?: Record<string, (string|number)[]>
+  pruneConflictingFilters?: Record<string, string[]>  // mutually exclusive filter groups
+  delimiters?: {
+    global?: string   // default ","
+    fields?: string | null
+    filters?: string | null
+    sorts?: string | null
+    includes?: string | null
+    params?: string | null
+  }
+  useQuestionMark?: boolean  // prepend "?" to build() output (default: true)
+  pagination?: { page: number; limit?: number }
+}
+```
+
+## All Methods (chainable unless noted)
+
+### Filters
+```ts
+builder.filter(attribute, value, override?)
+// override = true  → replace existing values
+// override = false → append (default)
+
+builder.filter('salary', '>', 1000)   // operator filter: =, <, >, <=, >=, <>
+builder.filter('status', 'active')    // simple equality filter
+builder.filter('status', 'vip', true) // override existing values
+
+builder.removeFilter(...attributes)
+builder.clearFilters()
+builder.hasFilter(...attributes)  // → boolean (true if ALL exist)
+```
+
+### Fields
+```ts
+builder.fields(...fieldNames)
+builder.removeField(...fieldNames)
+builder.clearFields()
+builder.hasField(...fieldNames)   // → boolean
+```
+
+### Sorts
+```ts
+builder.sort(attribute, direction?)  // direction: 'asc' (default) | 'desc'
+builder.removeSort(...attributes)
+builder.clearSorts()
+builder.hasSort(...attributes)       // → boolean
+```
+
+### Includes
+```ts
+builder.include(...relations)
+builder.removeInclude(...relations)
+builder.clearIncludes()
+builder.hasInclude(...relations)     // → boolean
+```
+
+### Custom Params
+```ts
+builder.setParam(key, value)         // value: string | number | (string|number)[]
+builder.removeParam(...keys)
+builder.clearParams()
+builder.hasParam(...keys)            // → boolean
+```
+
+### Pagination
+```ts
+builder.page(n)          // go to page n
+builder.nextPage()       // current + 1
+builder.previousPage()   // current - 1 (min: 1)
+builder.limit(n)         // page size
+builder.getCurrentPage() // → number | undefined  (not chainable)
+builder.getLimit()       // → number | undefined  (not chainable)
+```
+
+Changing filters or limit auto-resets page to 1 when pagination is active.
+
+### Output & Inspection
+```ts
+builder.build()          // → query string, e.g. "?filter[age]=18&sort=name"
+builder.toArray()        // → string[], useful as React Query queryKey
+builder.tap(fn)          // inspect state inline, returns builder
+builder.when(bool, fn)   // run fn(state) only if true, returns builder
+```
+
+## FilterOperator constants
+
+```ts
+import { FilterOperator } from "@cgarciagarcia/react-query-builder"
+
+FilterOperator.Equals           // "="
+FilterOperator.LessThan         // "<"
+FilterOperator.GreaterThan      // ">"
+FilterOperator.LessThanOrEqual  // "<="
+FilterOperator.GreaterThanOrEqual // ">="
+FilterOperator.Distinct         // "<>"
+```
+
+## Conflicting Filters (mutually exclusive)
+
+```ts
+const builder = useQueryBuilder({
+  pruneConflictingFilters: {
+    date: ['between_dates'],  // adding 'between_dates' removes 'date' and vice versa
+  }
+})
+```
+
+Conflicts are automatically bidirectional.
+
+## Integration with TanStack Query
+
+```ts
+const builder = useQueryBuilder()
+
+const { data } = useQuery({
+  queryFn: () => fetch('/api/users' + builder.build()).then(r => r.json()),
+  queryKey: ['users', ...builder.toArray()],  // re-fetches when builder changes
+})
+```
+
+## TypeScript: Typed Aliases
+
+```ts
+type MyAliases = {
+  user_name: 'name'
+  user_email: 'email'
+}
+
+const builder = useQueryBuilder<MyAliases>({
+  aliases: { user_name: 'name', user_email: 'email' }
+})
+
+builder.filter('user_name', 'John')  // autocompleted, maps to filter[name]=John
+```
+
+## Complete Example
+
+```ts
+import { useQueryBuilder, FilterOperator } from "@cgarciagarcia/react-query-builder"
+import { useQuery } from "@tanstack/react-query"
+
+function UserList() {
+  const builder = useQueryBuilder({
+    useQuestionMark: true,
+    pagination: { page: 1, limit: 20 },
+    pruneConflictingFilters: { date: ['between_dates'] },
+  })
+
+  const { data } = useQuery({
+    queryFn: () => fetch('/api/users' + builder.build()).then(r => r.json()),
+    queryKey: ['users', ...builder.toArray()],
+  })
+
+  const applyFilters = () => {
+    builder
+      .filter('status', 'active')
+      .filter('salary', FilterOperator.GreaterThan, 1000)
+      .sort('created_at', 'desc')
+      .include('posts', 'profile')
+      .fields('id', 'name', 'email')
+  }
+
+  return (
+    <div>
+      <button onClick={applyFilters}>Filter</button>
+      <button onClick={() => builder.nextPage()}>Next page</button>
+      <button onClick={() => builder.previousPage()}>Prev page</button>
+      <button onClick={() => builder.clearFilters()}>Clear</button>
+    </div>
+  )
+}
+```
+
+## Notes for AI Assistants
+
+- `useQueryBuilder` is a React hook — must be called inside a React component or custom hook.
+- The builder instance is **stable across renders** (backed by `useRef`).
+- State mutations trigger React re-renders automatically via subscriber pattern.
+- `build()` returns the query string with or without `?` depending on `useQuestionMark` config (default: `true` in the class, `false` as shown in README examples — pass `useQuestionMark: true` explicitly to be safe).
+- All `has*` and `get*` methods return values, not the builder — they are NOT chainable.
+- `tap()` and `when()` do not mutate state — use them only for reading/side-effects.
