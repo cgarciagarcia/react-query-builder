@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>react-query-builder — Laravel query strings for React</title>
+  <meta name="description" content="TypeScript React hook to build spatie/laravel-query-builder compatible query strings. Filters, sorts, includes, pagination and more." />
+  <meta property="og:title" content="@cgarciagarcia/react-query-builder" />
+  <meta property="og:description" content="TypeScript React hook to build spatie/laravel-query-builder compatible query strings." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .hljs { background: #0d1117 !important; border-radius: 0.75rem; padding: 1.25rem !important; font-size: 0.875rem; line-height: 1.6; }
+    .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-glow { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52,211,153,0.15), transparent); }
+    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .copy-btn { transition: all 0.15s; }
+    .copy-btn:active { transform: scale(0.95); }
+    nav a { transition: color 0.15s; }
+    .section-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.65rem; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-[#0a0f1a] text-gray-200 font-sans antialiased">
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1a]/90 backdrop-blur border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <span class="font-bold text-white text-sm tracking-tight">react-query-builder</span>
+      <div class="hidden md:flex items-center gap-6 text-sm text-gray-400">
+        <a href="#install" class="hover:text-white">Install</a>
+        <a href="#quickstart" class="hover:text-white">Quick Start</a>
+        <a href="#api" class="hover:text-white">API</a>
+        <a href="#integrations" class="hover:text-white">Integrations</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank"
+           class="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero-glow pt-32 pb-24 px-6 text-center">
+    <div class="max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 text-sm text-emerald-400 mb-8">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        Compatible with spatie/laravel-query-builder
+      </div>
+
+      <h1 class="text-5xl md:text-6xl font-extrabold text-white leading-tight mb-6">
+        Build Laravel query strings<br/>
+        <span class="gradient-text">straight from React</span>
+      </h1>
+
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        A TypeScript hook that manages filters, sorts, includes, fields and pagination —
+        and outputs a URL string your Laravel backend understands instantly.
+      </p>
+
+      <!-- Install command -->
+      <div id="install" class="inline-flex items-center gap-3 bg-[#0d1117] border border-white/10 rounded-xl px-6 py-3.5 text-sm font-mono mb-10">
+        <span class="text-gray-500">$</span>
+        <span id="install-cmd" class="text-emerald-400">npm install @cgarciagarcia/react-query-builder</span>
+        <button onclick="copyInstall()" class="copy-btn ml-2 text-gray-500 hover:text-white" title="Copy">
+          <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Badges -->
+      <div class="flex flex-wrap justify-center gap-3 mb-14">
+        <img src="https://img.shields.io/npm/d18m/@cgarciagarcia/react-query-builder?style=flat-square&color=3b82f6&labelColor=0d1117" alt="Downloads" />
+        <img src="https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square&labelColor=0d1117" alt="MIT" />
+        <img src="https://img.shields.io/badge/React-17%20%7C%2018%20%7C%2019-61dafb?style=flat-square&labelColor=0d1117" alt="React" />
+        <img src="https://img.shields.io/badge/TypeScript-native-3178c6?style=flat-square&labelColor=0d1117" alt="TypeScript" />
+      </div>
+
+      <!-- Hero code block -->
+      <div class="text-left max-w-2xl mx-auto">
+        <pre><code class="language-typescript">const builder = useQueryBuilder()
+
+builder
+  .filter('status', 'active')
+  .filter('salary', '>', 1000)
+  .sort('created_at', 'desc')
+  .include('posts', 'comments')
+  .page(1).limit(20)
+
+builder.build()
+// → ?filter[status]=active&filter[salary][gt]=1000
+//   &sort=-created_at&include=posts,comments&page=1&limit=20</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Zero config, ready to use</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">Call <code class="text-emerald-400">useQueryBuilder()</code> with no arguments and start chaining methods immediately. No providers, no boilerplate.</p>
+      </div>
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Fully typed with TypeScript</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">Define your aliases and get autocomplete on filter names, sort attributes and more. Catch typos at compile time, not in production.</p>
+      </div>
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">React-aware, auto re-renders</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">State changes trigger component re-renders automatically. Works perfectly as a <code class="text-purple-400">queryKey</code> with TanStack Query.</p>
+      </div>
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Conflict-aware filters</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">Declare mutually exclusive filters once. The library removes incompatible filters automatically when you add a new one.</p>
+      </div>
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10M12 21V3m0 0L8 7m4-4l4 4"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Smart pagination</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">Built-in <code class="text-cyan-400">nextPage()</code>, <code class="text-cyan-400">previousPage()</code> and auto page-reset when filters change.</p>
+      </div>
+
+      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+        <div class="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="font-bold text-white mb-2">Fluent, chainable API</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">Every method returns the builder. Build complex queries in a single expression, or spread them across handlers.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section id="quickstart" class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-12">
+        <span class="section-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">Getting started</span>
+        <h2 class="text-3xl font-bold text-white mt-2">Quick Start</h2>
+        <p class="text-gray-400 mt-2">Three steps to your first query.</p>
+      </div>
+
+      <div class="space-y-8">
+        <!-- Step 1 -->
+        <div class="flex gap-5">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">1</div>
+          <div class="flex-1">
+            <p class="text-white font-semibold mb-3">Install the package</p>
+            <pre><code class="language-bash">npm install @cgarciagarcia/react-query-builder</code></pre>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-5">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">2</div>
+          <div class="flex-1">
+            <p class="text-white font-semibold mb-3">Use the hook in your component</p>
+            <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
+
+function UserList() {
+  const builder = useQueryBuilder()
+
+  return (
+    &lt;button onClick={() => builder.filter('status', 'active')}&gt;
+      Filter active
+    &lt;/button&gt;
+  )
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-5">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">3</div>
+          <div class="flex-1">
+            <p class="text-white font-semibold mb-3">Pass the query string to your API call</p>
+            <pre><code class="language-typescript">fetch('/api/users' + builder.build())
+// → GET /api/users?filter[status]=active</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- API -->
+  <section id="api" class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-14">
+        <span class="section-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">Reference</span>
+        <h2 class="text-3xl font-bold text-white mt-2">API Reference</h2>
+        <p class="text-gray-400 mt-2">All methods are chainable unless noted. The builder re-renders its component on every state change.</p>
+      </div>
+
+      <!-- Config -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-gray-400"></span> Configuration
+        </h3>
+        <p class="text-gray-400 text-sm mb-4">All fields are optional. Pass a config object to set initial state or customize behavior.</p>
+        <pre><code class="language-typescript">const builder = useQueryBuilder({
+  aliases: { frontend_key: 'backend_key' }, // map names transparently
+  filters:  [],          // pre-set filters
+  includes: [],          // pre-set includes
+  sorts:    [],          // pre-set sorts
+  fields:   [],          // pre-set fields
+  params:   {},          // extra custom params
+  pruneConflictingFilters: {
+    date: ['between_dates'],  // mutually exclusive filters
+  },
+  delimiters: {
+    global:   ',',   // default separator for all groups
+    fields:   null,  // override per group (null = use global)
+    filters:  null,
+    sorts:    null,
+    includes: null,
+    params:   null,
+  },
+  useQuestionMark: true,   // prepend "?" to build() output
+  pagination: { page: 1, limit: 20 },
+})</code></pre>
+      </div>
+
+      <!-- Filters -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Filters
+        </h3>
+        <pre><code class="language-typescript">// Simple equality filter
+builder.filter('status', 'active')
+// → ?filter[status]=active
+
+// Comparison operators: = | < | > | <= | >= | <>
+builder.filter('salary', '>', 1000)
+builder.filter('age',    '<=', 65)
+
+// Append multiple values
+builder.filter('tag', 'php').filter('tag', 'laravel')
+// → ?filter[tag]=php,laravel
+
+// Override (replace) existing values
+builder.filter('status', 'inactive', true)
+
+// Remove & clear
+builder.removeFilter('status', 'age')
+builder.clearFilters()
+
+// Check existence — returns boolean, NOT chainable
+builder.hasFilter('status')
+builder.hasFilter('status', 'age') // true only if ALL exist
+
+// FilterOperator constants
+import { FilterOperator } from "@cgarciagarcia/react-query-builder"
+// .Equals | .LessThan | .GreaterThan | .LessThanOrEqual | .GreaterThanOrEqual | .Distinct</code></pre>
+      </div>
+
+      <!-- Sorts -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-400"></span> Sorts
+        </h3>
+        <pre><code class="language-typescript">builder.sort('created_at')           // asc by default
+builder.sort('salary', 'desc')
+// → ?sort=created_at,-salary
+
+builder.removeSort('created_at', 'salary')
+builder.clearSorts()
+builder.hasSort('created_at')        // → boolean</code></pre>
+      </div>
+
+      <!-- Fields -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-400"></span> Fields
+        </h3>
+        <pre><code class="language-typescript">builder.fields('id', 'name', 'email', 'user.avatar')
+// → ?fields=id,name,email&fields[user]=avatar
+
+builder.removeField('email')
+builder.clearFields()
+builder.hasField('name')             // → boolean</code></pre>
+      </div>
+
+      <!-- Includes -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-orange-400"></span> Includes
+        </h3>
+        <pre><code class="language-typescript">builder.include('posts', 'comments', 'profile.avatar')
+// → ?include=posts,comments,profile.avatar
+
+builder.removeInclude('posts')
+builder.clearIncludes()
+builder.hasInclude('posts')          // → boolean</code></pre>
+      </div>
+
+      <!-- Params -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Custom Params
+        </h3>
+        <pre><code class="language-typescript">builder.setParam('search', 'john doe')
+builder.setParam('ids', [1, 2, 3])
+// → ?search=john+doe&ids=1,2,3
+
+builder.removeParam('search')
+builder.clearParams()
+builder.hasParam('search')           // → boolean</code></pre>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-pink-400"></span> Pagination
+        </h3>
+        <p class="text-gray-400 text-sm mb-4">Adding or removing filters, or changing limit, auto-resets to page 1.</p>
+        <pre><code class="language-typescript">const builder = useQueryBuilder({
+  pagination: { page: 1, limit: 20 }
+})
+
+builder.page(3)           // go to specific page
+builder.nextPage()        // page + 1
+builder.previousPage()    // page - 1 (min: 1)
+builder.limit(50)         // change page size
+
+// Getters — NOT chainable
+builder.getCurrentPage()  // → number | undefined
+builder.getLimit()        // → number | undefined</code></pre>
+      </div>
+
+      <!-- Utilities -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-yellow-400"></span> Utilities
+        </h3>
+        <pre><code class="language-typescript">// Build the final query string
+builder.build()
+// → "?filter[status]=active&sort=-salary&page=1"
+
+// Get state as flat array — useful as React Query queryKey
+builder.toArray()
+// → ["filter[status]=active", "sort=-salary", "page=1"]
+
+// Inspect state inline without breaking the chain
+builder.filter('status', 'active').tap(state => console.log(state)).sort('name')
+
+// Conditionally run logic
+builder.when(isAdmin, state => console.log('admin:', state))</code></pre>
+      </div>
+
+      <!-- Conflicting Filters -->
+      <div class="mb-14">
+        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-400"></span> Conflicting Filters
+        </h3>
+        <p class="text-gray-400 text-sm mb-4">
+          When two filters cannot coexist (e.g. <code class="text-red-400">date</code> vs <code class="text-red-400">between_dates</code>),
+          declare it once — the conflict is automatically bidirectional.
+        </p>
+        <pre><code class="language-typescript">const builder = useQueryBuilder({
+  pruneConflictingFilters: {
+    date: ['between_dates'],
+  }
+})
+
+builder.filter('date', '2024-08-13')
+// → ?filter[date]=2024-08-13
+
+builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
+// → ?filter[between_dates]=2024-08-06,2024-08-13
+//   ↑ "date" was automatically removed</code></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INTEGRATIONS -->
+  <section id="integrations" class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-12">
+        <span class="section-badge bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-3">Integrations</span>
+        <h2 class="text-3xl font-bold text-white mt-2">Works great with TanStack Query</h2>
+        <p class="text-gray-400 mt-2">Use <code class="text-purple-400">toArray()</code> as the queryKey so your query re-fetches whenever the builder state changes.</p>
+      </div>
+      <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
+import { useQuery } from "@tanstack/react-query"
+
+function UserList() {
+  const builder = useQueryBuilder({
+    pagination: { page: 1, limit: 20 },
+    pruneConflictingFilters: { date: ['between_dates'] },
+  })
+
+  const { data, isLoading } = useQuery({
+    queryFn: () => fetch('/api/users' + builder.build()).then(r => r.json()),
+    queryKey:  ['users', ...builder.toArray()],
+    // ↑ re-fetches automatically on every builder change
+  })
+
+  return (
+    &lt;div&gt;
+      &lt;button onClick={() => builder.filter('status', 'active')}&gt;Active only&lt;/button&gt;
+      &lt;button onClick={() => builder.sort('created_at', 'desc')}&gt;Newest first&lt;/button&gt;
+      &lt;button onClick={() => builder.nextPage()}&gt;Next page&lt;/button&gt;
+      &lt;button onClick={() => builder.clearFilters()}&gt;Clear&lt;/button&gt;
+    &lt;/div&gt;
+  )
+}</code></pre>
+
+      <!-- TypeScript aliases -->
+      <div class="mt-14">
+        <h3 class="text-xl font-bold text-white mb-2">Typed Aliases</h3>
+        <p class="text-gray-400 text-sm mb-4">Map your frontend keys to backend names and get full autocomplete.</p>
+        <pre><code class="language-typescript">type MyAliases = {
+  userName:  'name'
+  userEmail: 'email'
+}
+
+const builder = useQueryBuilder&lt;MyAliases&gt;({
+  aliases: { userName: 'name', userEmail: 'email' }
+})
+
+builder.filter('userName', 'John')
+// → ?filter[name]=John   (mapped automatically)</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-14 px-6 text-center text-gray-500 text-sm">
+    <div class="max-w-4xl mx-auto">
+      <p class="text-white font-bold text-base mb-1">@cgarciagarcia/react-query-builder</p>
+      <p class="mb-6">MIT License · Made by <a href="https://github.com/cgarciagarcia" target="_blank" class="text-emerald-400 hover:underline">Carlos Garcia</a></p>
+      <div class="flex flex-wrap justify-center gap-6 text-gray-400 text-sm">
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="hover:text-white">GitHub</a>
+        <a href="https://www.npmjs.com/package/@cgarciagarcia/react-query-builder" target="_blank" class="hover:text-white">npm</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder/issues" target="_blank" class="hover:text-white">Issues</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder/discussions" target="_blank" class="hover:text-white">Discussions</a>
+        <a href="https://paypal.me/carlosgarciadev" target="_blank" class="hover:text-white">Support ♥</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyInstall() {
+      navigator.clipboard.writeText('npm install @cgarciagarcia/react-query-builder')
+      const icon = document.getElementById('copy-icon')
+      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>'
+      setTimeout(() => {
+        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>'
+      }, 2000)
+    }
+  </script>
+</body>
+</html>
