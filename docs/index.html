@@ -116,7 +116,7 @@
     /* ── Copyable code blocks ──────────────────────────────────── */
     .copy-block { position: relative; }
     .copy-block-btn {
-      position: absolute; top: 0.6rem; right: 0.6rem;
+      position: absolute; top: 0.6rem; right: 0.6rem; z-index: 10;
       display: flex; align-items: center; gap: 0.35rem;
       padding: 0.25rem 0.6rem; border-radius: 0.4rem;
       font-size: 0.7rem; font-weight: 600; font-family: sans-serif;
@@ -236,9 +236,9 @@
       </p>
 
       <!-- Install command -->
-      <div id="install" class="t-install flex items-center gap-2 rounded-xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-mono mb-10 max-w-full overflow-x-auto w-fit mx-auto">
+      <div id="install" class="t-install flex items-center gap-2 rounded-xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-mono mb-10 w-full max-w-xl mx-auto">
         <span class="t-faint flex-shrink-0">$</span>
-        <span class="text-emerald-500 whitespace-nowrap">npm install @cgarciagarcia/react-query-builder</span>
+        <span class="flex-1 overflow-x-auto text-emerald-500 whitespace-nowrap" style="scrollbar-width:none">npm install @cgarciagarcia/react-query-builder</span>
         <button onclick="copyInstall()" class="copy-btn flex-shrink-0 ml-1 t-faint hover:text-emerald-500" title="Copy">
           <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
