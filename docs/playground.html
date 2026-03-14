@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html data-theme="dark" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playground — react-query-builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    ;(function () {
+      const t = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+      document.documentElement.setAttribute('data-theme', t)
+    })()
+  </script>
+  <style>
+    :root {
+      --c-bg:           #0a0f1a;
+      --c-nav:          rgba(10,15,26,0.92);
+      --c-card:         #0d1117;
+      --c-border:       rgba(255,255,255,0.06);
+      --c-border-card:  rgba(255,255,255,0.08);
+      --c-text:         #e2e8f0;
+      --c-text-muted:   #94a3b8;
+      --c-text-faint:   #64748b;
+      --c-text-heading: #ffffff;
+      --c-shadow:       rgba(0,0,0,0.4);
+      --c-output-bg:    #060b14;
+      --c-param-row:    rgba(255,255,255,0.03);
+      --c-param-hover:  rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] {
+      --c-bg:           #f8fafc;
+      --c-nav:          rgba(255,255,255,0.92);
+      --c-card:         #ffffff;
+      --c-border:       rgba(0,0,0,0.06);
+      --c-border-card:  rgba(0,0,0,0.08);
+      --c-text:         #334155;
+      --c-text-muted:   #64748b;
+      --c-text-faint:   #94a3b8;
+      --c-text-heading: #0f172a;
+      --c-shadow:       rgba(0,0,0,0.08);
+      --c-output-bg:    #f1f5f9;
+      --c-param-row:    rgba(0,0,0,0.02);
+      --c-param-hover:  rgba(0,0,0,0.05);
+    }
+
+    html, body { height: 100%; margin: 0; }
+    body { background: var(--c-bg); color: var(--c-text); font-family: ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; }
+
+    /* Nav */
+    .t-nav { background: var(--c-nav); border-bottom: 1px solid var(--c-border); backdrop-filter: blur(12px); }
+
+    /* Layout */
+    .playground-grid { display: grid; grid-template-columns: 1fr 420px; flex: 1; min-height: 0; }
+    @media (max-width: 900px) { .playground-grid { grid-template-columns: 1fr; } }
+
+    /* Editor panel */
+    .editor-panel { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--c-border); }
+    .editor-toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--c-border); background: var(--c-card); flex-shrink: 0; flex-wrap: wrap; }
+    #monaco-container { flex: 1; min-height: 0; }
+
+    /* Output panel */
+    .output-panel { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--c-output-bg); }
+    .output-section { padding: 1rem 1.25rem; border-bottom: 1px solid var(--c-border); }
+    .output-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-text-faint); margin-bottom: 0.5rem; }
+
+    /* URL output */
+    .url-output { font-family: ui-monospace, monospace; font-size: 0.8rem; line-height: 1.6; word-break: break-all; color: var(--c-text-heading); background: var(--c-card); border: 1px solid var(--c-border-card); border-radius: 0.5rem; padding: 0.75rem 1rem; min-height: 2.5rem; }
+    .url-output.empty { color: var(--c-text-faint); font-style: italic; }
+    .url-param-key   { color: #60a5fa; }
+    .url-param-value { color: #34d399; }
+    .url-question    { color: #94a3b8; }
+    .url-amp         { color: #64748b; }
+
+    /* Params table */
+    .param-row { display: flex; align-items: baseline; gap: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 0.35rem; background: var(--c-param-row); margin-bottom: 0.25rem; font-size: 0.8rem; font-family: ui-monospace, monospace; }
+    .param-row:hover { background: var(--c-param-hover); }
+    .param-key   { color: #60a5fa; flex-shrink: 0; }
+    .param-eq    { color: var(--c-text-faint); }
+    .param-value { color: #34d399; word-break: break-all; }
+
+    /* Console output */
+    .console-line { font-family: ui-monospace, monospace; font-size: 0.78rem; padding: 0.2rem 0; color: var(--c-text-muted); border-bottom: 1px solid var(--c-border); }
+    .console-line:last-child { border-bottom: none; }
+    .console-line.error { color: #f87171; }
+
+    /* Example buttons */
+    .example-btn {
+      font-size: 0.7rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 0.375rem;
+      border: 1px solid var(--c-border-card); background: transparent; color: var(--c-text-muted);
+      cursor: pointer; white-space: nowrap; transition: all 0.15s;
+    }
+    .example-btn:hover { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.08); }
+    .example-btn.active { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.12); }
+
+    /* Run button */
+    .run-btn { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.85rem; border-radius: 0.4rem; border: none; background: #34d399; color: #0a0f1a; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 0.35rem; }
+    .run-btn:hover { background: #10b981; }
+
+    /* Theme toggle */
+    .theme-btn { width: 1.9rem; height: 1.9rem; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--c-border-card); background: transparent; color: var(--c-text-muted); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .theme-btn:hover { color: var(--c-text-heading); border-color: var(--c-text-muted); }
+    #pg-icon-sun  { display: none; }
+    [data-theme="light"] #pg-icon-sun  { display: block; }
+    [data-theme="light"] #pg-icon-moon { display: none; }
+
+    /* Status dot */
+    .status-ok    { width: 6px; height: 6px; border-radius: 50%; background: #34d399; flex-shrink: 0; }
+    .status-error { width: 6px; height: 6px; border-radius: 50%; background: #f87171; flex-shrink: 0; }
+
+    /* Empty state */
+    .empty-hint { color: var(--c-text-faint); font-size: 0.8rem; font-style: italic; }
+
+    /* Scrollbar */
+    .output-panel::-webkit-scrollbar { width: 5px; }
+    .output-panel::-webkit-scrollbar-track { background: transparent; }
+    .output-panel::-webkit-scrollbar-thumb { background: var(--c-border-card); border-radius: 9px; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="t-nav flex items-center justify-between px-5 h-12 flex-shrink-0">
+    <div class="flex items-center gap-4">
+      <a href="./index.html" style="color:var(--c-text-muted)" class="flex items-center gap-1.5 text-sm hover:text-white transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Docs
+      </a>
+      <span style="color:var(--c-border-card)">|</span>
+      <span style="color:var(--c-text-heading)" class="font-semibold text-sm">Playground</span>
+      <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">TypeScript</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div id="status-indicator" class="status-ok"></div>
+      <span id="status-text" style="color:var(--c-text-faint);font-size:0.7rem">Ready</span>
+      <button onclick="toggleTheme()" class="theme-btn" aria-label="Toggle theme">
+        <svg id="pg-icon-moon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+        <svg id="pg-icon-sun"  class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="playground-grid" style="flex:1;min-height:0">
+
+    <!-- LEFT: Editor -->
+    <div class="editor-panel">
+      <div class="editor-toolbar">
+        <button class="run-btn" onclick="runCode()">
+          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Run
+        </button>
+        <div style="width:1px;height:1.2rem;background:var(--c-border);flex-shrink:0"></div>
+        <span style="font-size:0.65rem;color:var(--c-text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Examples:</span>
+        <button class="example-btn active" onclick="loadExample('basic', this)">Basic</button>
+        <button class="example-btn" onclick="loadExample('operators', this)">Operators</button>
+        <button class="example-btn" onclick="loadExample('pagination', this)">Pagination</button>
+        <button class="example-btn" onclick="loadExample('fields', this)">Fields & Includes</button>
+        <button class="example-btn" onclick="loadExample('conflicts', this)">Conflicts</button>
+        <button class="example-btn" onclick="loadExample('aliases', this)">Aliases</button>
+      </div>
+      <div id="monaco-container"></div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="output-panel">
+
+      <div class="output-section">
+        <div class="output-label">Query String</div>
+        <div id="url-output" class="url-output empty">Run the code to see the output →</div>
+      </div>
+
+      <div class="output-section">
+        <div class="output-label">Parsed Params</div>
+        <div id="params-output"><span class="empty-hint">No params yet</span></div>
+      </div>
+
+      <div class="output-section">
+        <div class="output-label" style="display:flex;align-items:center;justify-content:between;gap:0.5rem">
+          Console output
+          <button onclick="clearConsole()" style="margin-left:auto;font-size:0.6rem;color:var(--c-text-faint);background:none;border:none;cursor:pointer;padding:0">clear</button>
+        </div>
+        <div id="console-output"><span class="empty-hint">console.log() output appears here</span></div>
+      </div>
+
+      <div class="output-section" style="border-bottom:none">
+        <div class="output-label">Builder State</div>
+        <div id="state-output"><span class="empty-hint">Internal state after execution</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Monaco loader -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script>
+    // ─── QueryBuilder runtime implementation ────────────────────────────────────
+    const OPERATORS = ['=', '<', '>', '<=', '>=', '<>']
+
+    function _isOperator(val) {
+      return typeof val === 'string' && val.length <= 2 && OPERATORS.includes(val)
+    }
+
+    function _reverseConflicts(map) {
+      const result = {}
+      for (const [filter, conflicts] of Object.entries(map)) {
+        for (const conflict of conflicts) {
+          result[conflict] = result[conflict] || []
+          if (!result[conflict].includes(filter)) result[conflict].push(filter)
+          result[filter] = result[filter] || []
+          if (!result[filter].includes(conflict)) result[filter].push(conflict)
+        }
+      }
+      return result
+    }
+
+    function _usingAlias(state, key) {
+      return state.aliases?.[key] ?? key
+    }
+
+    function _buildQueryString(state) {
+      const delim = (type) => state.delimiters[type] ?? state.delimiters.global
+
+      const filterEntries = state.filters.map(f => [
+        `filter[${_usingAlias(state, f.attribute)}]`,
+        (f.operator && f.operator !== '=' ? f.operator : '') + f.value.join(delim('filters'))
+      ])
+
+      const fields = {}
+      for (const field of state.fields) {
+        const dotIdx = field.indexOf('.')
+        if (dotIdx !== -1) {
+          const entity = field.slice(0, dotIdx)
+          const prop = field.slice(dotIdx + 1)
+          fields[`fields[${entity}]`] = [...(fields[`fields[${entity}]`] ?? []), prop]
+        } else {
+          fields['fields'] = [...(fields['fields'] ?? []), field]
+        }
+      }
+      const fieldEntries = Object.entries(fields).map(([k, v]) => [k, v.join(delim('fields'))])
+
+      const params = new URLSearchParams([...filterEntries, ...fieldEntries])
+      if (state.sorts.length > 0) {
+        params.append('sort', state.sorts.map(({ attribute, direction }) =>
+          `${direction === 'desc' ? '-' : ''}${_usingAlias(state, attribute)}`
+        ).join(delim('sorts')))
+      }
+      if (state.includes.length > 0) {
+        params.append('include', state.includes.join(delim('includes')))
+      }
+      for (const [key, value] of Object.entries(state.params)) {
+        params.append(key, value.join(delim('params')))
+      }
+      for (const [key, value] of Object.entries(state.pagination ?? {})) {
+        params.append(key, `${value}`)
+      }
+      const str = params.toString()
+      return str ? (state.useQuestionMark ? '?' : '') + decodeURIComponent(str) : ''
+    }
+
+    class _Builder {
+      constructor(config = {}) {
+        this._state = {
+          aliases: config.aliases ?? {},
+          filters: JSON.parse(JSON.stringify(config.filters ?? [])),
+          includes: [...(config.includes ?? [])],
+          sorts: JSON.parse(JSON.stringify(config.sorts ?? [])),
+          fields: [...(config.fields ?? [])],
+          params: JSON.parse(JSON.stringify(config.params ?? {})),
+          useQuestionMark: config.useQuestionMark ?? true,
+          pagination: config.pagination ? { ...config.pagination } : undefined,
+          pruneConflictingFilters: _reverseConflicts(config.pruneConflictingFilters ?? {}),
+          delimiters: { global: ',', fields: null, filters: null, sorts: null, includes: null, params: null, ...(config.delimiters ?? {}) },
+        }
+      }
+      filter(attribute, value, override) {
+        if (_isOperator(value)) {
+          const op = value, realValue = Array.isArray(override) ? override : [override]
+          const conflicts = this._state.pruneConflictingFilters[attribute] ?? []
+          const rest = this._state.filters.filter(f => f.attribute !== attribute && !conflicts.includes(f.attribute))
+          this._state.filters = [...rest, { attribute, value: realValue, operator: op }]
+          return this
+        }
+        const vals = Array.isArray(value) ? value : [value]
+        const conflicts = this._state.pruneConflictingFilters[attribute] ?? []
+        const rest = this._state.filters.filter(f => f.attribute !== attribute && !conflicts.includes(f.attribute))
+        const existing = this._state.filters.find(f => f.attribute === attribute)
+        const newValues = override === true ? vals : [...(existing?.value ?? []), ...vals]
+        this._state.filters = [...rest, { attribute, value: newValues }]
+        return this
+      }
+      removeFilter(...attrs)  { this._state.filters = this._state.filters.filter(f => !attrs.includes(f.attribute)); return this }
+      clearFilters()          { this._state.filters = []; return this }
+      hasFilter(...attrs)     { return attrs.every(a => this._state.filters.some(f => f.attribute === a)) }
+      sort(attribute, direction = 'asc') {
+        this._state.sorts = [...this._state.sorts.filter(s => s.attribute !== attribute), { attribute, direction }]; return this
+      }
+      removeSort(...attrs)    { this._state.sorts = this._state.sorts.filter(s => !attrs.includes(s.attribute)); return this }
+      clearSorts()            { this._state.sorts = []; return this }
+      hasSort(...attrs)       { return attrs.every(a => this._state.sorts.some(s => s.attribute === a)) }
+      fields(...fields) {
+        const set = new Set(this._state.fields); fields.forEach(f => set.add(f)); this._state.fields = [...set]; return this
+      }
+      removeField(...fields)  { this._state.fields = this._state.fields.filter(f => !fields.includes(f)); return this }
+      clearFields()           { this._state.fields = []; return this }
+      hasField(...fields)     { return fields.every(f => this._state.fields.includes(f)) }
+      include(...includes) {
+        const set = new Set(this._state.includes); includes.forEach(i => set.add(i)); this._state.includes = [...set]; return this
+      }
+      removeInclude(...includes) { this._state.includes = this._state.includes.filter(i => !includes.includes(i)); return this }
+      clearIncludes()          { this._state.includes = []; return this }
+      hasInclude(...includes)  { return includes.every(i => this._state.includes.includes(i)) }
+      setParam(key, value) {
+        this._state.params[key] = Array.isArray(value) ? value : [value]; return this
+      }
+      removeParam(...keys)    { keys.forEach(k => delete this._state.params[k]); return this }
+      clearParams()           { this._state.params = {}; return this }
+      hasParam(...keys)       { return keys.every(k => k in this._state.params) }
+      page(n)         { if (!this._state.pagination) this._state.pagination = {}; this._state.pagination.page = n; return this }
+      limit(n)        { if (!this._state.pagination) this._state.pagination = {}; this._state.pagination.limit = n; return this }
+      nextPage()      { if (this._state.pagination?.page) this._state.pagination.page++; return this }
+      previousPage()  { if (this._state.pagination?.page && this._state.pagination.page > 1) this._state.pagination.page--; return this }
+      getCurrentPage(){ return this._state.pagination?.page }
+      getLimit()      { return this._state.pagination?.limit }
+      build()         { return _buildQueryString(this._state) }
+      toArray()       { const qs = this.build(); if (!qs) return []; return qs.replace(/^\?/, '').split('&') }
+      tap(cb)         { cb(this._state); return this }
+      when(cond, cb)  { if (cond) cb(this._state); return this }
+    }
+
+    const FilterOperator = { Equals:'=', LessThan:'<', GreaterThan:'>', LessThanOrEqual:'<=', GreaterThanOrEqual:'>=', Distinct:'<>' }
+    function useQueryBuilder(config) { return new _Builder(config) }
+
+    // ─── Examples ───────────────────────────────────────────────────────────────
+    const EXAMPLES = {
+      basic: `// Basic example — filters, sort, includes
+const builder = useQueryBuilder()
+
+builder
+  .filter('status', 'active')
+  .filter('role', 'admin')
+  .sort('created_at', 'desc')
+  .include('posts', 'profile')
+
+console.log(builder.build())
+console.log('Has status filter:', builder.hasFilter('status'))
+console.log('Has name sort:',     builder.hasSort('name'))
+`,
+      operators: `// Comparison operators
+const builder = useQueryBuilder()
+
+builder
+  .filter('salary', FilterOperator.GreaterThan, 1000)
+  .filter('age', '>=', 18)
+  .filter('age', '<=', 65)
+  .filter('score', '<>', 0)
+
+console.log(builder.build())
+
+// You can also use string operators directly
+const b2 = useQueryBuilder()
+b2.filter('price', '>', 50).filter('price', '<', 200)
+console.log(b2.build())
+`,
+      pagination: `// Pagination
+const builder = useQueryBuilder({
+  pagination: { page: 1, limit: 20 }
+})
+
+builder
+  .filter('status', 'active')
+  .sort('updated_at', 'desc')
+
+console.log('Page 1:', builder.build())
+
+builder.nextPage()
+console.log('Page 2:', builder.build())
+
+builder.page(5)
+console.log('Page 5:', builder.build())
+
+console.log('Current page:', builder.getCurrentPage())
+console.log('Limit:',        builder.getLimit())
+`,
+      fields: `// Selecting fields and including relations
+const builder = useQueryBuilder()
+
+builder
+  .fields('id', 'name', 'email')
+  .fields('user.avatar', 'user.bio')  // dot-notation → fields[user]=avatar,bio
+  .include('posts', 'posts.comments', 'profile')
+
+console.log(builder.build())
+
+// Remove a specific field
+builder.removeField('email')
+console.log('After removing email:', builder.build())
+
+// Clear all fields
+builder.clearFields()
+console.log('After clearFields:', builder.build())
+`,
+      conflicts: `// Mutually exclusive filters (pruneConflictingFilters)
+const builder = useQueryBuilder({
+  pruneConflictingFilters: {
+    date: ['between_dates', 'month'],
+    // 'between_dates' and 'month' are also auto-added as conflicting with 'date'
+  }
+})
+
+builder.filter('date', '2024-08-13')
+console.log('With date:', builder.build())
+
+// Adding 'between_dates' automatically removes 'date'
+builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
+console.log('Switched to between_dates:', builder.build())
+
+console.log('date filter exists:', builder.hasFilter('date'))         // false
+console.log('between_dates exists:', builder.hasFilter('between_dates')) // true
+`,
+      aliases: `// Typed aliases — map frontend names to backend names
+const builder = useQueryBuilder({
+  aliases: {
+    userName:   'name',
+    userEmail:  'email',
+    createdAt:  'created_at',
+  }
+})
+
+// Use frontend names — they are transparently mapped
+builder
+  .filter('userName', 'John')
+  .filter('userEmail', 'john@example.com')
+  .sort('createdAt', 'desc')
+
+console.log(builder.build())
+// filter[name]=John&filter[email]=john@example.com&sort=-created_at
+
+// hasFilter uses frontend names too
+console.log('has userName:', builder.hasFilter('userName'))
+`,
+    }
+
+    // ─── Monaco setup ────────────────────────────────────────────────────────────
+    const TYPE_DEFS = `
+declare const FilterOperator: {
+  readonly Equals:             '=';
+  readonly LessThan:           '<';
+  readonly GreaterThan:        '>';
+  readonly LessThanOrEqual:    '<=';
+  readonly GreaterThanOrEqual: '>=';
+  readonly Distinct:           '<>';
+};
+
+type OperatorType = '=' | '<' | '>' | '<=' | '>=' | '<>';
+type FilterValue  = string | number | (string | number)[];
+type Direction    = 'asc' | 'desc';
+
+interface QueryBuilder {
+  /** Add a filter. Pass an operator as second arg for comparison filters. */
+  filter(attribute: string, value: FilterValue | OperatorType, override?: FilterValue | boolean): QueryBuilder;
+  removeFilter(...attributes: string[]): QueryBuilder;
+  clearFilters(): QueryBuilder;
+  /** Returns true only if ALL passed attributes exist */
+  hasFilter(...attributes: string[]): boolean;
+
+  /** Sort by attribute. Default direction: 'asc' */
+  sort(attribute: string, direction?: Direction): QueryBuilder;
+  removeSort(...attributes: string[]): QueryBuilder;
+  clearSorts(): QueryBuilder;
+  hasSort(...attributes: string[]): boolean;
+
+  /** Select fields. Use dot notation for model-scoped fields: 'user.name' */
+  fields(...fields: string[]): QueryBuilder;
+  removeField(...fields: string[]): QueryBuilder;
+  clearFields(): QueryBuilder;
+  hasField(...fields: string[]): boolean;
+
+  /** Eager-load relations */
+  include(...relations: string[]): QueryBuilder;
+  removeInclude(...relations: string[]): QueryBuilder;
+  clearIncludes(): QueryBuilder;
+  hasInclude(...relations: string[]): boolean;
+
+  /** Custom query parameters */
+  setParam(key: string, value: FilterValue): QueryBuilder;
+  removeParam(...keys: string[]): QueryBuilder;
+  clearParams(): QueryBuilder;
+  hasParam(...keys: string[]): boolean;
+
+  /** Pagination */
+  page(n: number): QueryBuilder;
+  limit(n: number): QueryBuilder;
+  nextPage(): QueryBuilder;
+  previousPage(): QueryBuilder;
+  getCurrentPage(): number | undefined;
+  getLimit(): number | undefined;
+
+  /** Build the final query string */
+  build(): string;
+  /** Returns query state as a flat string array — useful as React Query queryKey */
+  toArray(): string[];
+  /** Inspect state without breaking the chain */
+  tap(callback: (state: object) => void): QueryBuilder;
+  /** Conditionally execute a callback */
+  when(condition: boolean, callback: (state: object) => void): QueryBuilder;
+}
+
+interface BaseConfig {
+  aliases?:                  Record<string, string>;
+  filters?:                  { attribute: string; value: (string|number)[]; operator?: OperatorType }[];
+  includes?:                 string[];
+  sorts?:                    { attribute: string; direction: Direction }[];
+  fields?:                   string[];
+  params?:                   Record<string, (string|number)[]>;
+  pruneConflictingFilters?:  Record<string, string[]>;
+  delimiters?: {
+    global?:   string;
+    fields?:   string | null;
+    filters?:  string | null;
+    sorts?:    string | null;
+    includes?: string | null;
+    params?:   string | null;
+  };
+  useQuestionMark?: boolean;
+  pagination?: { page: number; limit?: number };
+}
+
+/** Create a new QueryBuilder instance */
+declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
+`
+
+    let editor
+    let _runTimeout = null
+
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } })
+    require(['vs/editor/editor.main'], () => {
+      // Inject type definitions
+      monaco.languages.typescript.typescriptDefaults.addExtraLib(TYPE_DEFS, 'ts:rqb-types.d.ts')
+      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
+        allowNonTsExtensions: true,
+        noLib: false,
+      })
+
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      editor = monaco.editor.create(document.getElementById('monaco-container'), {
+        value: EXAMPLES.basic,
+        language: 'typescript',
+        theme: isDark ? 'vs-dark' : 'vs',
+        fontSize: 13,
+        lineHeight: 22,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        padding: { top: 16, bottom: 16 },
+        automaticLayout: true,
+        suggestOnTriggerCharacters: true,
+        quickSuggestions: true,
+        tabSize: 2,
+        wordWrap: 'on',
+        smoothScrolling: true,
+        cursorBlinking: 'smooth',
+        renderLineHighlight: 'gutter',
+        fontFamily: '"Cascadia Code", "Fira Code", ui-monospace, monospace',
+        fontLigatures: true,
+      })
+
+      // Auto-run on change (debounced)
+      editor.onDidChangeModelContent(() => {
+        clearTimeout(_runTimeout)
+        _runTimeout = setTimeout(runCode, 800)
+      })
+
+      runCode()
+    })
+
+    // ─── Code runner ─────────────────────────────────────────────────────────────
+    let _lastBuilder = null
+
+    function runCode() {
+      const tsCode = editor?.getValue() ?? ''
+      setStatus('running')
+
+      const logs = []
+      const origLog = console.log
+      console.log = (...args) => { logs.push(args.map(a => formatValue(a)).join(' ')); origLog(...args) }
+
+      try {
+        const jsCode = Babel.transform(tsCode, {
+          presets: [['typescript', { allExtensions: true }]],
+          filename: 'playground.ts',
+        }).code
+
+        // Wrap in function with provided globals
+        const fn = new Function(
+          'useQueryBuilder', 'FilterOperator', 'console',
+          jsCode + '\n;typeof builder !== "undefined" ? builder : null'
+        )
+
+        const result = fn(useQueryBuilder, FilterOperator, { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) })
+        _lastBuilder = result instanceof _Builder ? result : null
+
+        renderOutput(_lastBuilder)
+        renderConsole(logs)
+        setStatus('ok')
+      } catch (err) {
+        renderConsole(logs, err)
+        setStatus('error', err.message)
+      } finally {
+        console.log = origLog
+      }
+    }
+
+    function formatValue(v) {
+      if (typeof v === 'string')  return v
+      if (typeof v === 'boolean') return String(v)
+      if (typeof v === 'number')  return String(v)
+      return JSON.stringify(v, null, 2)
+    }
+
+    // ─── Render helpers ──────────────────────────────────────────────────────────
+    function renderOutput(builder) {
+      const urlEl     = document.getElementById('url-output')
+      const paramsEl  = document.getElementById('params-output')
+      const stateEl   = document.getElementById('state-output')
+
+      if (!builder) {
+        urlEl.className    = 'url-output empty'
+        urlEl.textContent  = 'No builder returned — make sure your last variable is named "builder"'
+        paramsEl.innerHTML = '<span class="empty-hint">No params</span>'
+        stateEl.innerHTML  = '<span class="empty-hint">—</span>'
+        return
+      }
+
+      const qs = builder.build()
+      urlEl.className = 'url-output'
+      if (!qs) {
+        urlEl.innerHTML = '<span style="color:var(--c-text-faint);font-style:italic">Empty query string</span>'
+      } else {
+        urlEl.innerHTML = colorizeUrl(qs)
+      }
+
+      // Params table
+      if (!qs) {
+        paramsEl.innerHTML = '<span class="empty-hint">No params</span>'
+      } else {
+        const pairs = qs.replace(/^\?/, '').split('&')
+        paramsEl.innerHTML = pairs.map(p => {
+          const [k, v] = p.split('=')
+          return `<div class="param-row"><span class="param-key">${k}</span><span class="param-eq">=</span><span class="param-value">${v ?? ''}</span></div>`
+        }).join('')
+      }
+
+      // State
+      const s = builder._state
+      stateEl.innerHTML = `<pre style="font-size:0.72rem;font-family:ui-monospace,monospace;color:var(--c-text-muted);margin:0;white-space:pre-wrap;word-break:break-all">${JSON.stringify({
+        filters:  s.filters,
+        sorts:    s.sorts,
+        includes: s.includes,
+        fields:   s.fields,
+        params:   s.params,
+        pagination: s.pagination,
+      }, null, 2)}</pre>`
+    }
+
+    function colorizeUrl(qs) {
+      // Highlight ? & key = value
+      return qs
+        .replace(/^(\?)/, '<span class="url-question">$1</span>')
+        .replace(/&/g, '<span class="url-amp">&amp;</span>')
+        .replace(/([^=&?]+)(?==)/g, '<span class="url-param-key">$1</span>')
+        .replace(/=([^&]*)/g, '=<span class="url-param-value">$1</span>')
+    }
+
+    function renderConsole(logs, error) {
+      const el = document.getElementById('console-output')
+      if (!logs.length && !error) {
+        el.innerHTML = '<span class="empty-hint">No console output</span>'
+        return
+      }
+      let html = logs.map(l => `<div class="console-line">${escHtml(l)}</div>`).join('')
+      if (error) html += `<div class="console-line error">⚠ ${escHtml(error.message)}</div>`
+      el.innerHTML = html
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    }
+
+    function setStatus(state, msg) {
+      const dot  = document.getElementById('status-indicator')
+      const text = document.getElementById('status-text')
+      if (state === 'ok') {
+        dot.className = 'status-ok'; text.textContent = 'OK'
+      } else if (state === 'error') {
+        dot.className = 'status-error'; text.textContent = 'Error'
+      } else {
+        dot.className = 'status-ok'; text.textContent = '...'
+      }
+    }
+
+    function clearConsole() {
+      document.getElementById('console-output').innerHTML = '<span class="empty-hint">No console output</span>'
+    }
+
+    // ─── Example loader ──────────────────────────────────────────────────────────
+    function loadExample(key, btn) {
+      if (!editor) return
+      document.querySelectorAll('.example-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      editor.setValue(EXAMPLES[key])
+      editor.setScrollPosition({ scrollTop: 0 })
+    }
+
+    // ─── Theme toggle ─────────────────────────────────────────────────────────────
+    function toggleTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      const next = isDark ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', next)
+      localStorage.setItem('theme', next)
+      if (editor) monaco.editor.setTheme(next === 'light' ? 'vs' : 'vs-dark')
+    }
+  </script>
+</body>
+</html>
