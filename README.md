@@ -1,6 +1,7 @@
 
-**TypeScript React hook query Builder** provides a way to build a query string compatible with
-[spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder).
+# @cgarciagarcia/react-query-builder
+
+A TypeScript React hook that builds query strings compatible with [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder).
 
 [![Coverage Status](https://coveralls.io/repos/github/cgarciagarcia/react-query-builder/badge.svg?branch=main&service=github&kill_cache=1)](https://coveralls.io/github/cgarciagarcia/react-query-builder?branch=main)
 [![Test CI](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml/badge.svg)](https://github.com/cgarciagarcia/react-query-builder/actions/workflows/test.yml)
@@ -8,253 +9,307 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1f3f48abc84f4e3cba76e39e804786d6)](https://app.codacy.com/gh/cgarciagarcia/react-query-builder/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Downloads](https://img.shields.io/npm/d18m/@cgarciagarcia/react-query-builder?style=flat-square)](https://www.npmjs.com/package/@cgarciagarcia/react-query-builder)
 
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+  - [Filters](#filters)
+  - [Fields](#fields)
+  - [Sorts](#sorts)
+  - [Includes](#includes)
+  - [Params](#params)
+  - [Pagination](#pagination)
+  - [Utilities](#utilities)
+- [Advanced: Conflicting Filters](#advanced-conflicting-filters)
+- [Support](#support)
+- [License](#license)
+
+---
+
 ## Installation
 
-You can install package using yarn (or npm):
-
 ```bash
+# npm
+npm install @cgarciagarcia/react-query-builder
+
+# yarn
 yarn add @cgarciagarcia/react-query-builder
+
+# pnpm
+pnpm add @cgarciagarcia/react-query-builder
 ```
 
-## Usage
+**Peer dependencies:** React 17, 18, or 19.
 
-This package is designed to provide an easy way to interact with the backend integration
-of `spatie/laravel-query-builder`
-using your favorite frontend library, `React.js`. It includes a custom hook that you can use for seamless interaction.
+---
 
-<h3 style="color:#cb3837">Some Examples</h3>
+## Quick Start
 
-Here is a simple example:
-
-```js
+```ts
 import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
 
-const baseConfig = {
-  aliases: {
-    "frontend_name": "backend_name",
-  },
- 
-}
-
-const builder = useQueryBuilder(baseConfig)
+const builder = useQueryBuilder()
 
 builder
-  .fields('user.name', 'user.last_name', 'other')
-  .filter('salary', ">", 1000)
-  .filter("age", 18)
-  .sort("created_at") // by default sorting asc
-  .sort("age", 'desc') // sorting desc
-  .setParam("external_param", 123) // you can define it in the baseConfig
-  .include("posts", "comments")
+  .fields('user.name', 'user.last_name')
+  .filter('age', 18)
+  .filter('salary', '>', 1000)
+  .sort('created_at')
+  .sort('age', 'desc')
+  .include('posts', 'comments')
+  .setParam('external_param', 123)
   .page(1)
   .limit(10)
 
-function apiCall() {
-  console.log(builder.build());
-  // ?fields[user]=name,fields=other,last_name&filter[age]=18&sort=created_at,-age&includes=posts,comments
-  return fetch("https://myapi.com/api/users" + builder.build()).then(response => response.json())
-}
+// Use in fetch
+fetch("https://myapi.com/api/users" + builder.build())
+
+// builder.build() returns:
+// ?fields[user]=name,last_name&filter[age]=18&filter[salary][gt]=1000&sort=created_at,-age&includes=posts,comments&external_param=123&page=1&limit=10
 ```
 
-<h3 style="color:#cb3837;">Configurations</h3>
+---
 
-You can set the initial state for your query builder, also it's possible to modify
-the delimiter for each action (fields, filters, includes, sorts), the global delimiter
-will be overwritten  with the specific delimiter
+## Configuration
 
-```javascript
+Pass an optional config object to `useQueryBuilder` to set initial state and customize behavior.
 
-// Default configuration 
-const baseConfig = {
-  aliases: {},
+```ts
+const builder = useQueryBuilder({
+  // Map frontend field names to backend names
+  aliases: {
+    "frontend_name": "backend_name",
+  },
+
+  // Pre-set initial state
   filters: [],
   includes: [],
   sorts: [],
   fields: [],
+  params: {},
+
+  // Define mutually exclusive filters (see Advanced section)
   pruneConflictingFilters: {},
+
+  // Custom delimiters (default: ',')
   delimiters: {
-    global: ',',
+    global: ',',    // applies to all unless overridden
     fields: null,
     filters: null,
     sorts: null,
     includes: null,
     params: null,
   },
+
+  // Prepend '?' to the output of build()
   useQuestionMark: false,
-  params: {}
-}
+
+  // Initial pagination state
+  pagination: {
+    page: 1,
+    limit: 10,
+  },
+})
 ```
 
-<h3 style="color:#cb3837;">Remove Methods</h3>
-You can use the remove method in sort, includes, filter like this:
+---
 
-```js
-const builder = useQueryBuilder(baseConfig)
+## API Reference
 
-  builder
-    .removeField('field_1', 'field_2')
-    .removeFilter('name', 'last_name')
-    .removeSort('name', 'id')
-    .removeInclude('address', 'documents')
-    .removeParam('param1', 'param2')
+All methods return the builder instance, so they are **chainable**.
+
+### Filters
+
+```ts
+// Add a filter (appends values by default)
+builder.filter('status', 'active')
+
+// Add a filter with an operator
+builder.filter('salary', '>', 1000)
+builder.filter('age', '>=', 18)
+
+// Override existing filter values instead of appending
+builder.filter('status', 'inactive', true)
+
+// Remove specific filters
+builder.removeFilter('status', 'age')
+
+// Remove all filters
+builder.clearFilters()
+
+// Check if filters exist
+builder.hasFilter('status')           // → boolean
+builder.hasFilter('status', 'age')    // → true only if ALL exist
 ```
 
-<h3 style="color:#cb3837;">Clear Methods</h3>
+Available operators: `=`, `<`, `>`, `<=`, `>=`, `<>`
 
-You can use the clear methods for delete the entire data group
+You can also import `FilterOperator` for type-safe operators:
 
-```js
-const builder = useQueryBuilder(baseConfig)
+```ts
+import { FilterOperator } from "@cgarciagarcia/react-query-builder"
 
-  builder
-    .clearFields()
-    .clearFilters()
-    .clearIncludes()
-    .clearSorts()
-    .clearParams()
+builder.filter('salary', FilterOperator.GreaterThan, 1000)
 ```
 
-<h3 style="color:#cb3837;">Filters that don't work together</h3>
+---
 
-Maybe your business logic has filters that won't work together, for example you could
-have filters like `date` filter and `between_dates` filter in your backend, but you can not filter
-by both at the same time, so you have to be sure to clear incompatibles filters
-before to adding a new one. With this purpose the property `pruneConflictingFilters`
-was created, you can define these incompatibilities in the base configuration and delegate
-the humdrum action to the library.
+### Fields
 
-Example:
+```ts
+builder.fields('name', 'email', 'user.avatar')
+builder.removeField('email')
+builder.clearFields()
+builder.hasField('name')   // → boolean
+```
 
-```js
+---
+
+### Sorts
+
+```ts
+builder.sort('created_at')           // default: asc
+builder.sort('age', 'desc')
+builder.removeSort('created_at', 'age')
+builder.clearSorts()
+builder.hasSort('created_at')        // → boolean
+```
+
+---
+
+### Includes
+
+```ts
+builder.include('posts', 'comments')
+builder.removeInclude('posts')
+builder.clearIncludes()
+builder.hasInclude('posts')          // → boolean
+```
+
+---
+
+### Params
+
+```ts
+builder.setParam('custom_key', 'value')
+builder.setParam('ids', [1, 2, 3])
+builder.removeParam('custom_key')
+builder.clearParams()
+builder.hasParam('custom_key')       // → boolean
+```
+
+---
+
+### Pagination
+
+```ts
+const builder = useQueryBuilder({
+  pagination: { page: 1, limit: 10 }
+})
+
+builder.page(3)           // go to page 3
+builder.nextPage()        // page + 1
+builder.previousPage()    // page - 1 (stops at 1)
+builder.limit(25)         // change page size
+
+builder.getCurrentPage()  // → number | undefined
+builder.getLimit()        // → number | undefined
+```
+
+> **Note:** Changing filters, removing filters, or changing the limit automatically resets to page 1.
+
+---
+
+### Utilities
+
+#### `build()`
+
+Returns the final query string.
+
+```ts
+builder.build() // → "?filter[age]=18&sort=created_at"
+```
+
+#### `toArray()`
+
+Returns the query state as a flat string array. Useful as a React Query `queryKey`.
+
+```ts
+import { useQuery } from "@tanstack/react-query"
+
+const builder = useQueryBuilder()
+
+const { data } = useQuery({
+  queryFn: () => getUsers(builder.build()),
+  queryKey: ['users', ...builder.toArray()],
+})
+```
+
+#### `tap(callback)`
+
+Inspect the internal state without interrupting the chain.
+
+```ts
+builder
+  .filter('age', 18)
+  .tap((state) => console.log(state))
+  .sort('name')
+```
+
+#### `when(condition, callback)`
+
+Conditionally execute a callback based on a boolean. The builder is returned regardless.
+
+```ts
+builder.when(isAdmin, (state) => {
+  console.log('Admin state:', state)
+})
+```
+
+---
+
+## Advanced: Conflicting Filters
+
+Some filters are mutually exclusive in your backend (e.g. `date` vs `between_dates`). Use `pruneConflictingFilters` to let the library handle this automatically.
+
+```ts
 const builder = useQueryBuilder({
   pruneConflictingFilters: {
-    date: ['between_dates']
+    date: ['between_dates'],
+    // 'between_dates': ['date'] is added automatically (bidirectional)
   },
 })
 
-builder.filter('date', today)
-    .build() // the result is ?filter[date]=2024-08-13
-    .filter('between_dates', [lastWeek, today])
-    .build() // the result in this line is ?filter[between_dates]=2024-08-06,2024-08-13
+builder.filter('date', '2024-08-13')
+// → ?filter[date]=2024-08-13
+
+builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
+// → ?filter[between_dates]=2024-08-06,2024-08-13
+// (date filter was automatically removed)
 ```
 
-#### How does it work?
+The conflict is **bidirectional by default** — you only need to declare it once. You can also declare both directions explicitly if you prefer.
 
-When you define that `date` filter is not compatible with `between_dates`, internally
-the library define the bidirectional incompatibility for you. Too much magic? Don't
-worry, you still could define manually the inverse incompatibility to have explicit
-declaration from your side.
+---
 
-<h3 style="color:#cb3837;">Utilities</h3>
+## Support
 
-You could use the builder with your [Tank Stack React query](https://tanstack.com/query/latest)
-implementation for example:
+Have a question or need help? [Open a discussion](https://github.com/cgarciagarcia/react-query-builder/discussions) on GitHub.
 
-#### toArray()
+---
 
-```typescript
+## Consider Supporting
 
-import { getApiUsers } from "@/Api/users"
-import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
+If this package helps you, consider supporting its creator:
 
-const MyComponent = () => {
+**PayPal:** [@carlosgarciadev](https://paypal.me/carlosgarciadev?country.x=AR&locale.x=es_XC)
 
-  const builder = useQueryBuilder()
-
-  const useUserQuery = useQuery({
-    fnQuery: () => getApiUsers(builder),
-    queryKey: ['userQuery', ...builder.toArray()]
-  })
-
-  /* Rest of code */
-}
-
-```
-
-#### when()
-
-```typescript
-
-import { getApiUsers } from "@/Api/users"
-import { useQueryBuilder } from "@cgarciagarcia/react-query-builder";
-
-const MyComponent = () => {
-  
-  const builder = useQueryBuilder()
-
-  const useUserQuery = useQuery({
-    fnQuery: () => getApiUsers(builder),
-    queryKey: ['userQuery', ...builder.toArray()]
-  })
-  
-  const onClickButton = (id: number|null) => {
-    
-    builder.when(id !== null, (state) => {
-      console.log(state) // reveal internal state
-    })
-  }
-  
-  /* Rest of code */
-}
-
-```
-
-### hasMethods()
-
-
-```js
-const builder = useQueryBuilder()
-
-builder.hasFilter('filter', 'filter2', ...)
-  .hasInclude('include', 'include2', ...)
-  .hasParam('param1', 'param2', ...)
-  .hasField('field', ...)
-  .hasSort('sort', ...)
-
-```
-
-<h3 style="color:#cb3837">Pagination</h3>
-
-this package also support pagination to provide a verbose and well explained interaction
-
-```typescript
-
-const builder = useQueryBuilder({
-  pagination: {
-    page: 1,
-    limit: 10
-  }
-})
-
-const onPressNextPage = () => builder.nexPage()
-
-const onPressPreviousPage = () => builder.previousPage()
-
-// Go to specific page
-const goToFirstPage = () => builder.page(1)
-
-const goToLastPage = () => builder.page(MY_LAST_PAGE)
-
-// Change the limit of pagination
-const onChangeLimit = (newLimit: number) => builder.limit(newLimit)
-
-```
-
-
-## Do you have question how to implement it?
-
-Feel free to generate a discussion in the github repository I will help you
-
-
-## Consider supporting me
-
-I invite you to support its creator. Your contribution will
-not only help maintain and improve this package but also promote the continuous
-development of quality tools and resources. You can also email me and let me know.
-
-Paypal: [@carlosgarciadev](https://paypal.me/carlosgarciadev?country.x=AR&locale.x=es_XC)
-
+---
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE) for more information.
+The MIT License (MIT). See [LICENSE](LICENSE) for more information.
