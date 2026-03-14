@@ -113,6 +113,23 @@
     /* ── Step circles ──────────────────────────────────────────── */
     .t-step { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.25); color: #34d399; }
 
+    /* ── Copyable code blocks ──────────────────────────────────── */
+    .copy-block { position: relative; }
+    .copy-block-btn {
+      position: absolute; top: 0.6rem; right: 0.6rem;
+      display: flex; align-items: center; gap: 0.35rem;
+      padding: 0.25rem 0.6rem; border-radius: 0.4rem;
+      font-size: 0.7rem; font-weight: 600; font-family: sans-serif;
+      background: rgba(255,255,255,0.08); color: var(--c-text-muted);
+      border: 1px solid var(--c-border-card);
+      cursor: pointer; opacity: 0; transition: opacity 0.15s, background 0.15s, color 0.15s;
+      user-select: none;
+    }
+    [data-theme="light"] .copy-block-btn { background: rgba(0,0,0,0.05); }
+    .copy-block:hover .copy-block-btn { opacity: 1; }
+    .copy-block-btn:hover { background: rgba(52,211,153,0.15); color: #34d399; border-color: rgba(52,211,153,0.3); }
+    .copy-block-btn.copied { background: rgba(52,211,153,0.2); color: #34d399; border-color: rgba(52,211,153,0.4); opacity: 1; }
+
     /* ── Section anchor links ──────────────────────────────────── */
     .anchor-link { opacity: 0; transition: opacity 0.15s; color: var(--c-text-faint); text-decoration: none; }
     .anchor-heading:hover .anchor-link { opacity: 1; }
@@ -309,7 +326,13 @@ builder.build()
           <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">1</div>
           <div class="flex-1 min-w-0">
             <p class="t-heading font-semibold mb-3">Install the package</p>
-            <pre><code class="language-bash">npm install @cgarciagarcia/react-query-builder</code></pre>
+            <div class="copy-block">
+              <button class="copy-block-btn" onclick="copyBlock(this)">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+              <pre><code class="language-bash">npm install @cgarciagarcia/react-query-builder</code></pre>
+            </div>
           </div>
         </div>
 
@@ -317,7 +340,12 @@ builder.build()
           <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">2</div>
           <div class="flex-1 min-w-0">
             <p class="t-heading font-semibold mb-3">Use the hook in your component</p>
-            <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
+            <div class="copy-block">
+              <button class="copy-block-btn" onclick="copyBlock(this)">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+              <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
 
 function UserList() {
   const builder = useQueryBuilder()
@@ -328,6 +356,7 @@ function UserList() {
     &lt;/button&gt;
   )
 }</code></pre>
+            </div>
           </div>
         </div>
 
@@ -335,8 +364,14 @@ function UserList() {
           <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">3</div>
           <div class="flex-1 min-w-0">
             <p class="t-heading font-semibold mb-3">Pass the query string to your API call</p>
-            <pre><code class="language-typescript">fetch('/api/users' + builder.build())
+            <div class="copy-block">
+              <button class="copy-block-btn" onclick="copyBlock(this)">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+              <pre><code class="language-typescript">fetch('/api/users' + builder.build())
 // → GET /api/users?filter[status]=active</code></pre>
+            </div>
           </div>
         </div>
       </div>
@@ -595,6 +630,7 @@ builder.filter('userName', 'John')
         <a href="https://www.npmjs.com/package/@cgarciagarcia/react-query-builder" target="_blank" class="hover:text-emerald-500 transition-colors">npm</a>
         <a href="https://github.com/cgarciagarcia/react-query-builder/issues" target="_blank" class="hover:text-emerald-500 transition-colors">Issues</a>
         <a href="https://github.com/cgarciagarcia/react-query-builder/discussions" target="_blank" class="hover:text-emerald-500 transition-colors">Discussions</a>
+        <a href="https://www.linkedin.com/in/carlosgarciadevelop/" target="_blank" class="hover:text-emerald-500 transition-colors">LinkedIn</a>
         <a href="https://paypal.me/carlosgarciadev" target="_blank" class="hover:text-emerald-500 transition-colors">Support ♥</a>
       </div>
     </div>
@@ -614,6 +650,17 @@ builder.filter('userName', 'John')
       // sync mobile icon
       document.getElementById('icon-sun-mobile').style.display  = next === 'light' ? 'block' : 'none'
       document.getElementById('icon-moon-mobile').style.display = next === 'dark'  ? 'block' : 'none'
+    }
+
+    function copyBlock(btn) {
+      const code = btn.closest('.copy-block').querySelector('code')
+      navigator.clipboard.writeText(code.innerText)
+      btn.classList.add('copied')
+      btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'
+      setTimeout(() => {
+        btn.classList.remove('copied')
+        btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy'
+      }, 2000)
     }
 
     function copyInstall() {
