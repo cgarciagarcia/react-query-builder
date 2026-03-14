@@ -370,6 +370,39 @@ describe("Testing the class Builder", () => {
     expect(subscriber).not.toHaveBeenCalled();
   });
 
+  it("should notify all subscribers when state changes", () => {
+    const builder = new Builder(initialConfig);
+    const firstSubscriber = jest.fn();
+    const secondSubscriber = jest.fn();
+    builder.addSubscriber(firstSubscriber);
+    builder.addSubscriber(secondSubscriber);
+    builder.filter("name", "John Doe");
+    expect(firstSubscriber).toHaveBeenCalledTimes(1);
+    expect(secondSubscriber).toHaveBeenCalledTimes(1);
+  });
+
+  it("should pass the updated state to the subscriber", () => {
+    const builder = new Builder(initialConfig);
+    let receivedState: ReturnType<typeof builder.build> | null = null;
+    builder.addSubscriber(() => {
+      receivedState = builder.build();
+    });
+    builder.filter("name", "John Doe");
+    expect(receivedState).toBe("?filter[name]=John+Doe");
+  });
+
+  it("should not notify removed subscribers while keeping remaining ones", () => {
+    const builder = new Builder(initialConfig);
+    const removedSubscriber = jest.fn();
+    const keptSubscriber = jest.fn();
+    const idToRemove = builder.addSubscriber(removedSubscriber);
+    builder.addSubscriber(keptSubscriber);
+    builder.removeSubscriber(idToRemove);
+    builder.filter("name", "John Doe");
+    expect(removedSubscriber).not.toHaveBeenCalled();
+    expect(keptSubscriber).toHaveBeenCalledTimes(1);
+  });
+
   it("should be possible has filter using aliases", () => {
     const builder = new Builder<{ name: "full_name" }>({
       ...initialConfig,
@@ -482,7 +515,7 @@ describe("Testing the class Builder", () => {
     builder.limit(50);
     expect(builder.getCurrentPage()).toBeUndefined();
   });
-  it('should reset the pagination page when a current filter changes the value', () => {
+  it("should reset the pagination page when a current filter changes the value", () => {
     const builder = new Builder({
       ...initialConfig,
       pagination: { page: 3, limit: 10 },
@@ -495,5 +528,5 @@ describe("Testing the class Builder", () => {
     });
     builder.filter("name", ["Jane Doe"]);
     expect(builder.getCurrentPage()).toBe(1);
-  })
+  });
 });

@@ -251,7 +251,7 @@ export class Builder<
   }
 
   limit(limit: number): QueryBuilder<Aliases> {
-    if (this.state.pagination && limit != this.state.pagination?.limit) {
+    if (this.state.pagination && limit !== this.state.pagination?.limit) {
       this.setState((s) => {
         const state = this.shouldResetPage() ? pageAction(1, s) : s;
         return limitAction(limit, state);
