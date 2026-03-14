@@ -195,7 +195,7 @@ builder.build()
         <!-- Step 1 -->
         <div class="flex gap-5">
           <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">1</div>
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <p class="text-white font-semibold mb-3">Install the package</p>
             <pre><code class="language-bash">npm install @cgarciagarcia/react-query-builder</code></pre>
           </div>
@@ -204,7 +204,7 @@ builder.build()
         <!-- Step 2 -->
         <div class="flex gap-5">
           <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">2</div>
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <p class="text-white font-semibold mb-3">Use the hook in your component</p>
             <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
 
@@ -223,7 +223,7 @@ function UserList() {
         <!-- Step 3 -->
         <div class="flex gap-5">
           <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">3</div>
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <p class="text-white font-semibold mb-3">Pass the query string to your API call</p>
             <pre><code class="language-typescript">fetch('/api/users' + builder.build())
 // → GET /api/users?filter[status]=active</code></pre>
