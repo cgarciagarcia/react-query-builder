@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.20.5](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.4...v1.20.5) (2026-03-14)
+
+
+### Bug Fixes
+
+* upgrade lodash to 4.17.23 to resolve prototype pollution vulnerability ([#76](https://github.com/cgarciagarcia/react-query-builder/issues/76)) ([aea5627](https://github.com/cgarciagarcia/react-query-builder/commit/aea5627ceb0b8aa953c90c2d51162a1d9511dba9))
+
 ### [1.20.4](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.3...v1.20.4) (2026-03-14)
 
 ### [1.20.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.2...v1.20.3) (2026-03-14)
