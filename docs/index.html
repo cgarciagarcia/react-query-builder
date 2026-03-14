@@ -147,7 +147,20 @@
   <!-- NAV -->
   <nav class="t-nav fixed top-0 left-0 right-0 z-50 backdrop-blur">
     <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-      <span class="font-bold text-sm tracking-tight t-heading">react-query-builder</span>
+      <div class="flex items-center gap-2">
+        <!-- Laravel logo -->
+        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 50 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Laravel">
+          <path d="M49.626 11.564a.809.809 0 01.028.209v10.972a.8.8 0 01-.402.694l-9.209 5.302V39.25c0 .286-.152.55-.4.694L20.42 51.01a.814.814 0 01-.044.024l-.7.019a.801.801 0 01-.468-.163l-.025-.019L.402 39.944A.801.801 0 010 39.25V6.334c0-.1.019-.198.054-.292l.004-.011c.023-.06.053-.118.088-.172l.011-.015c.033-.045.07-.087.112-.123l.002-.002 9.652-5.56a.801.801 0 01.796 0l9.652 5.56.003.002a.8.8 0 01.112.123l.011.015c.035.054.065.112.088.172l.004.011A.81.81 0 0120.59 6.3v26.218l8.006-4.613V11.773c0-.1.019-.198.054-.292l.004-.011c.023-.06.053-.118.088-.172l.011-.015c.033-.045.07-.087.112-.123l.002-.002 9.652-5.56a.801.801 0 01.796 0l9.652 5.56.003.002a.801.801 0 01.112.123l.011.015c.035.054.065.112.088.172l.004.011z" fill="#FF2D20"/>
+        </svg>
+        <!-- Heart -->
+        <span class="text-red-400 text-base leading-none select-none">♥</span>
+        <!-- Spatie logo -->
+        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Spatie">
+          <rect width="64" height="64" rx="12" fill="#0EA5E9"/>
+          <path d="M44 22c0-5.523-4.477-10-10-10H20a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 010 4H20a2 2 0 00-2 2v8a2 2 0 002 2h14c5.523 0 10-4.477 10-10v-4a9.965 9.965 0 00-2.929-7.071A9.965 9.965 0 0044 22z" fill="white"/>
+        </svg>
+        <span class="font-bold text-sm tracking-tight t-heading">react-query-builder</span>
+      </div>
 
       <!-- Desktop links -->
       <div class="hidden md:flex items-center gap-6 text-sm">
@@ -155,6 +168,7 @@
         <a href="#quickstart"   class="t-nav-link">Quick Start</a>
         <a href="#api"          class="t-nav-link">API</a>
         <a href="#integrations" class="t-nav-link">Integrations</a>
+        <a href="playground.html" class="t-nav-link font-medium text-emerald-500 hover:text-emerald-400">Playground ▶</a>
         <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank"
            class="t-nav-link flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -199,6 +213,7 @@
       <a href="#quickstart"   onclick="toggleMenu()" class="t-nav-link py-1">Quick Start</a>
       <a href="#api"          onclick="toggleMenu()" class="t-nav-link py-1">API Reference</a>
       <a href="#integrations" onclick="toggleMenu()" class="t-nav-link py-1">Integrations</a>
+      <a href="playground.html" onclick="toggleMenu()" class="py-1 font-medium text-emerald-500">Playground ▶</a>
     </div>
   </nav>
 
@@ -237,6 +252,24 @@
         <img src="https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square&labelColor=0d1117" alt="MIT" />
         <img src="https://img.shields.io/badge/React-17%20%7C%2018%20%7C%2019-61dafb?style=flat-square&labelColor=0d1117" alt="React" />
         <img src="https://img.shields.io/badge/TypeScript-native-3178c6?style=flat-square&labelColor=0d1117" alt="TypeScript" />
+      </div>
+
+      <!-- Hero CTAs -->
+      <div class="flex flex-wrap justify-center gap-3 mb-10">
+        <a href="playground.html"
+           class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+          Try Playground
+        </a>
+        <a href="#quickstart"
+           class="inline-flex items-center gap-2 t-card t-border font-medium rounded-xl px-5 py-2.5 text-sm t-muted transition-colors" style="border:1px solid var(--c-border-card)">
+          Quick Start
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </a>
       </div>
 
       <!-- Hero code block -->
