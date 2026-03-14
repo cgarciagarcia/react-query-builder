@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-theme="dark" lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,55 +8,168 @@
   <meta property="og:title" content="@cgarciagarcia/react-query-builder" />
   <meta property="og:description" content="TypeScript React hook to build spatie/laravel-query-builder compatible query strings." />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script>
+    // Apply saved theme before paint to avoid flash
+    ;(function () {
+      const saved = localStorage.getItem('theme')
+      const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+      const theme = saved || preferred
+      document.documentElement.setAttribute('data-theme', theme)
+      if (theme === 'light') {
+        document.getElementById('hljs-theme').href =
+          'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+      }
+    })()
+  </script>
   <script>hljs.highlightAll();</script>
   <style>
-    html { scroll-behavior: smooth; }
-    pre { overflow-x: auto; max-width: 100%; }
-    .hljs { background: #0d1117 !important; border-radius: 0.75rem; padding: 1rem !important; font-size: 0.8rem; line-height: 1.6; }
+    /* ── Theme variables ───────────────────────────────────────── */
+    :root {
+      --c-bg:           #0a0f1a;
+      --c-nav:          rgba(10,15,26,0.92);
+      --c-nav-solid:    #0a0f1a;
+      --c-card:         #0d1117;
+      --c-code:         #0d1117;
+      --c-border:       rgba(255,255,255,0.06);
+      --c-border-card:  rgba(255,255,255,0.08);
+      --c-border-input: rgba(255,255,255,0.10);
+      --c-text:         #e2e8f0;
+      --c-text-muted:   #94a3b8;
+      --c-text-faint:   #64748b;
+      --c-text-heading: #ffffff;
+      --c-shadow:       rgba(0,0,0,0.4);
+      --hero-glow:      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52,211,153,0.15), transparent);
+    }
+    [data-theme="light"] {
+      --c-bg:           #f8fafc;
+      --c-nav:          rgba(255,255,255,0.92);
+      --c-nav-solid:    #ffffff;
+      --c-card:         #ffffff;
+      --c-code:         #f1f5f9;
+      --c-border:       rgba(0,0,0,0.06);
+      --c-border-card:  rgba(0,0,0,0.08);
+      --c-border-input: rgba(0,0,0,0.10);
+      --c-text:         #334155;
+      --c-text-muted:   #64748b;
+      --c-text-faint:   #94a3b8;
+      --c-text-heading: #0f172a;
+      --c-shadow:       rgba(0,0,0,0.08);
+      --hero-glow:      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52,211,153,0.08), transparent);
+    }
+
+    /* ── Base ──────────────────────────────────────────────────── */
+    html  { scroll-behavior: smooth; }
+    body  { background: var(--c-bg); color: var(--c-text); transition: background 0.2s, color 0.2s; }
+
+    /* ── Code blocks ───────────────────────────────────────────── */
+    pre  { overflow-x: auto; max-width: 100%; }
+    .hljs { background: var(--c-code) !important; border-radius: 0.75rem; padding: 1rem !important; font-size: 0.8rem; line-height: 1.6; }
     @media (min-width: 640px) { .hljs { padding: 1.25rem !important; font-size: 0.875rem; } }
-    .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hero-glow { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52,211,153,0.15), transparent); }
+
+    /* ── Nav ───────────────────────────────────────────────────── */
+    .t-nav    { background: var(--c-nav); border-bottom: 1px solid var(--c-border); }
+    .t-nav-solid { background: var(--c-nav-solid); }
+    .t-nav-link { color: var(--c-text-muted); transition: color 0.15s; }
+    .t-nav-link:hover { color: var(--c-text-heading); }
+
+    /* ── Cards ─────────────────────────────────────────────────── */
+    .t-card { background: var(--c-card); border: 1px solid var(--c-border-card); }
     .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-    .copy-btn { transition: all 0.15s; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px var(--c-shadow); }
+
+    /* ── Install box ───────────────────────────────────────────── */
+    .t-install { background: var(--c-code); border: 1px solid var(--c-border-input); }
+
+    /* ── Section dividers ──────────────────────────────────────── */
+    .t-border-t { border-top: 1px solid var(--c-border); }
+
+    /* ── Typography helpers ────────────────────────────────────── */
+    .t-heading { color: var(--c-text-heading); }
+    .t-body    { color: var(--c-text); }
+    .t-muted   { color: var(--c-text-muted); }
+    .t-faint   { color: var(--c-text-faint); }
+
+    /* ── Misc ──────────────────────────────────────────────────── */
+    .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-glow     { background: var(--hero-glow); }
+    .copy-btn      { transition: all 0.15s; }
     .copy-btn:active { transform: scale(0.95); }
-    nav a { transition: color 0.15s; }
     .section-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.65rem; border-radius: 9999px; }
-    #mobile-menu { display: none; }
+    #mobile-menu   { display: none; }
     #mobile-menu.open { display: flex; }
+
+    /* ── Theme toggle button ───────────────────────────────────── */
+    .theme-toggle { width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.15s; color: var(--c-text-muted); }
+    .theme-toggle:hover { background: var(--c-border-card); color: var(--c-text-heading); }
+    #icon-sun  { display: none; }
+    #icon-moon { display: block; }
+    [data-theme="light"] #icon-sun  { display: block; }
+    [data-theme="light"] #icon-moon { display: none; }
+
+    /* ── Step circles ──────────────────────────────────────────── */
+    .t-step { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.25); color: #34d399; }
+
+    /* ── Section anchor links ──────────────────────────────────── */
+    .anchor-link { opacity: 0; transition: opacity 0.15s; color: var(--c-text-faint); text-decoration: none; }
+    .anchor-heading:hover .anchor-link { opacity: 1; }
+    .anchor-link:hover { color: #34d399; }
+
+    /* Light mode: inline code accent colors readable on white */
+    [data-theme="light"] code.text-emerald-400 { color: #059669; }
+    [data-theme="light"] code.text-purple-400  { color: #7c3aed; }
+    [data-theme="light"] code.text-cyan-400    { color: #0891b2; }
+    [data-theme="light"] code.text-red-400     { color: #dc2626; }
   </style>
 </head>
-<body class="bg-[#0a0f1a] text-gray-200 font-sans antialiased">
+<body class="font-sans antialiased">
 
   <!-- NAV -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1a]/90 backdrop-blur border-b border-white/5">
+  <nav class="t-nav fixed top-0 left-0 right-0 z-50 backdrop-blur">
     <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-      <span class="font-bold text-white text-sm tracking-tight">react-query-builder</span>
+      <span class="font-bold text-sm tracking-tight t-heading">react-query-builder</span>
 
       <!-- Desktop links -->
-      <div class="hidden md:flex items-center gap-6 text-sm text-gray-400">
-        <a href="#install" class="hover:text-white">Install</a>
-        <a href="#quickstart" class="hover:text-white">Quick Start</a>
-        <a href="#api" class="hover:text-white">API</a>
-        <a href="#integrations" class="hover:text-white">Integrations</a>
+      <div class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#install"      class="t-nav-link">Install</a>
+        <a href="#quickstart"   class="t-nav-link">Quick Start</a>
+        <a href="#api"          class="t-nav-link">API</a>
+        <a href="#integrations" class="t-nav-link">Integrations</a>
         <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank"
-           class="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium">
+           class="t-nav-link flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           GitHub
         </a>
+        <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+          <!-- Moon (shown in dark mode) -->
+          <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+          </svg>
+          <!-- Sun (shown in light mode) -->
+          <svg id="icon-sun" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
       </div>
 
-      <!-- Mobile: github icon + hamburger -->
-      <div class="flex md:hidden items-center gap-3">
-        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="text-gray-400 hover:text-white">
+      <!-- Mobile: icons -->
+      <div class="flex md:hidden items-center gap-2">
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="theme-toggle">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         </a>
-        <button onclick="toggleMenu()" class="text-gray-400 hover:text-white p-1" aria-label="Menu">
-          <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+          <svg class="w-[1.1rem] h-[1.1rem]" id="icon-moon-mobile" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+          </svg>
+          <svg class="w-[1.1rem] h-[1.1rem]" id="icon-sun-mobile" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+            <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+        <button onclick="toggleMenu()" class="theme-toggle" aria-label="Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
@@ -64,37 +177,37 @@
     </div>
 
     <!-- Mobile menu -->
-    <div id="mobile-menu" class="md:hidden flex-col border-t border-white/5 bg-[#0a0f1a] px-6 py-4 gap-4 text-sm text-gray-400">
-      <a href="#install" onclick="toggleMenu()" class="hover:text-white py-1">Install</a>
-      <a href="#quickstart" onclick="toggleMenu()" class="hover:text-white py-1">Quick Start</a>
-      <a href="#api" onclick="toggleMenu()" class="hover:text-white py-1">API Reference</a>
-      <a href="#integrations" onclick="toggleMenu()" class="hover:text-white py-1">Integrations</a>
+    <div id="mobile-menu" class="t-nav-solid md:hidden flex-col t-border-t px-6 py-4 gap-4 text-sm">
+      <a href="#install"      onclick="toggleMenu()" class="t-nav-link py-1">Install</a>
+      <a href="#quickstart"   onclick="toggleMenu()" class="t-nav-link py-1">Quick Start</a>
+      <a href="#api"          onclick="toggleMenu()" class="t-nav-link py-1">API Reference</a>
+      <a href="#integrations" onclick="toggleMenu()" class="t-nav-link py-1">Integrations</a>
     </div>
   </nav>
 
   <!-- HERO -->
   <section class="hero-glow pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 text-center">
     <div class="max-w-4xl mx-auto">
-      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 text-sm text-emerald-400 mb-8">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 text-sm text-emerald-500 mb-8">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
         Compatible with spatie/laravel-query-builder
       </div>
 
-      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 t-heading">
         Build Laravel query strings
         <span class="gradient-text block sm:inline">straight from React</span>
       </h1>
 
-      <p class="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+      <p class="text-base sm:text-lg md:text-xl t-muted max-w-2xl mx-auto mb-10 leading-relaxed">
         A TypeScript hook that manages filters, sorts, includes, fields and pagination —
         and outputs a URL string your Laravel backend understands instantly.
       </p>
 
       <!-- Install command -->
-      <div id="install" class="flex items-center gap-2 bg-[#0d1117] border border-white/10 rounded-xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-mono mb-10 max-w-full overflow-x-auto w-fit mx-auto">
-        <span class="text-gray-500 flex-shrink-0">$</span>
-        <span id="install-cmd" class="text-emerald-400 whitespace-nowrap">npm install @cgarciagarcia/react-query-builder</span>
-        <button onclick="copyInstall()" class="copy-btn flex-shrink-0 ml-1 text-gray-500 hover:text-white" title="Copy">
+      <div id="install" class="t-install flex items-center gap-2 rounded-xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-mono mb-10 max-w-full overflow-x-auto w-fit mx-auto">
+        <span class="t-faint flex-shrink-0">$</span>
+        <span class="text-emerald-500 whitespace-nowrap">npm install @cgarciagarcia/react-query-builder</span>
+        <button onclick="copyInstall()" class="copy-btn flex-shrink-0 ml-1 t-faint hover:text-emerald-500" title="Copy">
           <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
           </svg>
@@ -128,84 +241,82 @@ builder.build()
   </section>
 
   <!-- FEATURES -->
-  <section class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
+  <section class="t-border-t py-14 sm:py-20 px-4 sm:px-6">
     <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Zero config, ready to use</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">Call <code class="text-emerald-400">useQueryBuilder()</code> with no arguments and start chaining methods immediately. No providers, no boilerplate.</p>
+        <h3 class="font-bold mb-2 t-heading">Zero config, ready to use</h3>
+        <p class="t-muted text-sm leading-relaxed">Call <code class="text-emerald-400">useQueryBuilder()</code> with no arguments and start chaining methods immediately. No providers, no boilerplate.</p>
       </div>
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Fully typed with TypeScript</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">Define your aliases and get autocomplete on filter names, sort attributes and more. Catch typos at compile time, not in production.</p>
+        <h3 class="font-bold mb-2 t-heading">Fully typed with TypeScript</h3>
+        <p class="t-muted text-sm leading-relaxed">Define your aliases and get autocomplete on filter names, sort attributes and more. Catch typos at compile time, not in production.</p>
       </div>
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">React-aware, auto re-renders</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">State changes trigger component re-renders automatically. Works perfectly as a <code class="text-purple-400">queryKey</code> with TanStack Query.</p>
+        <h3 class="font-bold mb-2 t-heading">React-aware, auto re-renders</h3>
+        <p class="t-muted text-sm leading-relaxed">State changes trigger component re-renders automatically. Works perfectly as a <code class="text-purple-400">queryKey</code> with TanStack Query.</p>
       </div>
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Conflict-aware filters</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">Declare mutually exclusive filters once. The library removes incompatible filters automatically when you add a new one.</p>
+        <h3 class="font-bold mb-2 t-heading">Conflict-aware filters</h3>
+        <p class="t-muted text-sm leading-relaxed">Declare mutually exclusive filters once. The library removes incompatible filters automatically when you add a new one.</p>
       </div>
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10M12 21V3m0 0L8 7m4-4l4 4"/></svg>
+          <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10M12 21V3m0 0L8 7m4-4l4 4"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Smart pagination</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">Built-in <code class="text-cyan-400">nextPage()</code>, <code class="text-cyan-400">previousPage()</code> and auto page-reset when filters change.</p>
+        <h3 class="font-bold mb-2 t-heading">Smart pagination</h3>
+        <p class="t-muted text-sm leading-relaxed">Built-in <code class="text-cyan-400">nextPage()</code>, <code class="text-cyan-400">previousPage()</code> and auto page-reset when filters change.</p>
       </div>
 
-      <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
+      <div class="card-hover t-card rounded-2xl p-6">
         <div class="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center mb-4">
-          <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="font-bold text-white mb-2">Fluent, chainable API</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">Every method returns the builder. Build complex queries in a single expression, or spread them across handlers.</p>
+        <h3 class="font-bold mb-2 t-heading">Fluent, chainable API</h3>
+        <p class="t-muted text-sm leading-relaxed">Every method returns the builder. Build complex queries in a single expression, or spread them across handlers.</p>
       </div>
 
     </div>
   </section>
 
   <!-- QUICK START -->
-  <section id="quickstart" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
+  <section id="quickstart" class="t-border-t py-14 sm:py-20 px-4 sm:px-6">
     <div class="max-w-4xl mx-auto">
       <div class="mb-12">
-        <span class="section-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">Getting started</span>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Quick Start</h2>
-        <p class="text-gray-400 mt-2">Three steps to your first query.</p>
+        <span class="section-badge bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-3">Getting started</span>
+        <h2 class="text-2xl sm:text-3xl font-bold mt-2 t-heading">Quick Start</h2>
+        <p class="t-muted mt-2">Three steps to your first query.</p>
       </div>
 
       <div class="space-y-8">
-        <!-- Step 1 -->
         <div class="flex gap-5">
-          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">1</div>
+          <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">1</div>
           <div class="flex-1 min-w-0">
-            <p class="text-white font-semibold mb-3">Install the package</p>
+            <p class="t-heading font-semibold mb-3">Install the package</p>
             <pre><code class="language-bash">npm install @cgarciagarcia/react-query-builder</code></pre>
           </div>
         </div>
 
-        <!-- Step 2 -->
         <div class="flex gap-5">
-          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">2</div>
+          <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">2</div>
           <div class="flex-1 min-w-0">
-            <p class="text-white font-semibold mb-3">Use the hook in your component</p>
+            <p class="t-heading font-semibold mb-3">Use the hook in your component</p>
             <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
 
 function UserList() {
@@ -220,11 +331,10 @@ function UserList() {
           </div>
         </div>
 
-        <!-- Step 3 -->
         <div class="flex gap-5">
-          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">3</div>
+          <div class="flex-shrink-0 w-8 h-8 rounded-full t-step flex items-center justify-center font-bold text-sm">3</div>
           <div class="flex-1 min-w-0">
-            <p class="text-white font-semibold mb-3">Pass the query string to your API call</p>
+            <p class="t-heading font-semibold mb-3">Pass the query string to your API call</p>
             <pre><code class="language-typescript">fetch('/api/users' + builder.build())
 // → GET /api/users?filter[status]=active</code></pre>
           </div>
@@ -234,20 +344,20 @@ function UserList() {
   </section>
 
   <!-- API -->
-  <section id="api" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
+  <section id="api" class="t-border-t py-14 sm:py-20 px-4 sm:px-6">
     <div class="max-w-4xl mx-auto">
       <div class="mb-14">
-        <span class="section-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">Reference</span>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">API Reference</h2>
-        <p class="text-gray-400 mt-2">All methods are chainable unless noted. The builder re-renders its component on every state change.</p>
+        <span class="section-badge bg-blue-500/10 text-blue-500 border border-blue-500/20 mb-3">Reference</span>
+        <h2 class="text-2xl sm:text-3xl font-bold mt-2 t-heading">API Reference</h2>
+        <p class="t-muted mt-2">All methods are chainable unless noted. The builder re-renders its component on every state change.</p>
       </div>
 
-      <!-- Config -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-config" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-gray-400"></span> Configuration
+          <a href="#api-config" class="anchor-link" title="Copy link">#</a>
         </h3>
-        <p class="text-gray-400 text-sm mb-4">All fields are optional. Pass a config object to set initial state or customize behavior.</p>
+        <p class="t-muted text-sm mb-4">All fields are optional. Pass a config object to set initial state or customize behavior.</p>
         <pre><code class="language-typescript">const builder = useQueryBuilder({
   aliases: { frontend_key: 'backend_key' }, // map names transparently
   filters:  [],          // pre-set filters
@@ -271,10 +381,10 @@ function UserList() {
 })</code></pre>
       </div>
 
-      <!-- Filters -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-filters" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Filters
+          <a href="#api-filters" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">// Simple equality filter
 builder.filter('status', 'active')
@@ -304,10 +414,10 @@ import { FilterOperator } from "@cgarciagarcia/react-query-builder"
 // .Equals | .LessThan | .GreaterThan | .LessThanOrEqual | .GreaterThanOrEqual | .Distinct</code></pre>
       </div>
 
-      <!-- Sorts -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-sorts" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-blue-400"></span> Sorts
+          <a href="#api-sorts" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">builder.sort('created_at')           // asc by default
 builder.sort('salary', 'desc')
@@ -318,10 +428,10 @@ builder.clearSorts()
 builder.hasSort('created_at')        // → boolean</code></pre>
       </div>
 
-      <!-- Fields -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-fields" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-purple-400"></span> Fields
+          <a href="#api-fields" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">builder.fields('id', 'name', 'email', 'user.avatar')
 // → ?fields=id,name,email&fields[user]=avatar
@@ -331,10 +441,10 @@ builder.clearFields()
 builder.hasField('name')             // → boolean</code></pre>
       </div>
 
-      <!-- Includes -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-includes" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-orange-400"></span> Includes
+          <a href="#api-includes" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">builder.include('posts', 'comments', 'profile.avatar')
 // → ?include=posts,comments,profile.avatar
@@ -344,10 +454,10 @@ builder.clearIncludes()
 builder.hasInclude('posts')          // → boolean</code></pre>
       </div>
 
-      <!-- Params -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-params" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Custom Params
+          <a href="#api-params" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">builder.setParam('search', 'john doe')
 builder.setParam('ids', [1, 2, 3])
@@ -358,12 +468,12 @@ builder.clearParams()
 builder.hasParam('search')           // → boolean</code></pre>
       </div>
 
-      <!-- Pagination -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-pagination" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-pink-400"></span> Pagination
+          <a href="#api-pagination" class="anchor-link" title="Copy link">#</a>
         </h3>
-        <p class="text-gray-400 text-sm mb-4">Adding or removing filters, or changing limit, auto-resets to page 1.</p>
+        <p class="t-muted text-sm mb-4">Adding or removing filters, or changing limit, auto-resets to page 1.</p>
         <pre><code class="language-typescript">const builder = useQueryBuilder({
   pagination: { page: 1, limit: 20 }
 })
@@ -378,10 +488,10 @@ builder.getCurrentPage()  // → number | undefined
 builder.getLimit()        // → number | undefined</code></pre>
       </div>
 
-      <!-- Utilities -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+      <div id="api-utilities" class="mb-14">
+        <h3 class="text-xl font-bold mb-2 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-yellow-400"></span> Utilities
+          <a href="#api-utilities" class="anchor-link" title="Copy link">#</a>
         </h3>
         <pre><code class="language-typescript">// Build the final query string
 builder.build()
@@ -398,12 +508,12 @@ builder.filter('status', 'active').tap(state => console.log(state)).sort('name')
 builder.when(isAdmin, state => console.log('admin:', state))</code></pre>
       </div>
 
-      <!-- Conflicting Filters -->
-      <div class="mb-14">
-        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+      <div id="api-conflicting-filters" class="mb-14">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2 t-heading anchor-heading">
           <span class="w-2 h-2 rounded-full bg-red-400"></span> Conflicting Filters
+          <a href="#api-conflicting-filters" class="anchor-link" title="Copy link">#</a>
         </h3>
-        <p class="text-gray-400 text-sm mb-4">
+        <p class="t-muted text-sm mb-4">
           When two filters cannot coexist (e.g. <code class="text-red-400">date</code> vs <code class="text-red-400">between_dates</code>),
           declare it once — the conflict is automatically bidirectional.
         </p>
@@ -425,12 +535,12 @@ builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
   </section>
 
   <!-- INTEGRATIONS -->
-  <section id="integrations" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
+  <section id="integrations" class="t-border-t py-14 sm:py-20 px-4 sm:px-6">
     <div class="max-w-4xl mx-auto">
       <div class="mb-12">
-        <span class="section-badge bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-3">Integrations</span>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Works great with TanStack Query</h2>
-        <p class="text-gray-400 mt-2">Use <code class="text-purple-400">toArray()</code> as the queryKey so your query re-fetches whenever the builder state changes.</p>
+        <span class="section-badge bg-purple-500/10 text-purple-500 border border-purple-500/20 mb-3">Integrations</span>
+        <h2 class="text-2xl sm:text-3xl font-bold mt-2 t-heading">Works great with TanStack Query</h2>
+        <p class="t-muted mt-2">Use <code class="text-purple-400">toArray()</code> as the queryKey so your query re-fetches whenever the builder state changes.</p>
       </div>
       <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
 import { useQuery } from "@tanstack/react-query"
@@ -457,10 +567,9 @@ function UserList() {
   )
 }</code></pre>
 
-      <!-- TypeScript aliases -->
       <div class="mt-14">
-        <h3 class="text-xl font-bold text-white mb-2">Typed Aliases</h3>
-        <p class="text-gray-400 text-sm mb-4">Map your frontend keys to backend names and get full autocomplete.</p>
+        <h3 class="text-xl font-bold mb-2 t-heading">Typed Aliases</h3>
+        <p class="t-muted text-sm mb-4">Map your frontend keys to backend names and get full autocomplete.</p>
         <pre><code class="language-typescript">type MyAliases = {
   userName:  'name'
   userEmail: 'email'
@@ -477,21 +586,36 @@ builder.filter('userName', 'John')
   </section>
 
   <!-- FOOTER -->
-  <footer class="border-t border-white/5 py-14 px-6 text-center text-gray-500 text-sm">
+  <footer class="t-border-t py-14 px-6 text-center text-sm t-faint">
     <div class="max-w-4xl mx-auto">
-      <p class="text-white font-bold text-base mb-1">@cgarciagarcia/react-query-builder</p>
-      <p class="mb-6">MIT License · Made by <a href="https://github.com/cgarciagarcia" target="_blank" class="text-emerald-400 hover:underline">Carlos Garcia</a></p>
-      <div class="flex flex-wrap justify-center gap-6 text-gray-400 text-sm">
-        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="hover:text-white">GitHub</a>
-        <a href="https://www.npmjs.com/package/@cgarciagarcia/react-query-builder" target="_blank" class="hover:text-white">npm</a>
-        <a href="https://github.com/cgarciagarcia/react-query-builder/issues" target="_blank" class="hover:text-white">Issues</a>
-        <a href="https://github.com/cgarciagarcia/react-query-builder/discussions" target="_blank" class="hover:text-white">Discussions</a>
-        <a href="https://paypal.me/carlosgarciadev" target="_blank" class="hover:text-white">Support ♥</a>
+      <p class="t-heading font-bold text-base mb-1">@cgarciagarcia/react-query-builder</p>
+      <p class="mb-6 t-muted">MIT License · Made by <a href="https://github.com/cgarciagarcia" target="_blank" class="text-emerald-500 hover:underline">Carlos Garcia</a></p>
+      <div class="flex flex-wrap justify-center gap-6 text-sm t-muted">
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="hover:text-emerald-500 transition-colors">GitHub</a>
+        <a href="https://www.npmjs.com/package/@cgarciagarcia/react-query-builder" target="_blank" class="hover:text-emerald-500 transition-colors">npm</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder/issues" target="_blank" class="hover:text-emerald-500 transition-colors">Issues</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder/discussions" target="_blank" class="hover:text-emerald-500 transition-colors">Discussions</a>
+        <a href="https://paypal.me/carlosgarciadev" target="_blank" class="hover:text-emerald-500 transition-colors">Support ♥</a>
       </div>
     </div>
   </footer>
 
   <script>
+    const HLJS_DARK  = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+    const HLJS_LIGHT = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+
+    function toggleTheme() {
+      const html  = document.documentElement
+      const isDark = html.getAttribute('data-theme') === 'dark'
+      const next  = isDark ? 'light' : 'dark'
+      html.setAttribute('data-theme', next)
+      localStorage.setItem('theme', next)
+      document.getElementById('hljs-theme').href = next === 'light' ? HLJS_LIGHT : HLJS_DARK
+      // sync mobile icon
+      document.getElementById('icon-sun-mobile').style.display  = next === 'light' ? 'block' : 'none'
+      document.getElementById('icon-moon-mobile').style.display = next === 'dark'  ? 'block' : 'none'
+    }
+
     function copyInstall() {
       navigator.clipboard.writeText('npm install @cgarciagarcia/react-query-builder')
       const icon = document.getElementById('copy-icon')
@@ -502,16 +626,19 @@ builder.filter('userName', 'John')
     }
 
     function toggleMenu() {
-      const menu = document.getElementById('mobile-menu')
-      menu.classList.toggle('open')
+      document.getElementById('mobile-menu').classList.toggle('open')
     }
 
-    // Close mobile menu on resize to desktop
     window.addEventListener('resize', () => {
-      if (window.innerWidth >= 768) {
-        document.getElementById('mobile-menu').classList.remove('open')
-      }
+      if (window.innerWidth >= 768) document.getElementById('mobile-menu').classList.remove('open')
     })
+
+    // Sync mobile icons to initial theme
+    ;(function () {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      document.getElementById('icon-sun-mobile').style.display  = isDark ? 'none'  : 'block'
+      document.getElementById('icon-moon-mobile').style.display = isDark ? 'block' : 'none'
+    })()
   </script>
 </body>
 </html>
