@@ -1,5 +1,6 @@
 import { type GlobalState } from "@/types";
 
-export const usingAlias = <Al, K>(state: GlobalState<Al>, key: K) => {
-  return (state.aliases[key as unknown as keyof Al] as string) ?? key;
+export const usingAlias = <Al>(state: GlobalState<Al>, key: string): string => {
+  const aliases = state.aliases as Record<string, string> | undefined;
+  return aliases?.[key] ?? key;
 };
