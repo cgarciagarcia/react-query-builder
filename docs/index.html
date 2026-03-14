@@ -15,7 +15,9 @@
   <script>hljs.highlightAll();</script>
   <style>
     html { scroll-behavior: smooth; }
-    .hljs { background: #0d1117 !important; border-radius: 0.75rem; padding: 1.25rem !important; font-size: 0.875rem; line-height: 1.6; }
+    pre { overflow-x: auto; max-width: 100%; }
+    .hljs { background: #0d1117 !important; border-radius: 0.75rem; padding: 1rem !important; font-size: 0.8rem; line-height: 1.6; }
+    @media (min-width: 640px) { .hljs { padding: 1.25rem !important; font-size: 0.875rem; } }
     .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .hero-glow { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52,211,153,0.15), transparent); }
     .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
@@ -24,6 +26,8 @@
     .copy-btn:active { transform: scale(0.95); }
     nav a { transition: color 0.15s; }
     .section-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.65rem; border-radius: 9999px; }
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
   </style>
 </head>
 <body class="bg-[#0a0f1a] text-gray-200 font-sans antialiased">
@@ -32,6 +36,8 @@
   <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1a]/90 backdrop-blur border-b border-white/5">
     <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
       <span class="font-bold text-white text-sm tracking-tight">react-query-builder</span>
+
+      <!-- Desktop links -->
       <div class="hidden md:flex items-center gap-6 text-sm text-gray-400">
         <a href="#install" class="hover:text-white">Install</a>
         <a href="#quickstart" class="hover:text-white">Quick Start</a>
@@ -43,32 +49,52 @@
           GitHub
         </a>
       </div>
+
+      <!-- Mobile: github icon + hamburger -->
+      <div class="flex md:hidden items-center gap-3">
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="text-gray-400 hover:text-white">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+        <button onclick="toggleMenu()" class="text-gray-400 hover:text-white p-1" aria-label="Menu">
+          <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden flex-col border-t border-white/5 bg-[#0a0f1a] px-6 py-4 gap-4 text-sm text-gray-400">
+      <a href="#install" onclick="toggleMenu()" class="hover:text-white py-1">Install</a>
+      <a href="#quickstart" onclick="toggleMenu()" class="hover:text-white py-1">Quick Start</a>
+      <a href="#api" onclick="toggleMenu()" class="hover:text-white py-1">API Reference</a>
+      <a href="#integrations" onclick="toggleMenu()" class="hover:text-white py-1">Integrations</a>
     </div>
   </nav>
 
   <!-- HERO -->
-  <section class="hero-glow pt-32 pb-24 px-6 text-center">
+  <section class="hero-glow pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 text-center">
     <div class="max-w-4xl mx-auto">
       <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 text-sm text-emerald-400 mb-8">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
         Compatible with spatie/laravel-query-builder
       </div>
 
-      <h1 class="text-5xl md:text-6xl font-extrabold text-white leading-tight mb-6">
-        Build Laravel query strings<br/>
-        <span class="gradient-text">straight from React</span>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
+        Build Laravel query strings
+        <span class="gradient-text block sm:inline">straight from React</span>
       </h1>
 
-      <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+      <p class="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
         A TypeScript hook that manages filters, sorts, includes, fields and pagination —
         and outputs a URL string your Laravel backend understands instantly.
       </p>
 
       <!-- Install command -->
-      <div id="install" class="inline-flex items-center gap-3 bg-[#0d1117] border border-white/10 rounded-xl px-6 py-3.5 text-sm font-mono mb-10">
-        <span class="text-gray-500">$</span>
-        <span id="install-cmd" class="text-emerald-400">npm install @cgarciagarcia/react-query-builder</span>
-        <button onclick="copyInstall()" class="copy-btn ml-2 text-gray-500 hover:text-white" title="Copy">
+      <div id="install" class="flex items-center gap-2 bg-[#0d1117] border border-white/10 rounded-xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-mono mb-10 max-w-full overflow-x-auto w-fit mx-auto">
+        <span class="text-gray-500 flex-shrink-0">$</span>
+        <span id="install-cmd" class="text-emerald-400 whitespace-nowrap">npm install @cgarciagarcia/react-query-builder</span>
+        <button onclick="copyInstall()" class="copy-btn flex-shrink-0 ml-1 text-gray-500 hover:text-white" title="Copy">
           <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
           </svg>
@@ -102,7 +128,7 @@ builder.build()
   </section>
 
   <!-- FEATURES -->
-  <section class="py-20 px-6 border-t border-white/5">
+  <section class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
     <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
 
       <div class="card-hover bg-[#0d1117] border border-white/8 rounded-2xl p-6">
@@ -157,11 +183,11 @@ builder.build()
   </section>
 
   <!-- QUICK START -->
-  <section id="quickstart" class="py-20 px-6 border-t border-white/5">
+  <section id="quickstart" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
     <div class="max-w-4xl mx-auto">
       <div class="mb-12">
         <span class="section-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">Getting started</span>
-        <h2 class="text-3xl font-bold text-white mt-2">Quick Start</h2>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Quick Start</h2>
         <p class="text-gray-400 mt-2">Three steps to your first query.</p>
       </div>
 
@@ -208,11 +234,11 @@ function UserList() {
   </section>
 
   <!-- API -->
-  <section id="api" class="py-20 px-6 border-t border-white/5">
+  <section id="api" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
     <div class="max-w-4xl mx-auto">
       <div class="mb-14">
         <span class="section-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">Reference</span>
-        <h2 class="text-3xl font-bold text-white mt-2">API Reference</h2>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">API Reference</h2>
         <p class="text-gray-400 mt-2">All methods are chainable unless noted. The builder re-renders its component on every state change.</p>
       </div>
 
@@ -399,11 +425,11 @@ builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
   </section>
 
   <!-- INTEGRATIONS -->
-  <section id="integrations" class="py-20 px-6 border-t border-white/5">
+  <section id="integrations" class="py-14 sm:py-20 px-4 sm:px-6 border-t border-white/5">
     <div class="max-w-4xl mx-auto">
       <div class="mb-12">
         <span class="section-badge bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-3">Integrations</span>
-        <h2 class="text-3xl font-bold text-white mt-2">Works great with TanStack Query</h2>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Works great with TanStack Query</h2>
         <p class="text-gray-400 mt-2">Use <code class="text-purple-400">toArray()</code> as the queryKey so your query re-fetches whenever the builder state changes.</p>
       </div>
       <pre><code class="language-typescript">import { useQueryBuilder } from "@cgarciagarcia/react-query-builder"
@@ -474,6 +500,18 @@ builder.filter('userName', 'John')
         icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>'
       }, 2000)
     }
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu')
+      menu.classList.toggle('open')
+    }
+
+    // Close mobile menu on resize to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        document.getElementById('mobile-menu').classList.remove('open')
+      }
+    })
   </script>
 </body>
 </html>
