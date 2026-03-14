@@ -164,15 +164,14 @@ export class Builder<
   ): QueryBuilder<Aliases> {
     const overrideValue = args[0];
     const filter = this.state.filters.find((f) => f.attribute === attribute);
-    let filterValues: FilterValue;
-    let shouldUpdate: boolean;
+    let filterValues: FilterValue = [],
+      shouldUpdate = false;
 
     if (isOperator(value)) {
-      if (overrideValue === undefined || _.isBoolean(overrideValue)) {
+      if (overrideValue === undefined || _.isBoolean(overrideValue))
         throw new Error(
           `The third argument is required when using an operator value received: '${overrideValue}'`,
         );
-      }
       filterValues = Array.isArray(overrideValue)
         ? overrideValue
         : [overrideValue];
@@ -251,7 +250,7 @@ export class Builder<
   }
 
   limit(limit: number): QueryBuilder<Aliases> {
-    if (this.state.pagination && limit !== this.state.pagination?.limit) {
+    if (this.state.pagination && limit !== this.state.pagination.limit) {
       this.setState((s) => {
         const state = this.shouldResetPage() ? pageAction(1, s) : s;
         return limitAction(limit, state);
@@ -265,7 +264,7 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          s.pagination?.page != undefined ? s.pagination.page + 1 : 1,
+          s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
           s,
         ),
       );
@@ -274,7 +273,7 @@ export class Builder<
   }
 
   page(page: number): QueryBuilder<Aliases> {
-    if (this.state.pagination && page !== this.state.pagination?.page) {
+    if (this.state.pagination && page !== this.state.pagination.page) {
       this.setState((s) => pageAction(page, s));
     }
     return this;
@@ -342,9 +341,12 @@ export class Builder<
       ? (keyof Aliases & string) | string
       : string)[]
   ): QueryBuilder<Aliases> {
-    if (
-      this.state.sorts.some((sort) => sortsToRemove.includes(sort.attribute))
-    ) {
+    const hasSortToRemove =
+      _.intersection(
+        sortsToRemove,
+        this.state.sorts.map((s) => s.attribute),
+      ).length !== 0;
+    if (hasSortToRemove) {
       this.setState((s) => removeSortAction(sortsToRemove, s));
     }
     return this;

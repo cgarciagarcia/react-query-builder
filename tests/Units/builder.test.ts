@@ -9,6 +9,12 @@ describe("Testing the class Builder", () => {
     expect(builder.build()).toBe("?filter[name]=John+Doe");
   });
 
+  it("should be possible to filter with an operator and an array of values", () => {
+    const builder = new Builder(initialConfig);
+    builder.filter("age", "<", [18, 25]);
+    expect(builder.build()).toBe("?filter[age]=<18,25");
+  });
+
   it("should be possible to filter with dynamics attributes", () => {
     const builder = new Builder(initialConfig);
     builder.filter("name", "<>", "John Doe");
@@ -54,6 +60,12 @@ describe("Testing the class Builder", () => {
   it("should be possible to add a field", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name"] });
     expect(builder.build()).toBe("?fields=name");
+  });
+
+  it("should be possible to add fields using the fields method", () => {
+    const builder = new Builder(initialConfig);
+    builder.fields("name", "age");
+    expect(builder.build()).toBe("?fields=name,age");
   });
 
   it("should be possible to sort ascending", () => {
@@ -104,6 +116,12 @@ describe("Testing the class Builder", () => {
     expect(builder.build()).toBe("?include=address");
   });
 
+  it("should be possible to add includes using the include method", () => {
+    const builder = new Builder(initialConfig);
+    builder.include("address", "jobs");
+    expect(builder.build()).toBe("?include=address,jobs");
+  });
+
   it("should be possible to add a limit and page", () => {
     const builder = new Builder({
       ...initialConfig,
@@ -152,6 +170,16 @@ describe("Testing the class Builder", () => {
     builder.clearSorts();
     expect(builder.build()).toBe("");
   });
+  it("should return true from hasPagination when pagination is configured", () => {
+    const builder = new Builder({ pagination: { page: 1, limit: 10 } });
+    expect(builder.hasPagination()).toBe(true);
+  });
+
+  it("should return false from hasPagination when pagination is not configured", () => {
+    const builder = new Builder(initialConfig);
+    expect(builder.hasPagination()).toBe(false);
+  });
+
   it("should be possible to get the current page", () => {
     const builder = new Builder({
       pagination: { page: 2, limit: 10 },
@@ -241,6 +269,13 @@ describe("Testing the class Builder", () => {
     });
     builder.removeSort("name", "age");
     expect(builder.build()).toBe("");
+  });
+  it("should not change state when removeSort is called with a non-existing attribute", () => {
+    const builder = new Builder({
+      sorts: [{ attribute: "name", direction: "asc" }],
+    });
+    builder.removeSort("nonexistent");
+    expect(builder.build()).toBe("?sort=name");
   });
   it("should be possible to set a param", () => {
     const builder = new Builder(initialConfig);

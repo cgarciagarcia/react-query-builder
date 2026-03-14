@@ -311,6 +311,23 @@ describe("Filter Action test: ", () => {
     ]);
   });
 
+  it("should add filter with operator and a single non-array override value", () => {
+    const result = filterAction(
+      "age",
+      FilterOperator.LessThan,
+      initialState,
+      18,
+    );
+
+    expect(result.filters).toEqual([
+      {
+        attribute: "age",
+        value: [18],
+        operator: "<",
+      },
+    ]);
+  });
+
   it("should not append when filter by operator", () => {
     const state: GlobalState = {
       ...initialState,
