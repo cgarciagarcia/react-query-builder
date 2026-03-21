@@ -41,10 +41,17 @@ import {
   hasParam,
   hasSort,
 } from "@/utils/state";
-import _ from "lodash/fp";
 
 function uniqueID() {
   return Math.floor(Math.random() * Date.now());
+}
+
+function hasIntersection<T>(a: T[], b: T[]): boolean {
+  return a.some((x) => b.includes(x));
+}
+
+function symmetricDiff<T>(a: T[], b: T[]): T[] {
+  return [...a.filter((x) => !b.includes(x)), ...b.filter((x) => !a.includes(x))];
 }
 
 export class Builder<
@@ -145,7 +152,7 @@ export class Builder<
   }
 
   fields(...fields: Field[]): QueryBuilder<Aliases> {
-    const areNotEquals = _.difference(fields, this.state.fields).length !== 0;
+    const areNotEquals = fields.some((f) => !this.state.fields.includes(f));
     if (areNotEquals) {
       this.setState((s) => fieldAction(fields, s));
     }
@@ -168,7 +175,7 @@ export class Builder<
       shouldUpdate = false;
 
     if (isOperator(value)) {
-      if (overrideValue === undefined || _.isBoolean(overrideValue))
+      if (overrideValue === undefined || typeof overrideValue === "boolean")
         throw new Error(
           `The third argument is required when using an operator value received: '${overrideValue}'`,
         );
@@ -177,17 +184,20 @@ export class Builder<
         : [overrideValue];
       shouldUpdate =
         filter?.operator !== value ||
-        !_.isEmpty(_.xor(filter?.value, filterValues));
+        symmetricDiff(filter?.value ?? [], filterValues).length > 0;
     } else {
       filterValues = Array.isArray(value) ? value : [value];
       const shouldOverride = overrideValue === true;
 
       if (shouldOverride) {
-        shouldUpdate = !_.isEmpty(_.xor(filter?.value, filterValues));
+        shouldUpdate =
+          symmetricDiff(filter?.value ?? [], filterValues).length > 0;
       } else {
         // Append mode: check if there are new values to add
         const currentValues = filter?.value ?? [];
-        const newValues = _.difference(filterValues, currentValues);
+        const newValues = filterValues.filter(
+          (x) => !currentValues.includes(x),
+        );
         shouldUpdate = newValues.length > 0;
       }
     }
@@ -241,8 +251,9 @@ export class Builder<
   }
 
   include(...includes: Include[]): QueryBuilder<Aliases> {
-    const areNotEquals =
-      _.difference(includes, this.state.includes).length !== 0;
+    const areNotEquals = includes.some(
+      (i) => !this.state.includes.includes(i),
+    );
     if (areNotEquals) {
       this.setState((s) => includeAction(includes, s));
     }
@@ -289,8 +300,7 @@ export class Builder<
   }
 
   removeField(...fieldsToRemove: Field[]): QueryBuilder<Aliases> {
-    const hasFieldToRemove =
-      _.intersection(fieldsToRemove, this.state.fields).length !== 0;
+    const hasFieldToRemove = hasIntersection(fieldsToRemove, this.state.fields);
     if (hasFieldToRemove) {
       this.setState((s) => removeFieldAction(fieldsToRemove, s));
     }
@@ -316,8 +326,7 @@ export class Builder<
   }
 
   removeInclude(...includesToRemove: Include[]): QueryBuilder<Aliases> {
-    const hasIncludeToRemove =
-      _.intersection(includesToRemove, this.state.includes).length !== 0;
+    const hasIncludeToRemove = hasIntersection(includesToRemove, this.state.includes);
     if (hasIncludeToRemove) {
       this.setState((s) => removeIncludeAction(includesToRemove, s));
     }
@@ -326,10 +335,7 @@ export class Builder<
   }
 
   removeParam(...paramsToRemove: string[]): QueryBuilder<Aliases> {
-    const hasParamToRemove = _.intersection(
-      paramsToRemove,
-      Object.keys(this.state.params),
-    );
+    const hasParamToRemove = hasIntersection(paramsToRemove, Object.keys(this.state.params));
     if (hasParamToRemove) {
       this.setState((s) => removeParamAction(paramsToRemove, s));
     }
@@ -341,11 +347,9 @@ export class Builder<
       ? (keyof Aliases & string) | string
       : string)[]
   ): QueryBuilder<Aliases> {
-    const hasSortToRemove =
-      _.intersection(
-        sortsToRemove,
-        this.state.sorts.map((s) => s.attribute),
-      ).length !== 0;
+    const hasSortToRemove = sortsToRemove.some((s) =>
+      this.state.sorts.some((sort) => sort.attribute === s),
+    );
     if (hasSortToRemove) {
       this.setState((s) => removeSortAction(sortsToRemove, s));
     }
@@ -357,8 +361,9 @@ export class Builder<
     value: (string | number)[] | string | number,
   ): QueryBuilder<Aliases> {
     const val = Array.isArray(value) ? value : [value];
-    const areNotEquals =
-      _.difference(this.state.params[key] ?? [], val).length !== 0;
+    const areNotEquals = (this.state.params[key] ?? []).some(
+      (x) => !val.includes(x),
+    );
     if (areNotEquals || !this.state.params[key]) {
       this.setState((s) => paramAction(key, val, s));
     }
