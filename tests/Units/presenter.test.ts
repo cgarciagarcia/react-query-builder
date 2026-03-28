@@ -1,7 +1,7 @@
 import { toArray } from "@/actions/presenter";
 import { type GlobalState } from "@/types";
-import { describe, expect, it } from "vitest";
 import { initialState } from "@tests/Units/utils";
+import { describe, expect, it } from "vitest";
 
 describe("toArray", () => {
   it("should return an array with all elements from the state", () => {

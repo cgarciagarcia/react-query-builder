@@ -1,6 +1,6 @@
 import { Builder } from "@/classes/Builder";
-import { describe, expect, it, vi } from "vitest";
 import { initialConfig } from "@tests/Units/utils";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Testing the class Builder", () => {
   it("should be possible to filter", () => {

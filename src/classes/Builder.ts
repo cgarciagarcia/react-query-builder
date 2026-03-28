@@ -51,7 +51,10 @@ function hasIntersection<T>(a: T[], b: T[]): boolean {
 }
 
 function symmetricDiff<T>(a: T[], b: T[]): T[] {
-  return [...a.filter((x) => !b.includes(x)), ...b.filter((x) => !a.includes(x))];
+  return [
+    ...a.filter((x) => !b.includes(x)),
+    ...b.filter((x) => !a.includes(x)),
+  ];
 }
 
 export class Builder<
@@ -251,9 +254,7 @@ export class Builder<
   }
 
   include(...includes: Include[]): QueryBuilder<Aliases> {
-    const areNotEquals = includes.some(
-      (i) => !this.state.includes.includes(i),
-    );
+    const areNotEquals = includes.some((i) => !this.state.includes.includes(i));
     if (areNotEquals) {
       this.setState((s) => includeAction(includes, s));
     }
@@ -326,7 +327,10 @@ export class Builder<
   }
 
   removeInclude(...includesToRemove: Include[]): QueryBuilder<Aliases> {
-    const hasIncludeToRemove = hasIntersection(includesToRemove, this.state.includes);
+    const hasIncludeToRemove = hasIntersection(
+      includesToRemove,
+      this.state.includes,
+    );
     if (hasIncludeToRemove) {
       this.setState((s) => removeIncludeAction(includesToRemove, s));
     }
@@ -335,7 +339,10 @@ export class Builder<
   }
 
   removeParam(...paramsToRemove: string[]): QueryBuilder<Aliases> {
-    const hasParamToRemove = hasIntersection(paramsToRemove, Object.keys(this.state.params));
+    const hasParamToRemove = hasIntersection(
+      paramsToRemove,
+      Object.keys(this.state.params),
+    );
     if (hasParamToRemove) {
       this.setState((s) => removeParamAction(paramsToRemove, s));
     }

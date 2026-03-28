@@ -6,8 +6,8 @@ import {
   hasParam,
   hasSort,
 } from "@/utils/state";
-import { describe, expect, it } from "vitest";
 import { initialState } from "@tests/Units/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Utilities state test", function () {
   it("should check if a filter exists", function () {
