@@ -1,6 +1,6 @@
 import { Builder } from "@/classes/Builder";
-import { describe, expect, it } from "@jest/globals";
 import { initialConfig } from "@tests/Units/utils";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Testing the class Builder", () => {
   it("should be possible to filter", () => {
@@ -231,6 +231,15 @@ describe("Testing the class Builder", () => {
     builder.nextPage();
     expect(builder.getCurrentPage()).toBe(2);
   });
+
+  it("should not move to next page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.nextPage();
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to move to the previous page", () => {
     const builder = new Builder({
       pagination: { page: 2, limit: 10 },
@@ -238,11 +247,36 @@ describe("Testing the class Builder", () => {
     builder.previousPage();
     expect(builder.getCurrentPage()).toBe(1);
   });
+
+  it("should not move to previous page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.previousPage();
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it("should not update page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.page(2);
+    expect(subscriber).not.toHaveBeenCalled();
+  });
   it("should be possible to remove a field", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name", "age"] });
     builder.removeField("age");
     expect(builder.build()).toBe("?fields=name");
   });
+
+  it("should not update state when removeField is called with a non-existing field", () => {
+    const builder = new Builder({ ...initialConfig, fields: ["name"] });
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeField("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to remove a filter", () => {
     const builder = new Builder({
       filters: [{ attribute: "name", value: ["John Doe"] }],
@@ -250,10 +284,35 @@ describe("Testing the class Builder", () => {
     builder.removeFilter("name");
     expect(builder.build()).toBe("");
   });
+
+  it("should not update state when removeFilter is called with a non-existing filter", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeFilter("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to remove an include", () => {
     const builder = new Builder({ ...initialConfig, includes: ["address"] });
     builder.removeInclude("address");
     expect(builder.build()).toBe("");
+  });
+
+  it("should not update state when removeInclude is called with a non-existing include", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeInclude("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it("should not update state when removeParam is called with a non-existing param", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeParam("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
   });
   it("should be possible to remove a param", () => {
     const builder = new Builder({ ...initialConfig, params: { page: [1] } });
@@ -270,6 +329,18 @@ describe("Testing the class Builder", () => {
     builder.removeSort("name", "age");
     expect(builder.build()).toBe("");
   });
+  it("should not update state when sort is called with same attribute and direction", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.sort("name", "asc");
+    builder.sort("name", "asc");
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?sort=name");
+  });
+
   it("should not change state when removeSort is called with a non-existing attribute", () => {
     const builder = new Builder({
       sorts: [{ attribute: "name", direction: "asc" }],
@@ -291,6 +362,17 @@ describe("Testing the class Builder", () => {
     const builder = new Builder(initialConfig);
     builder.setParam("nested", [1, 1, 1, 1]);
     expect(builder.build()).toBe("?nested=1,1,1,1");
+  });
+
+  it("should not update state when setParam is called with the same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.setParam("page", 1);
+    builder.setParam("page", 1);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
   });
   it("should be possible to tap into the state", () => {
     const builder = new Builder(initialConfig);
@@ -398,7 +480,7 @@ describe("Testing the class Builder", () => {
 
   it("should be possible to unsubscribe from state changes", () => {
     const builder = new Builder(initialConfig);
-    const subscriber = jest.fn();
+    const subscriber = vi.fn();
     const subscriptionId = builder.addSubscriber(subscriber);
     builder.removeSubscriber(subscriptionId);
     builder.filter("name", "John Doe");
@@ -407,8 +489,8 @@ describe("Testing the class Builder", () => {
 
   it("should notify all subscribers when state changes", () => {
     const builder = new Builder(initialConfig);
-    const firstSubscriber = jest.fn();
-    const secondSubscriber = jest.fn();
+    const firstSubscriber = vi.fn();
+    const secondSubscriber = vi.fn();
     builder.addSubscriber(firstSubscriber);
     builder.addSubscriber(secondSubscriber);
     builder.filter("name", "John Doe");
@@ -428,8 +510,8 @@ describe("Testing the class Builder", () => {
 
   it("should not notify removed subscribers while keeping remaining ones", () => {
     const builder = new Builder(initialConfig);
-    const removedSubscriber = jest.fn();
-    const keptSubscriber = jest.fn();
+    const removedSubscriber = vi.fn();
+    const keptSubscriber = vi.fn();
     const idToRemove = builder.addSubscriber(removedSubscriber);
     builder.addSubscriber(keptSubscriber);
     builder.removeSubscriber(idToRemove);
@@ -563,5 +645,38 @@ describe("Testing the class Builder", () => {
     });
     builder.filter("name", ["Jane Doe"]);
     expect(builder.getCurrentPage()).toBe(1);
+  });
+
+  it("should not update state when operator filter is called with same operator and same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.filter("age", ">", 18);
+    builder.filter("age", ">", 18);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?filter[age]=>18");
+  });
+
+  it("should not update state when override filter is called with same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.filter("status", "active", true);
+    builder.filter("status", "active", true);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?filter[status]=active");
+  });
+
+  it("should update state when override filter is called with different value", () => {
+    const builder = new Builder(initialConfig);
+    builder.filter("status", "active");
+
+    builder.filter("status", "inactive", true);
+
+    expect(builder.build()).toBe("?filter[status]=inactive");
   });
 });

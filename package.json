@@ -1,9 +1,15 @@
 {
   "name": "@cgarciagarcia/react-query-builder",
   "version": "1.20.6",
-  "description": "",
+  "description": "React hook to build query strings compatible with spatie/laravel-query-builder",
   "main": "dist/bundle.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/bundle.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "type": "module",
   "files": [
     "dist"
@@ -11,15 +17,15 @@
   "scripts": {
     "lint": "eslint --max-warnings 0 .",
     "clean": "rm -rf dist",
-    "test": "jest",
-    "build": "npm run build:js && npm run build:types",
+    "test": "vitest run",
+    "build": "pnpm build:js && pnpm build:types",
     "build:js": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/bundle.js --format=esm --external:react",
     "build:types": "tsc && tsc-alias",
     "tag:generate": "standard-version",
-    "release": "npm run build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
+    "release": "pnpm build && rm -rf ./dist/tests && npm publish --provenance --access public && rm -rf ./dist",
     "prepare": "husky",
-    "pre-commit": "npm run fix && npm run test",
-    "fix": "prettier --write \"./src/**/*.{js,cjs,mjs,ts,tsx,md,json}\" \"./tests/**/*\" --ignore-path .gitignore && npm run lint"
+    "pre-commit": "pnpm fix && pnpm test",
+    "fix": "prettier --write \"./src/**/*.{js,cjs,mjs,ts,tsx,md,json}\" \"./tests/**/*\" --ignore-path .gitignore && pnpm lint"
   },
   "repository": {
     "type": "git",
@@ -32,32 +38,31 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
-    "@jest/globals": "^29.7.0",
-    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@testing-library/react": "^16.3.2",
     "@types/eslint": "^8.56.12",
-    "@types/jest": "^29.5.14",
     "@types/react": "^18.3.17",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/eslint-plugin": "^1.6.13",
     "esbuild": "^0.25.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.9.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-unused-imports": "^3.2.0",
+    "happy-dom": "^20.8.9",
     "husky": "^9.1.7",
-    "jest": "^29.7.0",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "standard-version": "^9.5.0",
-    "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.2"
   },
   "keywords": [
     "react",
@@ -78,5 +83,12 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "rolldown",
+      "unrs-resolver"
+    ]
   }
 }

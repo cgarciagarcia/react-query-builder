@@ -1,6 +1,6 @@
 import { limitAction, pageAction } from "@/actions/pagination";
-import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Pagination tests", () => {
   it("should add page param to the url", () => {

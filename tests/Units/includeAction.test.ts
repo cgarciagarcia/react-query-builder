@@ -4,8 +4,8 @@ import {
   removeIncludeAction,
 } from "@/actions/include";
 import { type GlobalState } from "@/types";
-import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Include Action test: ", () => {
   it("should add a new include", () => {

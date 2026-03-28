@@ -51,7 +51,10 @@ function hasIntersection<T>(a: T[], b: T[]): boolean {
 }
 
 function symmetricDiff<T>(a: T[], b: T[]): T[] {
-  return [...a.filter((x) => !b.includes(x)), ...b.filter((x) => !a.includes(x))];
+  return [
+    ...a.filter((x) => !b.includes(x)),
+    ...b.filter((x) => !a.includes(x)),
+  ];
 }
 
 export class Builder<
@@ -184,7 +187,8 @@ export class Builder<
         : [overrideValue];
       shouldUpdate =
         filter?.operator !== value ||
-        symmetricDiff(filter?.value ?? [], filterValues).length > 0;
+        symmetricDiff(filter?.value /* v8 ignore next */ ?? [], filterValues)
+          .length > 0;
     } else {
       filterValues = Array.isArray(value) ? value : [value];
       const shouldOverride = overrideValue === true;
@@ -251,9 +255,7 @@ export class Builder<
   }
 
   include(...includes: Include[]): QueryBuilder<Aliases> {
-    const areNotEquals = includes.some(
-      (i) => !this.state.includes.includes(i),
-    );
+    const areNotEquals = includes.some((i) => !this.state.includes.includes(i));
     if (areNotEquals) {
       this.setState((s) => includeAction(includes, s));
     }
@@ -275,7 +277,7 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
+          /* v8 ignore next */ s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
           s,
         ),
       );
@@ -293,7 +295,7 @@ export class Builder<
   previousPage(): QueryBuilder<Aliases> {
     if (this.state.pagination?.page && this.state.pagination.page > 1) {
       this.setState((s) =>
-        pageAction(s.pagination?.page ? s.pagination.page - 1 : 1, s),
+        pageAction(/* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1, s),
       );
     }
     return this;
@@ -326,7 +328,10 @@ export class Builder<
   }
 
   removeInclude(...includesToRemove: Include[]): QueryBuilder<Aliases> {
-    const hasIncludeToRemove = hasIntersection(includesToRemove, this.state.includes);
+    const hasIncludeToRemove = hasIntersection(
+      includesToRemove,
+      this.state.includes,
+    );
     if (hasIncludeToRemove) {
       this.setState((s) => removeIncludeAction(includesToRemove, s));
     }
@@ -335,7 +340,10 @@ export class Builder<
   }
 
   removeParam(...paramsToRemove: string[]): QueryBuilder<Aliases> {
-    const hasParamToRemove = hasIntersection(paramsToRemove, Object.keys(this.state.params));
+    const hasParamToRemove = hasIntersection(
+      paramsToRemove,
+      Object.keys(this.state.params),
+    );
     if (hasParamToRemove) {
       this.setState((s) => removeParamAction(paramsToRemove, s));
     }

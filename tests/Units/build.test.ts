@@ -1,7 +1,7 @@
 import { buildAction } from "@/actions/build";
 import { FilterOperator, type GlobalState } from "@/types";
-import { describe, expect, it } from "@jest/globals";
 import { initialState } from "@tests/Units/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Assert build method is working correctly", () => {
   it("should return a empty url", () => {

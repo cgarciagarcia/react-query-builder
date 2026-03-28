@@ -14,7 +14,7 @@
     "sourceMap": false,
     "moduleResolution": "Node",
     "emitDeclarationOnly": true,
-    "types": ["react", "jest"],
+    "types": ["react", "vitest/globals"],
     "outDir": "./dist",
     "noUnusedParameters": true,
     "noUnusedLocals": true,
@@ -32,7 +32,6 @@
     "dist",
     "node_modules",
     "*.config.cjs",
-    "jest.config.ts",
     "commitlint.config.js",
     "examples"
   ]

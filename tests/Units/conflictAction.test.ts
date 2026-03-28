@@ -1,5 +1,5 @@
 import { reverseConflicts } from "@/actions/conflict";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 
 describe("reverseConflicts", () => {
   it("should reverse conflicts correctly", () => {
