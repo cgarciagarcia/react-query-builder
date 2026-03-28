@@ -277,7 +277,7 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
+          /* v8 ignore next */ s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
           s,
         ),
       );
@@ -295,7 +295,7 @@ export class Builder<
   previousPage(): QueryBuilder<Aliases> {
     if (this.state.pagination?.page && this.state.pagination.page > 1) {
       this.setState((s) =>
-        pageAction(s.pagination?.page ? s.pagination.page - 1 : 1, s),
+        pageAction(/* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1, s),
       );
     }
     return this;

@@ -231,6 +231,15 @@ describe("Testing the class Builder", () => {
     builder.nextPage();
     expect(builder.getCurrentPage()).toBe(2);
   });
+
+  it("should not move to next page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.nextPage();
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to move to the previous page", () => {
     const builder = new Builder({
       pagination: { page: 2, limit: 10 },
@@ -238,11 +247,36 @@ describe("Testing the class Builder", () => {
     builder.previousPage();
     expect(builder.getCurrentPage()).toBe(1);
   });
+
+  it("should not move to previous page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.previousPage();
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it("should not update page when pagination is not set", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.page(2);
+    expect(subscriber).not.toHaveBeenCalled();
+  });
   it("should be possible to remove a field", () => {
     const builder = new Builder({ ...initialConfig, fields: ["name", "age"] });
     builder.removeField("age");
     expect(builder.build()).toBe("?fields=name");
   });
+
+  it("should not update state when removeField is called with a non-existing field", () => {
+    const builder = new Builder({ ...initialConfig, fields: ["name"] });
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeField("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to remove a filter", () => {
     const builder = new Builder({
       filters: [{ attribute: "name", value: ["John Doe"] }],
@@ -250,10 +284,35 @@ describe("Testing the class Builder", () => {
     builder.removeFilter("name");
     expect(builder.build()).toBe("");
   });
+
+  it("should not update state when removeFilter is called with a non-existing filter", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeFilter("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
   it("should be possible to remove an include", () => {
     const builder = new Builder({ ...initialConfig, includes: ["address"] });
     builder.removeInclude("address");
     expect(builder.build()).toBe("");
+  });
+
+  it("should not update state when removeInclude is called with a non-existing include", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeInclude("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it("should not update state when removeParam is called with a non-existing param", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+    builder.removeParam("non-existing");
+    expect(subscriber).not.toHaveBeenCalled();
   });
   it("should be possible to remove a param", () => {
     const builder = new Builder({ ...initialConfig, params: { page: [1] } });
