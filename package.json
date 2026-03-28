@@ -1,6 +1,6 @@
 {
   "name": "@cgarciagarcia/react-query-builder",
-  "version": "1.21.0",
+  "version": "1.21.1",
   "description": "React hook to build query strings compatible with spatie/laravel-query-builder",
   "main": "dist/bundle.js",
   "types": "dist/index.d.ts",
