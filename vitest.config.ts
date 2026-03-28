@@ -13,6 +13,12 @@ export default defineConfig({
     environment: "node",
     coverage: {
       provider: "v8",
+      exclude: [
+        "**/*.config.{cjs,js,ts}",
+        "**/.eslintrc.cjs",
+        "index.ts",
+        "src/index.ts",
+      ],
       thresholds: {
         lines: 85,
       },

@@ -270,6 +270,18 @@ describe("Testing the class Builder", () => {
     builder.removeSort("name", "age");
     expect(builder.build()).toBe("");
   });
+  it("should not update state when sort is called with same attribute and direction", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.sort("name", "asc");
+    builder.sort("name", "asc");
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?sort=name");
+  });
+
   it("should not change state when removeSort is called with a non-existing attribute", () => {
     const builder = new Builder({
       sorts: [{ attribute: "name", direction: "asc" }],
@@ -563,5 +575,38 @@ describe("Testing the class Builder", () => {
     });
     builder.filter("name", ["Jane Doe"]);
     expect(builder.getCurrentPage()).toBe(1);
+  });
+
+  it("should not update state when operator filter is called with same operator and same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.filter("age", ">", 18);
+    builder.filter("age", ">", 18);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?filter[age]=>18");
+  });
+
+  it("should not update state when override filter is called with same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.filter("status", "active", true);
+    builder.filter("status", "active", true);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(builder.build()).toBe("?filter[status]=active");
+  });
+
+  it("should update state when override filter is called with different value", () => {
+    const builder = new Builder(initialConfig);
+    builder.filter("status", "active");
+
+    builder.filter("status", "inactive", true);
+
+    expect(builder.build()).toBe("?filter[status]=inactive");
   });
 });

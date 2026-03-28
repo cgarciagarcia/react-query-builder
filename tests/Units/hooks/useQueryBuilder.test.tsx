@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
+import { useQueryBuilder } from "@/hooks/useQueryBuilder";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-
-import { useQueryBuilder } from "@/hooks/useQueryBuilder";
 
 describe("useQueryBuilder", () => {
   it("should return a QueryBuilder instance with empty state", () => {
