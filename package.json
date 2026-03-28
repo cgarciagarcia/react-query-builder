@@ -18,6 +18,7 @@
     "lint": "eslint --max-warnings 0 .",
     "clean": "rm -rf dist",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "build": "pnpm build:js && pnpm build:types",
     "build:js": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/bundle.js --format=esm --external:react",
     "build:types": "tsc && tsc-alias",
