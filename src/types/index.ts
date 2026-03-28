@@ -8,11 +8,17 @@ export type Include = string;
 export type FilterValue = (string | number)[] | string | number;
 
 export const FilterOperator = {
+  /** Exact match: `filter[field]=value` */
   Equals: "=",
+  /** Less than: `filter[field][lt]=value` */
   LessThan: "<",
+  /** Greater than: `filter[field][gt]=value` */
   GreaterThan: ">",
+  /** Less than or equal: `filter[field][lte]=value` */
   LessThanOrEqual: "<=",
+  /** Greater than or equal: `filter[field][gte]=value` */
   GreaterThanOrEqual: ">=",
+  /** Not equal / distinct: `filter[field][neq]=value` */
   Distinct: "<>",
 } as const;
 
@@ -21,6 +27,7 @@ export type OperatorType = (typeof FilterOperator)[keyof typeof FilterOperator];
 export interface Filter<Al> {
   attribute: Al extends object ? (keyof Al & string) | string : string;
   value: (string | number)[];
+  /** Filter comparison operator. Defaults to `FilterOperator.Equals` (`=`) when omitted. */
   operator?: OperatorType;
 }
 
@@ -56,6 +63,26 @@ export interface QueryBuilder<
     | Record<string, string>
     | undefined,
 > {
+  /**
+   * Add or override a filter.
+   *
+   * @param attribute - The field name (or alias key) to filter on.
+   * @param value - The filter value. Pass a `FilterOperator` here to use a
+   *   custom comparison operator, then supply the actual value as the third
+   *   argument.
+   * @param override - When `value` is a `FilterOperator`, this is the real
+   *   filter value. Otherwise pass `true` to replace an existing filter with
+   *   the same attribute instead of adding a new one.
+   *
+   * @example Basic equality filter
+   * builder.filter("status", "active")
+   *
+   * @example Operator filter
+   * builder.filter("age", FilterOperator.GreaterThan, 18)
+   *
+   * @example Override existing filter
+   * builder.filter("status", "inactive", true)
+   */
   filter: <TFilter extends FilterValue>(
     attribute: AliasType extends object
       ? (keyof AliasType & string) | string
