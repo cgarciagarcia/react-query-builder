@@ -4,7 +4,7 @@ import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 describe("useMount", () => {
-  it("should call fn only once on mount", () => {
+  it("should call fn only once regardless of re-renders", () => {
     const fn = vi.fn();
     const { rerender } = renderHook(() => useMount(fn));
 
@@ -26,13 +26,15 @@ describe("useMount", () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it("should call fn on initial mount", () => {
-    let called = false;
-    renderHook(() =>
-      useMount(() => {
-        called = true;
-      }),
-    );
-    expect(called).toBe(true);
+  it("should call fn again when component remounts", () => {
+    const fn = vi.fn();
+    const { unmount, rerender } = renderHook(() => useMount(fn));
+
+    rerender();
+    unmount();
+
+    renderHook(() => useMount(fn));
+
+    expect(fn).toHaveBeenCalledTimes(2);
   });
 });
