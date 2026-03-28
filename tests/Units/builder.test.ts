@@ -304,6 +304,17 @@ describe("Testing the class Builder", () => {
     builder.setParam("nested", [1, 1, 1, 1]);
     expect(builder.build()).toBe("?nested=1,1,1,1");
   });
+
+  it("should not update state when setParam is called with the same value", () => {
+    const builder = new Builder(initialConfig);
+    const subscriber = vi.fn();
+    builder.addSubscriber(subscriber);
+
+    builder.setParam("page", 1);
+    builder.setParam("page", 1);
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+  });
   it("should be possible to tap into the state", () => {
     const builder = new Builder(initialConfig);
     let called = false;

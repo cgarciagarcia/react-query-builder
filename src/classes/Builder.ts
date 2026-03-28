@@ -187,7 +187,8 @@ export class Builder<
         : [overrideValue];
       shouldUpdate =
         filter?.operator !== value ||
-        symmetricDiff(filter?.value /* v8 ignore next */ ?? [], filterValues).length > 0;
+        symmetricDiff(filter?.value /* v8 ignore next */ ?? [], filterValues)
+          .length > 0;
     } else {
       filterValues = Array.isArray(value) ? value : [value];
       const shouldOverride = overrideValue === true;
