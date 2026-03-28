@@ -20,11 +20,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: 'actions/setup-node@v6'
         with:
           node-version: '25.x'
           registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
 
       - name: 'Configure Git'
         run: |
@@ -32,12 +38,12 @@ jobs:
           git config --global user.email "actions@github.com"
 
       - name: 'Install Dependencies'
-        run: 'npm install'
+        run: 'pnpm install'
       - name: 'Releasing app'
         run: |
-            npm run tag:generate
+            pnpm run tag:generate
             git push --follow-tags origin main
-            npm run release
+            pnpm run release
         env:
             NPM_CONFIG_PROVENANCE: true
       - name: 'Trigger badged'

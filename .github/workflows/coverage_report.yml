@@ -22,22 +22,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: 'actions/setup-node@v6'
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
 
       - name: 'Determine branch from tag'
         run: |
             branch_name=$(git branch -r --contains $(git rev-parse HEAD) | grep -v '\->' | head -n 1 | sed 's/.*\///')
             echo "branch_name=$branch_name" >> $GITHUB_ENV
       - name: 'Install Dependencies'
-        run: 'npm install'
+        run: 'pnpm install'
 
       - name: 'Generate Coverage report files'
         env:
           CI: true
-        run: 'npm run test -- --coverage --coverageDirectory=./tests/coverage'
+        run: 'pnpm run test -- --coverage --coverageDirectory=./tests/coverage'
 
       - name: 'Coveralls Parallel'
         uses: 'coverallsapp/github-action@master'
