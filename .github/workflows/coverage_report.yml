@@ -43,7 +43,7 @@ jobs:
       - name: 'Generate Coverage report files'
         env:
           CI: true
-        run: 'pnpm run test -- --coverage --coverage.reportsDirectory=./tests/coverage'
+        run: 'pnpm run test -- --coverage --coverage.reporter=lcov --coverage.reportsDirectory=./tests/coverage'
 
       - name: 'Coveralls Parallel'
         uses: 'coverallsapp/github-action@master'
