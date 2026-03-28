@@ -13,6 +13,8 @@ export default defineConfig({
     environment: "node",
     coverage: {
       provider: "v8",
+      reporter: ["text", "lcov"],
+      reportsDirectory: "./tests/coverage",
       exclude: [
         "**/*.config.{cjs,js,ts}",
         "**/.eslintrc.cjs",
