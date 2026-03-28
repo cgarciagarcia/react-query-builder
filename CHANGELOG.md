@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.21.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.6...v1.21.0) (2026-03-28)
+
+
+### Features
+
+* migrate to Vitest v4, add JSDoc, hook tests and CI pnpm support ([#79](https://github.com/cgarciagarcia/react-query-builder/issues/79)) ([1a6d1db](https://github.com/cgarciagarcia/react-query-builder/commit/1a6d1dbc832b3b5be2aefcedead8fe576dd9b92b))
+
 ### [1.20.6](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.5...v1.20.6) (2026-03-21)
 
 ### [1.20.5](https://github.com/cgarciagarcia/react-query-builder/compare/v1.20.4...v1.20.5) (2026-03-14)
