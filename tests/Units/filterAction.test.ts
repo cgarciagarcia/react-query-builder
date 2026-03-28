@@ -5,7 +5,7 @@ import {
   removeFilterAction,
 } from "@/actions/filter";
 import { FilterOperator, type GlobalState } from "@/types";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { initialState } from "@tests/Units/utils";
 
 describe("Filter Action test: ", () => {

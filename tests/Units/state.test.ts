@@ -6,7 +6,7 @@ import {
   hasParam,
   hasSort,
 } from "@/utils/state";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { initialState } from "@tests/Units/utils";
 
 describe("Utilities state test", function () {

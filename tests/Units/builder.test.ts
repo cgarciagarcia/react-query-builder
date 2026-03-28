@@ -1,5 +1,5 @@
 import { Builder } from "@/classes/Builder";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { initialConfig } from "@tests/Units/utils";
 
 describe("Testing the class Builder", () => {
@@ -398,7 +398,7 @@ describe("Testing the class Builder", () => {
 
   it("should be possible to unsubscribe from state changes", () => {
     const builder = new Builder(initialConfig);
-    const subscriber = jest.fn();
+    const subscriber = vi.fn();
     const subscriptionId = builder.addSubscriber(subscriber);
     builder.removeSubscriber(subscriptionId);
     builder.filter("name", "John Doe");
@@ -407,8 +407,8 @@ describe("Testing the class Builder", () => {
 
   it("should notify all subscribers when state changes", () => {
     const builder = new Builder(initialConfig);
-    const firstSubscriber = jest.fn();
-    const secondSubscriber = jest.fn();
+    const firstSubscriber = vi.fn();
+    const secondSubscriber = vi.fn();
     builder.addSubscriber(firstSubscriber);
     builder.addSubscriber(secondSubscriber);
     builder.filter("name", "John Doe");
@@ -428,8 +428,8 @@ describe("Testing the class Builder", () => {
 
   it("should not notify removed subscribers while keeping remaining ones", () => {
     const builder = new Builder(initialConfig);
-    const removedSubscriber = jest.fn();
-    const keptSubscriber = jest.fn();
+    const removedSubscriber = vi.fn();
+    const keptSubscriber = vi.fn();
     const idToRemove = builder.addSubscriber(removedSubscriber);
     builder.addSubscriber(keptSubscriber);
     builder.removeSubscriber(idToRemove);

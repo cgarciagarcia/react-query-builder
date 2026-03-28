@@ -1,5 +1,5 @@
 import { whenAction } from "@/actions/when";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { initialState } from "@tests/Units/utils";
 
 describe("Testing when action", () => {

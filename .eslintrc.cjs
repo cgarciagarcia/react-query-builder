@@ -12,13 +12,12 @@ const config = {
     es2022: true,
     browser: true,
     commonjs: true,
-    "jest/globals": true,
   },
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "./tsconfig.json",
   },
-  plugins: ["@typescript-eslint", "import", "unused-imports", "jest"],
+  plugins: ["@typescript-eslint", "import", "unused-imports", "@vitest"],
   rules: {
     "react/prop-types": "off",
     "@typescript-eslint/unbound-method": "off",
@@ -42,12 +41,10 @@ const config = {
     "import/no-duplicates": "error",
     "object-curly-spacing": ["warn", "always"],
 
-    //Jest Configuration
-    "jest/no-disabled-tests": "warn",
-    "jest/no-focused-tests": "error",
-    "jest/no-identical-title": "error",
-    "jest/prefer-to-have-length": "warn",
-    "jest/valid-expect": "error",
+    // Vitest Configuration
+    "@vitest/no-disabled-tests": "warn",
+    "@vitest/no-focused-tests": "error",
+    "@vitest/valid-expect": "error",
   },
   ignorePatterns: [
     ".eslintrc.cjs",
@@ -63,13 +60,6 @@ const config = {
   },
   settings: {
     react: { version: "detect" },
-    jest: {
-      globalAliases: {
-        describe: ["context"],
-        fdescribe: ["fcontext"],
-        xdescribe: ["xcontext"],
-      },
-    },
   },
 };
 
