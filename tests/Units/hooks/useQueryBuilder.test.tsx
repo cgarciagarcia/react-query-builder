@@ -78,4 +78,15 @@ describe("useQueryBuilder", () => {
 
     expect(result.current.build()).toBe("?filter[full_name]=John");
   });
+
+  it("should not throw when mutating builder after unmount", () => {
+    const { result, unmount } = renderHook(() => useQueryBuilder());
+    const builder = result.current;
+
+    unmount();
+
+    expect(() => {
+      builder.filter("name", "John");
+    }).not.toThrow();
+  });
 });
