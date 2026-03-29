@@ -26,6 +26,7 @@ import { toArray } from "@/actions/presenter";
 import { clearSortsAction, removeSortAction, sortAction } from "@/actions/sort";
 import { whenAction } from "@/actions/when";
 import {
+  type AliasAttribute,
   type BaseConfig,
   type Field,
   type FilterValue,
@@ -164,9 +165,7 @@ export class Builder<
   }
 
   filter<TFilter extends FilterValue>(
-    attribute: Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string,
+    attribute: AliasAttribute<Aliases>,
     value: TFilter,
     ...args: TFilter extends OperatorType
       ? [override: FilterValue]
@@ -232,9 +231,7 @@ export class Builder<
     return hasField(fields, this.state);
   }
 
-  hasFilter(
-    ...filters: (Aliases extends object ? keyof Aliases | string : string)[]
-  ): boolean {
+  hasFilter(...filters: AliasAttribute<Aliases>[]): boolean {
     return hasFilter(filters, this.state);
   }
 
@@ -246,11 +243,7 @@ export class Builder<
     return hasParam(params, this.state);
   }
 
-  hasSort(
-    ...sorts: (Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string)[]
-  ): boolean {
+  hasSort(...sorts: AliasAttribute<Aliases>[]): boolean {
     return hasSort(sorts, this.state);
   }
 
@@ -277,7 +270,9 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          /* v8 ignore next */ s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
+          /* v8 ignore next */ s.pagination?.page !== undefined
+            ? s.pagination.page + 1
+            : 1,
           s,
         ),
       );
@@ -295,7 +290,10 @@ export class Builder<
   previousPage(): QueryBuilder<Aliases> {
     if (this.state.pagination?.page && this.state.pagination.page > 1) {
       this.setState((s) =>
-        pageAction(/* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1, s),
+        pageAction(
+          /* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1,
+          s,
+        ),
       );
     }
     return this;
@@ -310,9 +308,7 @@ export class Builder<
   }
 
   removeFilter(
-    ...filtersToRemove: (Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string)[]
+    ...filtersToRemove: AliasAttribute<Aliases>[]
   ): QueryBuilder<Aliases> {
     if (
       this.state.filters.some((filter) =>
@@ -351,9 +347,7 @@ export class Builder<
   }
 
   removeSort(
-    ...sortsToRemove: (Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string)[]
+    ...sortsToRemove: AliasAttribute<Aliases>[]
   ): QueryBuilder<Aliases> {
     const hasSortToRemove = sortsToRemove.some((s) =>
       this.state.sorts.some((sort) => sort.attribute === s),
@@ -379,9 +373,7 @@ export class Builder<
   }
 
   sort(
-    attribute: Aliases extends object
-      ? (keyof Aliases & string) | string
-      : string,
+    attribute: AliasAttribute<Aliases>,
     direction?: "asc" | "desc",
   ): QueryBuilder<Aliases> {
     const currentSort = this.state.sorts.find((f) => f.attribute === attribute);

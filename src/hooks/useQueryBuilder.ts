@@ -1,7 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Builder } from "@/classes/Builder";
-import { useMount } from "@/hooks/useMount";
-import { type BaseConfig, type QueryBuilder } from "src/types";
+import { type BaseConfig, type QueryBuilder } from "@/types";
 
 export const useQueryBuilder = <
   Aliases extends Record<string, string> | undefined = undefined,
@@ -12,11 +11,15 @@ export const useQueryBuilder = <
 
   const [, setReRendersCounter] = useState(0);
 
-  useMount(() => {
-    builder.current.addSubscriber(() => {
+  useEffect(() => {
+    const instance = builder.current;
+    const id = instance.addSubscriber(() => {
       setReRendersCounter((r) => r + 1);
     });
-  });
+    return () => {
+      instance.removeSubscriber(id);
+    };
+  }, []);
 
   return builder.current;
 };
