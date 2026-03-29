@@ -1,5 +1,9 @@
+export type AliasAttribute<Al> = Al extends object
+  ? (keyof Al & string) | string
+  : string;
+
 export interface Sort<T> {
-  attribute: T extends object ? (keyof T & string) | string : string;
+  attribute: AliasAttribute<T>;
   direction: "asc" | "desc";
 }
 
@@ -25,7 +29,7 @@ export const FilterOperator = {
 export type OperatorType = (typeof FilterOperator)[keyof typeof FilterOperator];
 
 export interface Filter<Al> {
-  attribute: Al extends object ? (keyof Al & string) | string : string;
+  attribute: AliasAttribute<Al>;
   value: (string | number)[];
   /** Filter comparison operator. Defaults to `FilterOperator.Equals` (`=`) when omitted. */
   operator?: OperatorType;
@@ -84,33 +88,25 @@ export interface QueryBuilder<
    * builder.filter("status", "inactive", true)
    */
   filter: <TFilter extends FilterValue>(
-    attribute: AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string,
+    attribute: AliasAttribute<AliasType>,
     value: TFilter,
     ...override: TFilter extends OperatorType
       ? [override: FilterValue]
       : [override?: boolean]
   ) => QueryBuilder<AliasType>;
   removeFilter: (
-    ...filtersToRemove: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
+    ...filtersToRemove: AliasAttribute<AliasType>[]
   ) => QueryBuilder<AliasType>;
   clearFilters: () => QueryBuilder<AliasType>;
   include: (...includes: Include[]) => QueryBuilder<AliasType>;
   removeInclude: (...includesToRemove: Include[]) => QueryBuilder<AliasType>;
   clearIncludes: () => QueryBuilder<AliasType>;
   sort: (
-    attribute: AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string,
+    attribute: AliasAttribute<AliasType>,
     direction?: "asc" | "desc",
   ) => QueryBuilder<AliasType>;
   removeSort: (
-    ...attributeToRemove: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
+    ...attributeToRemove: AliasAttribute<AliasType>[]
   ) => QueryBuilder<AliasType>;
   clearSorts: () => QueryBuilder<AliasType>;
   build: () => string;
@@ -131,16 +127,8 @@ export interface QueryBuilder<
     callback: (state: GlobalState<AliasType>) => void,
   ) => QueryBuilder<AliasType>;
   toArray: () => string[];
-  hasFilter: (
-    ...attribute: (AliasType extends object
-      ? keyof AliasType | string
-      : string)[]
-  ) => boolean;
-  hasSort: (
-    ...attribute: (AliasType extends object
-      ? (keyof AliasType & string) | string
-      : string)[]
-  ) => boolean;
+  hasFilter: (...attribute: AliasAttribute<AliasType>[]) => boolean;
+  hasSort: (...attribute: AliasAttribute<AliasType>[]) => boolean;
   hasInclude: (...includes: Include[]) => boolean;
   hasField: (...fields: Field[]) => boolean;
   hasParam: (...key: string[]) => boolean;
