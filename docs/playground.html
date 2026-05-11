@@ -116,6 +116,19 @@
     .output-panel::-webkit-scrollbar { width: 5px; }
     .output-panel::-webkit-scrollbar-track { background: transparent; }
     .output-panel::-webkit-scrollbar-thumb { background: var(--c-border-card); border-radius: 9px; }
+
+    /* localStorage inspector */
+    .storage-toolbar { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .storage-key-tag { font-family: ui-monospace, monospace; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); color: #60a5fa; background: rgba(96,165,250,0.08); }
+    .storage-btn { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); background: transparent; color: var(--c-text-muted); cursor: pointer; transition: all 0.15s; }
+    .storage-btn:hover { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.08); }
+    .storage-btn.danger:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.08); }
+    .storage-textarea { width: 100%; box-sizing: border-box; min-height: 6rem; font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1.5; color: var(--c-text); background: var(--c-card); border: 1px solid var(--c-border-card); border-radius: 0.4rem; padding: 0.55rem 0.75rem; resize: vertical; outline: none; }
+    .storage-textarea:focus { border-color: #34d399; }
+    .storage-hint { font-size: 0.68rem; color: var(--c-text-faint); margin-top: 0.4rem; }
+    .storage-feedback { font-size: 0.68rem; margin-top: 0.4rem; font-family: ui-monospace, monospace; }
+    .storage-feedback.ok    { color: #34d399; }
+    .storage-feedback.error { color: #f87171; }
   </style>
 </head>
 <body>
@@ -186,9 +199,23 @@
         <div id="console-output"><span class="empty-hint">console.log() output appears here</span></div>
       </div>
 
-      <div class="output-section" style="border-bottom:none">
+      <div class="output-section">
         <div class="output-label">Builder State</div>
         <div id="state-output"><span class="empty-hint">Internal state after execution</span></div>
+      </div>
+
+      <div class="output-section" id="storage-section" style="border-bottom:none;display:none">
+        <div class="output-label">localStorage</div>
+        <div class="storage-toolbar">
+          <span class="storage-key-tag" id="storage-key-label">rqb-playground-demo</span>
+          <button class="storage-btn" onclick="loadSampleStorage()">Sample</button>
+          <button class="storage-btn danger" onclick="clearStorageKey()">Clear</button>
+          <button class="storage-btn" onclick="refreshStorageInput()">Reload</button>
+          <button class="storage-btn" onclick="saveStorageKey()" style="margin-left:auto;border-color:#34d399;color:#34d399">Save &amp; Run</button>
+        </div>
+        <textarea id="storage-input" class="storage-textarea" spellcheck="false" placeholder='{ "filters": [{ "attribute": "status", "value": ["active"] }] }'></textarea>
+        <div id="storage-feedback" class="storage-feedback"></div>
+        <div class="storage-hint">Used by the <strong>localStorage Adapter</strong> example. Edit the JSON and click <strong>Save &amp; Run</strong> to re-hydrate the builder from it. <strong>Reload</strong> refreshes from the current localStorage value.</div>
       </div>
 
     </div>
@@ -550,6 +577,9 @@ console.log(builder.build())
 `,
       localStorageAdapter: `// localStorage adapter — two-way binding with browser storage.
 // read() seeds the builder on mount; write() persists every mutation.
+//
+// TIP: there's a live editor for this key in the "localStorage" panel on the
+// right. Click "Sample" → "Save & Run" to seed it, or edit the JSON directly.
 const KEY = 'rqb-playground-demo'
 
 const localStorageAdapter = {
@@ -812,6 +842,7 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
         setStatus('error', err.message)
       } finally {
         console.log = origLog
+        refreshStorageInput({ preserveFocus: true })
       }
     }
 
@@ -907,6 +938,84 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
       document.getElementById('console-output').innerHTML = '<span class="empty-hint">No console output</span>'
     }
 
+    // ─── localStorage inspector ──────────────────────────────────────────────────
+    const STORAGE_DEMO_KEY = 'rqb-playground-demo'
+    const STORAGE_SAMPLE = {
+      filters: [
+        { attribute: 'status', value: ['active'] },
+        { attribute: 'role',   value: ['admin', 'editor'] },
+      ],
+      sorts: [{ attribute: 'created_at', direction: 'desc' }],
+      includes: ['author', 'tags'],
+      fields: ['id', 'title', 'user.name'],
+      params: {},
+    }
+
+    function _storageInput()    { return document.getElementById('storage-input') }
+    function _storageFeedback() { return document.getElementById('storage-feedback') }
+
+    function _setFeedback(kind, msg) {
+      const el = _storageFeedback()
+      el.className = 'storage-feedback ' + (kind || '')
+      el.textContent = msg || ''
+      if (kind === 'ok' && msg) {
+        clearTimeout(_setFeedback._t)
+        _setFeedback._t = setTimeout(() => {
+          if (el.textContent === msg) { el.textContent = ''; el.className = 'storage-feedback' }
+        }, 1800)
+      }
+    }
+
+    function refreshStorageInput(options) {
+      const input = _storageInput()
+      if (!input) return
+      // Don't clobber the user's edits while they're typing
+      if (options?.preserveFocus && document.activeElement === input) return
+
+      const raw = localStorage.getItem(STORAGE_DEMO_KEY)
+      if (raw === null) {
+        input.value = ''
+        return
+      }
+      try {
+        input.value = JSON.stringify(JSON.parse(raw), null, 2)
+      } catch {
+        input.value = raw // not JSON — show as-is so the user can fix it
+      }
+    }
+
+    function saveStorageKey() {
+      const input = _storageInput()
+      const raw = input.value.trim()
+      if (raw === '') {
+        localStorage.removeItem(STORAGE_DEMO_KEY)
+        _setFeedback('ok', 'Cleared (empty value).')
+        runCode()
+        return
+      }
+      try {
+        const parsed = JSON.parse(raw)
+        localStorage.setItem(STORAGE_DEMO_KEY, JSON.stringify(parsed))
+        input.value = JSON.stringify(parsed, null, 2)
+        _setFeedback('ok', 'Saved. Re-running the example…')
+        runCode()
+      } catch (err) {
+        _setFeedback('error', 'Invalid JSON: ' + err.message)
+      }
+    }
+
+    function clearStorageKey() {
+      localStorage.removeItem(STORAGE_DEMO_KEY)
+      _storageInput().value = ''
+      _setFeedback('ok', 'localStorage key removed.')
+      runCode()
+    }
+
+    function loadSampleStorage() {
+      _storageInput().value = JSON.stringify(STORAGE_SAMPLE, null, 2)
+      _setFeedback('', 'Sample loaded — click "Save & Run" to apply.')
+    }
+
     // ─── Example loader ──────────────────────────────────────────────────────────
     function loadExample(key, btn) {
       if (!editor) return
@@ -914,6 +1023,14 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
       btn.classList.add('active')
       editor.setValue(EXAMPLES[key])
       editor.setScrollPosition({ scrollTop: 0 })
+      toggleStorageSection(key === 'localStorageAdapter')
+    }
+
+    function toggleStorageSection(visible) {
+      const section = document.getElementById('storage-section')
+      if (!section) return
+      section.style.display = visible ? '' : 'none'
+      if (visible) refreshStorageInput()
     }
 
     // ─── Theme toggle ─────────────────────────────────────────────────────────────
