@@ -25,6 +25,7 @@ A TypeScript React hook that builds query strings compatible with [spatie/larave
   - [Pagination](#pagination)
   - [Utilities](#utilities)
 - [Advanced: Conflicting Filters](#advanced-conflicting-filters)
+- [Hydrating from URL](#hydrating-from-url)
 - [Support](#support)
 - [License](#license)
 
@@ -293,6 +294,108 @@ builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
 ```
 
 The conflict is **bidirectional by default** — you only need to declare it once. You can also declare both directions explicitly if you prefer.
+
+---
+
+## Hydrating from URL
+
+The builder bridges to external state sources through an `adapter`. An adapter is any object that implements `QueryBuilderAdapter`:
+
+```ts
+interface QueryBuilderAdapter<Aliases> {
+  read: () => Partial<GlobalState<Aliases>>;
+  write?: (state: GlobalState<Aliases>) => void;
+}
+```
+
+- `read()` is called **exactly once** when the builder is created — like the lazy form of `useState(() => ...)`. Its return value seeds the initial state.
+- `write(state)` is optional. When defined, it runs on every state change so the external source can stay in sync (two-way binding).
+
+### Reading the current URL
+
+For the most common case — reading the page's query string — use the built-in `createSearchParamsAdapter`:
+
+```ts
+import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder";
+
+const urlAdapter = createSearchParamsAdapter({
+  // Optionally remap the keys the parser looks for in the URL.
+  // Anything you omit keeps its default ("filter", "sort", "include", "fields").
+  keys: {
+    filter: "filt",
+    sort:   "srt",
+    include:"inc",
+    fields: "fld",
+  },
+  // Query params that are not filter/sort/include/fields are ignored unless
+  // you list them here. They land in `state.params`.
+  allowedParams: ["locale", "tenant"],
+});
+
+const builder = useQueryBuilder({ adapter: urlAdapter });
+```
+
+Visiting `?filt[status]=active&srt=-name&inc=user&fld[user]=id,email&locale=es` produces a builder whose `build()` returns
+
+```
+?filter[status]=active&fields[user]=id,email&sort=-name&include=user&locale=es
+```
+
+(The output always uses the library's default keys — the renamed keys are only for **reading** from the URL.)
+
+### Notes
+
+- **One-shot read.** `read()` runs only at builder creation; later URL changes do **not** re-hydrate. Define `write` (or add a router listener) if you need to keep the URL in sync with the builder.
+- **Precedence.** Explicit config wins over `adapter.read()`. Passing `filters: [...]` alongside an adapter overrides the seeded filters entirely.
+- **SSR friendly.** The default `source` of `createSearchParamsAdapter` is `() => window.location.search`, evaluated inside `read()`. The default returns `""` when `window` is not available, so it never throws in Node.
+- **`page` / `limit` are not auto-hydrated** out of the box — add them to `allowedParams` if you need them preserved as raw params.
+
+### Two-way binding with `write`
+
+Add a `write` function to push every state change back to the URL (or anywhere else):
+
+```ts
+const adapter: QueryBuilderAdapter = {
+  read:  () => parseSearchParams(window.location.search),
+  write: (state) => {
+    const url = new URL(window.location.href);
+    url.search = buildAction(state); // or any custom serializer
+    window.history.replaceState(null, "", url);
+  },
+};
+
+useQueryBuilder({ adapter });
+```
+
+### Custom adapters
+
+`QueryBuilderAdapter` is just `{ read, write? }`. Any source — `react-router`'s search params, a hash fragment, an in-memory store, `localStorage` — can be wrapped as an adapter:
+
+```ts
+const memoryAdapter: QueryBuilderAdapter = {
+  read:  () => store.get(),
+  write: (state) => store.set(state),
+};
+
+useQueryBuilder({ adapter: memoryAdapter });
+```
+
+### Lower level: `parseSearchParams`
+
+If you only need the parser without the adapter wrapper, it is exported as a pure function:
+
+```ts
+import { parseSearchParams } from "@cgarciagarcia/react-query-builder";
+
+parseSearchParams("?filt[status]=active", {
+  keys: { filter: "filt" },
+  allowedParams: ["locale"],
+});
+// → { filters: [{ attribute: "status", value: ["active"] }] }
+```
 
 ---
 

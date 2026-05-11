@@ -45,6 +45,7 @@ interface BaseConfig {
   }
   useQuestionMark?: boolean  // prepend "?" to build() output (default: true)
   pagination?: { page: number; limit?: number }
+  adapter?: QueryBuilderAdapter  // see "Adapters" section below
 }
 ```
 
@@ -141,6 +142,117 @@ const builder = useQueryBuilder({
 ```
 
 Conflicts are automatically bidirectional.
+
+## Adapters (hydrating from external sources)
+
+The builder bridges to external state sources via `adapter`. An adapter is any
+object with the shape:
+
+```ts
+interface QueryBuilderAdapter<Aliases = undefined> {
+  read:  () => Partial<GlobalState<Aliases>>
+  write?: (state: GlobalState<Aliases>) => void
+}
+```
+
+- `read()` runs **exactly once** at builder creation — lazy init, like
+  `useState(() => ...)`. Its return seeds the initial state.
+- `write?(state)` is optional. When defined, it runs on every state change
+  (registered as an internal subscriber) — use for two-way binding.
+- Precedence: built-in defaults < `adapter.read()` < explicit `BaseConfig`
+  fields. Passing `filters: [...]` alongside an adapter overrides what
+  `read()` returned for that field.
+
+### Built-in URL adapter
+
+```ts
+import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const urlAdapter = createSearchParamsAdapter({
+  // Optional: rename the URL keys the parser looks for.
+  // Omitted keys keep their default ('filter' | 'sort' | 'include' | 'fields').
+  keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
+  // Optional: explicit allowlist of extra query params to preserve as `params`.
+  // Unknown params not in this list are ignored. Default: [] (nothing extra).
+  allowedParams: ['locale', 'tenant'],
+  // Optional. Default: () => window.location.search (returns "" in SSR).
+  // Evaluated inside read(), so module-scope instantiation is safe.
+  source: () => window.location.search,
+})
+
+const builder = useQueryBuilder({ adapter: urlAdapter })
+```
+
+Configurable URL keys: `filter`, `sort`, `include`, `fields`. **`page` and
+`limit` are NOT auto-hydrated** — add them to `allowedParams` if you want
+them preserved as raw params.
+
+Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
+Renamed keys only apply when **reading** from the URL.
+
+### Custom adapter — localStorage (two-way)
+
+```ts
+import {
+  useQueryBuilder,
+  type QueryBuilderAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const STORAGE_KEY = "user-filters"
+
+const localStorageAdapter: QueryBuilderAdapter = {
+  read: () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") }
+    catch { return {} }
+  },
+  write: (state) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      filters:    state.filters,
+      sorts:      state.sorts,
+      fields:     state.fields,
+      includes:   state.includes,
+      pagination: state.pagination,
+    }))
+  },
+}
+
+const builder = useQueryBuilder({ adapter: localStorageAdapter })
+```
+
+### Two-way URL binding
+
+```ts
+import { useQueryBuilder, parseSearchParams } from "@cgarciagarcia/react-query-builder"
+
+useQueryBuilder({
+  adapter: {
+    read:  () => parseSearchParams(window.location.search),
+    write: (state) => {
+      const url = new URL(window.location.href)
+      url.search = builder.build() // or any custom serializer
+      window.history.replaceState(null, "", url)
+    },
+  },
+})
+```
+
+### Lower-level: `parseSearchParams`
+
+Pure (no DOM) parser, exported if you need it without the adapter wrapper:
+
+```ts
+import { parseSearchParams } from "@cgarciagarcia/react-query-builder"
+
+parseSearchParams("?filt[status]=active&srt=-name", {
+  keys: { filter: "filt", sort: "srt" },
+  allowedParams: ["locale"],
+})
+// → { filters: [{ attribute: "status", value: ["active"] }],
+//     sorts:   [{ attribute: "name",   direction: "desc"   }] }
+```
 
 ## Integration with TanStack Query
 

@@ -159,6 +159,8 @@
         <button class="example-btn" onclick="loadExample('fields', this)">Fields & Includes</button>
         <button class="example-btn" onclick="loadExample('conflicts', this)">Conflicts</button>
         <button class="example-btn" onclick="loadExample('aliases', this)">Aliases</button>
+        <button class="example-btn" onclick="loadExample('urlAdapter', this)">URL Adapter</button>
+        <button class="example-btn" onclick="loadExample('localStorageAdapter', this)">localStorage Adapter</button>
       </div>
       <div id="monaco-container"></div>
     </div>
@@ -261,19 +263,24 @@
 
     class _Builder {
       constructor(config = {}) {
+        const seeded = config.adapter?.read?.() ?? {}
+        const pick = (key) => (config[key] !== undefined ? config[key] : seeded[key])
+
         this._state = {
-          aliases: config.aliases ?? {},
-          filters: JSON.parse(JSON.stringify(config.filters ?? [])),
-          includes: [...(config.includes ?? [])],
-          sorts: JSON.parse(JSON.stringify(config.sorts ?? [])),
-          fields: [...(config.fields ?? [])],
-          params: JSON.parse(JSON.stringify(config.params ?? {})),
+          aliases: config.aliases ?? seeded.aliases ?? {},
+          filters: JSON.parse(JSON.stringify(pick('filters') ?? [])),
+          includes: [...(pick('includes') ?? [])],
+          sorts: JSON.parse(JSON.stringify(pick('sorts') ?? [])),
+          fields: [...(pick('fields') ?? [])],
+          params: JSON.parse(JSON.stringify(pick('params') ?? {})),
           useQuestionMark: config.useQuestionMark ?? true,
           pagination: config.pagination ? { ...config.pagination } : undefined,
           pruneConflictingFilters: _reverseConflicts(config.pruneConflictingFilters ?? {}),
           delimiters: { global: ',', fields: null, filters: null, sorts: null, includes: null, params: null, ...(config.delimiters ?? {}) },
         }
+        this._writeFn = typeof config.adapter?.write === 'function' ? config.adapter.write : null
       }
+      _notifyWrite() { if (this._writeFn) this._writeFn(this._state) }
       filter(attribute, value, override) {
         if (_isOperator(value)) {
           const op = value, realValue = Array.isArray(override) ? override : [override]
@@ -329,8 +336,84 @@
       when(cond, cb)  { if (cond) cb(this._state); return this }
     }
 
+    // Wrap every mutator so adapter.write(state) is invoked on every mutation.
+    const _MUTATORS = [
+      'filter', 'removeFilter', 'clearFilters',
+      'sort', 'removeSort', 'clearSorts',
+      'fields', 'removeField', 'clearFields',
+      'include', 'removeInclude', 'clearIncludes',
+      'setParam', 'removeParam', 'clearParams',
+      'page', 'limit', 'nextPage', 'previousPage',
+    ]
+    for (const name of _MUTATORS) {
+      const original = _Builder.prototype[name]
+      _Builder.prototype[name] = function (...args) {
+        const result = original.apply(this, args)
+        this._notifyWrite()
+        return result
+      }
+    }
+
     const FilterOperator = { Equals:'=', LessThan:'<', GreaterThan:'>', LessThanOrEqual:'<=', GreaterThanOrEqual:'>=', Distinct:'<>' }
     function useQueryBuilder(config) { return new _Builder(config) }
+
+    // ─── Adapter helpers (mirror src/utils/parseSearchParams + src/adapters/searchParams) ─
+    const _OP_PREFIXES = ['<>', '<=', '>=', '<', '>']
+    function _extractOperator(raw) {
+      for (const op of _OP_PREFIXES) {
+        if (raw.startsWith(op)) return { operator: op, rest: raw.slice(op.length) }
+      }
+      return { rest: raw }
+    }
+    function _bracketedKey(paramKey, prefix) {
+      if (!paramKey.startsWith(prefix + '[') || !paramKey.endsWith(']')) return null
+      return paramKey.slice(prefix.length + 1, -1)
+    }
+    function parseSearchParams(search, options = {}) {
+      const trimmed = (search ?? '').replace(/^\?/, '').trim()
+      if (!trimmed) return {}
+      const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
+      const allowed = new Set(options.allowedParams ?? [])
+      const params = new URLSearchParams(trimmed)
+      const filters = [], fields = [], sorts = [], includes = [], collected = {}
+
+      for (const [key, raw] of params.entries()) {
+        const filterAttr = _bracketedKey(key, keys.filter)
+        if (filterAttr !== null) {
+          const { operator, rest } = _extractOperator(raw)
+          filters.push({ attribute: filterAttr, value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
+          continue
+        }
+        const fieldEntity = _bracketedKey(key, keys.fields)
+        if (fieldEntity !== null) {
+          for (const prop of raw.split(',')) fields.push(`${fieldEntity}.${prop}`)
+          continue
+        }
+        if (key === keys.fields) { for (const f of raw.split(',')) fields.push(f); continue }
+        if (key === keys.sort) {
+          for (const item of raw.split(',')) {
+            const desc = item.startsWith('-')
+            sorts.push({ attribute: desc ? item.slice(1) : item, direction: desc ? 'desc' : 'asc' })
+          }
+          continue
+        }
+        if (key === keys.include) { for (const inc of raw.split(',')) includes.push(inc); continue }
+        if (allowed.has(key)) collected[key] = raw.split(',')
+      }
+      const result = {}
+      if (filters.length)  result.filters  = filters
+      if (fields.length)   result.fields   = fields
+      if (sorts.length)    result.sorts    = sorts
+      if (includes.length) result.includes = includes
+      if (Object.keys(collected).length) result.params = collected
+      return result
+    }
+    function createSearchParamsAdapter(options = {}) {
+      const defaultSource = () => (typeof window === 'undefined' ? '' : window.location.search)
+      return {
+        read: () => parseSearchParams((options.source ?? defaultSource)(), options),
+      }
+    }
 
     // ─── Examples ───────────────────────────────────────────────────────────────
     const EXAMPLES = {
@@ -440,6 +523,70 @@ console.log(builder.build())
 // hasFilter uses frontend names too
 console.log('has userName:', builder.hasFilter('userName'))
 `,
+      urlAdapter: `// URL adapter — hydrate the builder from a query string on first mount.
+//
+// In a real app you'd let createSearchParamsAdapter read window.location.search.
+// Here we inject a fake \`source\` so the example is reproducible inside the
+// playground (no actual URL changes).
+const urlAdapter = createSearchParamsAdapter({
+  source: () => '?filt[status]=active&srt=-created_at&inc=user&fld[user]=id,email&locale=es',
+  keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
+  allowedParams: ['locale'],  // anything outside this list is ignored
+})
+
+const builder = useQueryBuilder({ adapter: urlAdapter })
+
+console.log('Hydrated query string:')
+console.log(builder.build())
+// → ?filter[status]=active&fields[user]=id,email&sort=-created_at&include=user&locale=es
+
+// Output always uses the library default keys ('filter', 'sort', ...).
+// Renaming only applies when READING from the URL.
+
+// Mutations work normally — the seed is just an initial value.
+builder.filter('role', 'admin').sort('name')
+console.log('\\nAfter further mutations:')
+console.log(builder.build())
+`,
+      localStorageAdapter: `// localStorage adapter — two-way binding with browser storage.
+// read() seeds the builder on mount; write() persists every mutation.
+const KEY = 'rqb-playground-demo'
+
+const localStorageAdapter = {
+  read: () => {
+    try { return JSON.parse(localStorage.getItem(KEY) ?? '{}') }
+    catch { return {} }
+  },
+  write: (state) => {
+    localStorage.setItem(KEY, JSON.stringify({
+      filters:  state.filters,
+      sorts:    state.sorts,
+      includes: state.includes,
+      fields:   state.fields,
+      params:   state.params,
+    }))
+  },
+}
+
+const builder = useQueryBuilder({ adapter: localStorageAdapter })
+
+console.log('Seeded from localStorage on mount:')
+console.log(builder.build() || '(empty)')
+
+// Every mutation triggers write() automatically.
+builder
+  .filter('status', 'active')
+  .sort('updated_at', 'desc')
+  .include('author')
+
+console.log('\\nAfter mutations:')
+console.log(builder.build())
+
+console.log('\\nPersisted payload in localStorage:')
+console.log(JSON.parse(localStorage.getItem(KEY) ?? '{}'))
+
+// Re-run this example to see the previous state being restored.
+`,
     }
 
     // ─── Monaco setup ────────────────────────────────────────────────────────────
@@ -507,6 +654,54 @@ interface QueryBuilder {
   when(condition: boolean, callback: (state: object) => void): QueryBuilder;
 }
 
+interface GlobalState {
+  aliases:  Record<string, string>;
+  filters:  { attribute: string; value: (string|number)[]; operator?: OperatorType }[];
+  sorts:    { attribute: string; direction: Direction }[];
+  includes: string[];
+  fields:   string[];
+  params:   Record<string, (string|number)[]>;
+  pagination?: { page?: number; limit?: number };
+  useQuestionMark: boolean;
+  delimiters: {
+    global: string;
+    fields: string | null; filters: string | null; sorts: string | null;
+    includes: string | null; params: string | null;
+  };
+  pruneConflictingFilters: Record<string, string[]>;
+}
+
+/**
+ * Bridge to an external source of state. \`read()\` seeds the builder once
+ * at creation; the optional \`write()\` runs on every mutation.
+ */
+interface QueryBuilderAdapter {
+  read:   () => Partial<GlobalState>;
+  write?: (state: GlobalState) => void;
+}
+
+type ConfigurableURLKey = 'filter' | 'sort' | 'include' | 'fields';
+
+interface SearchParamsAdapterOptions {
+  /** Rename the URL keys the parser looks for. Defaults to identity. */
+  keys?:          Partial<Record<ConfigurableURLKey, string>>;
+  /** Allowlist of extra query params to preserve as \`params\`. Default: []. */
+  allowedParams?: string[];
+  /** Provider of the query string. Default: () => window.location.search */
+  source?:        () => string;
+}
+
+/** Pure parser: query string → Partial<GlobalState>. No DOM needed. */
+declare function parseSearchParams(
+  search: string,
+  options?: SearchParamsAdapterOptions,
+): Partial<GlobalState>;
+
+/** Built-in adapter that reads window.location.search (or any \`source\`). */
+declare function createSearchParamsAdapter(
+  options?: SearchParamsAdapterOptions,
+): QueryBuilderAdapter;
+
 interface BaseConfig {
   aliases?:                  Record<string, string>;
   filters?:                  { attribute: string; value: (string|number)[]; operator?: OperatorType }[];
@@ -525,6 +720,8 @@ interface BaseConfig {
   };
   useQuestionMark?: boolean;
   pagination?: { page: number; limit?: number };
+  /** Hydrate from an external source on mount; optionally persist on every change. */
+  adapter?:         QueryBuilderAdapter;
 }
 
 /** Create a new QueryBuilder instance */
@@ -594,11 +791,17 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
 
         // Wrap in function with provided globals
         const fn = new Function(
-          'useQueryBuilder', 'FilterOperator', 'console',
+          'useQueryBuilder', 'FilterOperator', 'createSearchParamsAdapter', 'parseSearchParams', 'console',
           jsCode + '\n;typeof builder !== "undefined" ? builder : null'
         )
 
-        const result = fn(useQueryBuilder, FilterOperator, { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) })
+        const result = fn(
+          useQueryBuilder,
+          FilterOperator,
+          createSearchParamsAdapter,
+          parseSearchParams,
+          { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) },
+        )
         _lastBuilder = result instanceof _Builder ? result : null
 
         renderOutput(_lastBuilder)

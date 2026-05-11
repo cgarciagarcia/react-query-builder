@@ -80,6 +80,9 @@ export class Builder<
   };
 
   constructor(config?: BaseConfig<Aliases>) {
+    const { adapter, ...rest } = config ?? {};
+    const seeded: Partial<GlobalState<Aliases>> = adapter?.read() ?? {};
+
     this.state = {
       aliases: {} as Aliases,
       filters: [],
@@ -89,9 +92,10 @@ export class Builder<
       params: {},
       useQuestionMark: true,
       pagination: {},
-      ...(config ?? {}),
+      ...seeded,
+      ...rest,
       pruneConflictingFilters: reverseConflicts(
-        config?.pruneConflictingFilters ?? {},
+        rest.pruneConflictingFilters ?? {},
       ),
       delimiters: {
         global: ",",
@@ -100,9 +104,13 @@ export class Builder<
         sorts: null,
         includes: null,
         params: null,
-        ...(config?.delimiters ?? {}),
+        ...(rest.delimiters ?? {}),
       },
     };
+
+    if (adapter?.write) {
+      this.addSubscriber(adapter.write);
+    }
   }
 
   private setState(fn: (s: GlobalState<Aliases>) => GlobalState<Aliases>) {
@@ -277,7 +285,9 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          /* v8 ignore next */ s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
+          /* v8 ignore next */ s.pagination?.page !== undefined
+            ? s.pagination.page + 1
+            : 1,
           s,
         ),
       );
@@ -295,7 +305,10 @@ export class Builder<
   previousPage(): QueryBuilder<Aliases> {
     if (this.state.pagination?.page && this.state.pagination.page > 1) {
       this.setState((s) =>
-        pageAction(/* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1, s),
+        pageAction(
+          /* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1,
+          s,
+        ),
       );
     }
     return this;

@@ -152,6 +152,56 @@ export interface QueryBuilder<
   getLimit: () => number | undefined;
 }
 
+/**
+ * URL keys recognized by the built-in `parseSearchParams` and
+ * `createSearchParamsAdapter`. Consumers can remap any of these to a custom
+ * key (e.g. `filter` -> `filt`) while reading from the URL.
+ */
+export type ConfigurableURLKey = "filter" | "sort" | "include" | "fields";
+
+export interface SearchParamsAdapterOptions {
+  /**
+   * Remap the URL keys the parser looks for. Any omitted key falls back to
+   * its default (`filter`, `sort`, `include`, `fields`).
+   */
+  keys?: Partial<Record<ConfigurableURLKey, string>>;
+  /**
+   * Explicit allowlist of query params that are NOT `filter`/`sort`/`include`/
+   * `fields` and should be preserved as `params` in the builder state. Any
+   * other unknown param is ignored.
+   */
+  allowedParams?: string[];
+  /**
+   * Lazy provider of the query string to parse. Default:
+   * `() => window.location.search`. Evaluated when `read()` is called, not
+   * at adapter-creation time, so it is safe to instantiate at module scope.
+   */
+  source?: () => string;
+}
+
+/**
+ * Strategy interface for any data source that can seed (and optionally
+ * persist) the builder state. The built-in `createSearchParamsAdapter` reads
+ * from `window.location.search`; custom adapters (hash router, react-router,
+ * in-memory, localStorage, etc.) implement the same shape.
+ */
+export interface QueryBuilderAdapter<
+  Aliases extends Record<string, string> | undefined = undefined,
+> {
+  /**
+   * Called exactly once when the builder is created. Returns the partial
+   * state to seed the builder with.
+   */
+  read: () => Partial<GlobalState<Aliases>>;
+  /**
+   * Optional. When defined, the builder invokes this on every state change
+   * (it is wired as an internal subscriber). Use it to keep an external
+   * source in sync — for example, `history.replaceState` for two-way URL
+   * binding, or a `localStorage` write.
+   */
+  write?: (state: GlobalState<Aliases>) => void;
+}
+
 export interface BaseConfig<
   AliasType extends Record<string, string> | undefined = undefined,
 > {
@@ -160,6 +210,22 @@ export interface BaseConfig<
   sorts?: Sort<AliasType>[];
   filters?: Filter<AliasType>[];
   fields?: Field[];
+  /**
+   * Bridge to an external source of state — typically a URL parser, but
+   * anything implementing `QueryBuilderAdapter` works (localStorage, hash
+   * router, in-memory store, etc.).
+   *
+   * - `adapter.read()` runs exactly once when the builder is created. Its
+   *   return value seeds the initial state, behaving like the lazy form of
+   *   `useState(() => ...)`.
+   * - `adapter.write(state)` is optional. When defined, it is invoked on
+   *   every state change so the external source can be kept in sync (e.g.
+   *   `history.replaceState` for two-way URL binding).
+   *
+   * Precedence on seed: built-in defaults < `adapter.read()` < the rest of
+   * `BaseConfig` (anything you set explicitly here always wins).
+   */
+  adapter?: QueryBuilderAdapter<AliasType>;
   /**
    * Create a map of filters that don't work together
    */
