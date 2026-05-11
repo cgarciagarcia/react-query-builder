@@ -14,8 +14,7 @@ const defaultSource = (): string =>
  * any callable that returns a query string (useful for SSR, tests, hash
  * routers, etc.).
  *
- * The adapter is meant to be composed with `useQueryBuilder`'s `initialState`
- * for lazy, one-time hydration:
+ * The adapter is meant to be passed straight to `useQueryBuilder`:
  *
  * ```ts
  * const urlAdapter = createSearchParamsAdapter({
@@ -23,7 +22,7 @@ const defaultSource = (): string =>
  *   allowedParams: ["locale"],
  * });
  *
- * useQueryBuilder({ initialState: () => urlAdapter.read() });
+ * useQueryBuilder({ adapter: urlAdapter });
  * ```
  */
 export const createSearchParamsAdapter = <

@@ -82,4 +82,16 @@ describe("parseSearchParams", () => {
     const result = parseSearchParams("?unknown=x");
     expect(result).toEqual({});
   });
+
+  it("returns an empty value array for filter keys with no value", () => {
+    const result = parseSearchParams("?filter[status]=");
+    expect(result.filters).toEqual([{ attribute: "status", value: [] }]);
+  });
+
+  it("returns an empty value array for filter keys with an operator and no value", () => {
+    const result = parseSearchParams("?filter[score]=>=");
+    expect(result.filters).toEqual([
+      { attribute: "score", value: [], operator: ">=" },
+    ]);
+  });
 });

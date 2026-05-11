@@ -47,7 +47,7 @@ export const parseSearchParams = <
   search: string,
   options?: SearchParamsAdapterOptions,
 ): Partial<GlobalState<Aliases>> => {
-  const trimmed = stripLeadingQuestion(search ?? "").trim();
+  const trimmed = stripLeadingQuestion(search).trim();
   if (trimmed === "") return {};
 
   const keys = { ...DEFAULT_KEYS, ...(options?.keys ?? {}) };

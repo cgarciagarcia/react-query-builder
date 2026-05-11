@@ -36,4 +36,9 @@ describe("createSearchParamsAdapter", () => {
       params: { locale: ["es"] },
     });
   });
+
+  it("returns {} when no source is given and window is unavailable (SSR/node env)", () => {
+    const adapter = createSearchParamsAdapter();
+    expect(adapter.read()).toEqual({});
+  });
 });
