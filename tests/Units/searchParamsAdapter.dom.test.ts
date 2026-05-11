@@ -7,24 +7,16 @@ describe("createSearchParamsAdapter (browser env)", () => {
     window.history.replaceState(null, "", "/");
   });
 
-  it("reads from window.location.search when no source is given", () => {
-    window.history.replaceState(null, "", "/?filter[status]=active&sort=-name");
+  it("falls back to window.location.search on every read() when no source is given", () => {
     const adapter = createSearchParamsAdapter();
 
+    window.history.replaceState(null, "", "/?filter[status]=active&sort=-name");
     expect(adapter.read()).toEqual({
       filters: [{ attribute: "status", value: ["active"] }],
       sorts: [{ attribute: "name", direction: "desc" }],
     });
-  });
 
-  it("re-reads window.location.search on every read() call", () => {
-    const adapter = createSearchParamsAdapter();
-
-    window.history.replaceState(null, "", "/?filter[status]=active");
-    expect(adapter.read()).toEqual({
-      filters: [{ attribute: "status", value: ["active"] }],
-    });
-
+    // Re-read picks up the new URL — proving the default source is re-evaluated.
     window.history.replaceState(null, "", "/?filter[status]=archived");
     expect(adapter.read()).toEqual({
       filters: [{ attribute: "status", value: ["archived"] }],

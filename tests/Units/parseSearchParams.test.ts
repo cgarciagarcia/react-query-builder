@@ -1,97 +1,85 @@
+import { type GlobalState } from "@/types";
 import { parseSearchParams } from "@/utils/parseSearchParams";
 import { describe, expect, it } from "vitest";
 
 describe("parseSearchParams", () => {
-  it("returns an empty object for an empty search string", () => {
-    expect(parseSearchParams("")).toEqual({});
-    expect(parseSearchParams("?")).toEqual({});
-  });
+  it.each([[""], ["?"], ["?unknown=x"]])(
+    "returns {} for non-recognised input (%j)",
+    (input) => {
+      expect(parseSearchParams(input)).toEqual({});
+    },
+  );
 
-  it("parses default filter keys with comma-separated values", () => {
-    const result = parseSearchParams(
+  it.each<[string, string, Partial<GlobalState>]>([
+    [
+      "filters with single and multi-value",
       "?filter[status]=active,pending&filter[name]=John",
-    );
-
-    expect(result.filters).toEqual([
-      { attribute: "status", value: ["active", "pending"] },
-      { attribute: "name", value: ["John"] },
-    ]);
-  });
-
-  it("recovers the operator prefix from a filter value", () => {
-    const result = parseSearchParams("?filter[age]=>=18&filter[score]=<>0");
-
-    expect(result.filters).toEqual([
-      { attribute: "age", value: ["18"], operator: ">=" },
-      { attribute: "score", value: ["0"], operator: "<>" },
-    ]);
-  });
-
-  it("parses sort with desc prefix and asc default", () => {
-    const result = parseSearchParams("?sort=-created_at,name");
-
-    expect(result.sorts).toEqual([
-      { attribute: "created_at", direction: "desc" },
-      { attribute: "name", direction: "asc" },
-    ]);
-  });
-
-  it("parses include into a flat array", () => {
-    const result = parseSearchParams("?include=user,team");
-    expect(result.includes).toEqual(["user", "team"]);
-  });
-
-  it("parses both bare and bracketed fields into dotted notation", () => {
-    const result = parseSearchParams("?fields=id&fields[user]=name,email");
-    expect(result.fields).toEqual(["id", "user.name", "user.email"]);
+      {
+        filters: [
+          { attribute: "status", value: ["active", "pending"] },
+          { attribute: "name", value: ["John"] },
+        ],
+      },
+    ],
+    [
+      "filters with operator prefixes",
+      "?filter[age]=>=18&filter[score]=<>0",
+      {
+        filters: [
+          { attribute: "age", value: ["18"], operator: ">=" },
+          { attribute: "score", value: ["0"], operator: "<>" },
+        ],
+      },
+    ],
+    [
+      "filter keys with empty value (with and without operator)",
+      "?filter[status]=&filter[score]=>=",
+      {
+        filters: [
+          { attribute: "status", value: [] },
+          { attribute: "score", value: [], operator: ">=" },
+        ],
+      },
+    ],
+    [
+      "sort with desc prefix and asc default",
+      "?sort=-created_at,name",
+      {
+        sorts: [
+          { attribute: "created_at", direction: "desc" },
+          { attribute: "name", direction: "asc" },
+        ],
+      },
+    ],
+    ["include into a flat array", "?include=user,team", { includes: ["user", "team"] }],
+    [
+      "bare and bracketed fields collapsed into dotted notation",
+      "?fields=id&fields[user]=name,email",
+      { fields: ["id", "user.name", "user.email"] },
+    ],
+  ])("parses %s", (_label, input, expected) => {
+    expect(parseSearchParams(input)).toEqual(expected);
   });
 
   it("honours custom URL keys", () => {
-    const result = parseSearchParams(
-      "?filt[status]=active&srt=-name&inc=user&fld[user]=id",
-      {
-        keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
-      },
-    );
-
-    expect(result.filters).toEqual([
-      { attribute: "status", value: ["active"] },
-    ]);
-    expect(result.sorts).toEqual([{ attribute: "name", direction: "desc" }]);
-    expect(result.includes).toEqual(["user"]);
-    expect(result.fields).toEqual(["user.id"]);
-  });
-
-  it("ignores unknown params when no allowlist is provided", () => {
-    const result = parseSearchParams("?locale=es&tenant=acme");
-    expect(result.params).toBeUndefined();
-  });
-
-  it("captures only allowlisted unknown params", () => {
-    const result = parseSearchParams("?locale=es&tenant=acme&spy=1", {
-      allowedParams: ["locale", "tenant"],
-    });
-
-    expect(result.params).toEqual({
-      locale: ["es"],
-      tenant: ["acme"],
+    expect(
+      parseSearchParams(
+        "?filt[status]=active&srt=-name&inc=user&fld[user]=id",
+        { keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" } },
+      ),
+    ).toEqual({
+      filters: [{ attribute: "status", value: ["active"] }],
+      sorts: [{ attribute: "name", direction: "desc" }],
+      includes: ["user"],
+      fields: ["user.id"],
     });
   });
 
-  it("does not return empty collections when nothing was parsed", () => {
-    const result = parseSearchParams("?unknown=x");
-    expect(result).toEqual({});
-  });
-
-  it("returns an empty value array for filter keys with no value", () => {
-    const result = parseSearchParams("?filter[status]=");
-    expect(result.filters).toEqual([{ attribute: "status", value: [] }]);
-  });
-
-  it("returns an empty value array for filter keys with an operator and no value", () => {
-    const result = parseSearchParams("?filter[score]=>=");
-    expect(result.filters).toEqual([
-      { attribute: "score", value: [], operator: ">=" },
-    ]);
+  it("captures only allowlisted unknown params (ignores the rest)", () => {
+    expect(
+      parseSearchParams("?locale=es&tenant=acme&spy=1", {
+        allowedParams: ["locale", "tenant"],
+      }),
+    ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
 });
