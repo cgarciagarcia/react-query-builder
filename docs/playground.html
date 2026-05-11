@@ -122,7 +122,6 @@
     .storage-key-tag { font-family: ui-monospace, monospace; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); color: #60a5fa; background: rgba(96,165,250,0.08); }
     .storage-btn { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); background: transparent; color: var(--c-text-muted); cursor: pointer; transition: all 0.15s; }
     .storage-btn:hover { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.08); }
-    .storage-btn.danger:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.08); }
     .storage-textarea { width: 100%; box-sizing: border-box; min-height: 6rem; font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1.5; color: var(--c-text); background: var(--c-card); border: 1px solid var(--c-border-card); border-radius: 0.4rem; padding: 0.55rem 0.75rem; resize: vertical; outline: none; }
     .storage-textarea:focus { border-color: #34d399; }
     .storage-hint { font-size: 0.68rem; color: var(--c-text-faint); margin-top: 0.4rem; }
@@ -209,8 +208,6 @@
         <div class="storage-toolbar">
           <span class="storage-key-tag" id="storage-key-label">rqb-playground-demo</span>
           <button class="storage-btn" onclick="loadSampleStorage()">Sample</button>
-          <button class="storage-btn danger" onclick="clearStorageKey()">Clear</button>
-          <button class="storage-btn" onclick="refreshStorageInput()">Reload</button>
           <button class="storage-btn" onclick="saveStorageKey()" style="margin-left:auto;border-color:#34d399;color:#34d399">Save &amp; Run</button>
         </div>
         <textarea id="storage-input" class="storage-textarea" spellcheck="false" placeholder='{ "filters": [{ "attribute": "status", "value": ["active"] }] }'></textarea>
@@ -605,7 +602,7 @@ console.log(builder.build() || '(empty)')
 
 // Every mutation triggers write() automatically.
 builder
-  .filter('status', 'active')
+  .filter('status', 'active', true)
   .sort('updated_at', 'desc')
   .include('author')
 
@@ -1002,13 +999,6 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
       } catch (err) {
         _setFeedback('error', 'Invalid JSON: ' + err.message)
       }
-    }
-
-    function clearStorageKey() {
-      localStorage.removeItem(STORAGE_DEMO_KEY)
-      _storageInput().value = ''
-      _setFeedback('ok', 'localStorage key removed.')
-      runCode()
     }
 
     function loadSampleStorage() {
