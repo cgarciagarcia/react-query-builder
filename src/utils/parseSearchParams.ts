@@ -2,6 +2,7 @@ import {
   type ConfigurableURLKey,
   type Field,
   type Filter,
+  FilterOperator,
   type GlobalState,
   type Include,
   type OperatorType,
@@ -16,7 +17,14 @@ const DEFAULT_KEYS: Record<ConfigurableURLKey, string> = {
   fields: "fields",
 };
 
-const OPERATOR_PREFIXES: OperatorType[] = ["<>", "<=", ">=", "<", ">"];
+// Longest first so multi-char operators (`<=`, `>=`, `<>`) win the prefix
+// race against their single-char prefixes (`<`, `>`). `Equals` is excluded
+// because the implicit operator carries no prefix on the wire.
+const OPERATOR_PREFIXES: OperatorType[] = (
+  Object.values(FilterOperator) as OperatorType[]
+)
+  .filter((op) => op !== FilterOperator.Equals)
+  .sort((a, b) => b.length - a.length);
 
 const stripLeadingQuestion = (search: string): string =>
   search.startsWith("?") ? search.slice(1) : search;
