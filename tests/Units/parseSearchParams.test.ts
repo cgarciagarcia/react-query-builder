@@ -51,7 +51,11 @@ describe("parseSearchParams", () => {
         ],
       },
     ],
-    ["include into a flat array", "?include=user,team", { includes: ["user", "team"] }],
+    [
+      "include into a flat array",
+      "?include=user,team",
+      { includes: ["user", "team"] },
+    ],
     [
       "bare and bracketed fields collapsed into dotted notation",
       "?fields=id&fields[user]=name,email",
@@ -65,7 +69,9 @@ describe("parseSearchParams", () => {
     expect(
       parseSearchParams(
         "?filt[status]=active&srt=-name&inc=user&fld[user]=id",
-        { keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" } },
+        {
+          keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+        },
       ),
     ).toEqual({
       filters: [{ attribute: "status", value: ["active"] }],
