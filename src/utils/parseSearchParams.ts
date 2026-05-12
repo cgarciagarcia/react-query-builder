@@ -1,8 +1,8 @@
 import {
+  FilterOperator,
   type ConfigurableURLKey,
   type Field,
   type Filter,
-  FilterOperator,
   type GlobalState,
   type Include,
   type OperatorType,
@@ -17,9 +17,6 @@ const DEFAULT_KEYS: Record<ConfigurableURLKey, string> = {
   fields: "fields",
 };
 
-// Longest first so multi-char operators (`<=`, `>=`, `<>`) win the prefix
-// race against their single-char prefixes (`<`, `>`). `Equals` is excluded
-// because the implicit operator carries no prefix on the wire.
 const OPERATOR_PREFIXES: OperatorType[] = (
   Object.values(FilterOperator) as OperatorType[]
 )
