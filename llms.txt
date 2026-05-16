@@ -176,13 +176,27 @@ const urlAdapter = createSearchParamsAdapter({
   // Optional: rename the URL keys the parser looks for.
   // Omitted keys keep their default ('filter' | 'sort' | 'include' | 'fields').
   keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
-  // Optional: explicit allowlist of extra query params to preserve as `params`.
-  // Unknown params not in this list are ignored. Default: [] (nothing extra).
-  allowedParams: ['locale', 'tenant'],
-  // Optional defense-in-depth denylist. Drops any matching attribute on read
-  // (overrides allowedParams). Use to block URL injection of sensitive keys
-  // like ?filter[is_admin]=true.
-  excludeKeys: ['is_admin', 'password', 'tenant_id'],
+  // Optional bucket-scoped allowlist. Applies on read AND write
+  // (symmetric — URL never carries entries outside the policy). Omit a
+  // bucket → its default: filters/sorts/includes/fields = allow-all,
+  // params = deny-all. When you DO list a bucket, only those names pass.
+  allowed: {
+    filters:  ['status', 'role', 'created_at'],
+    sorts:    ['created_at', 'name'],
+    includes: ['author', 'tags'],
+    fields:   ['id', 'title', 'user.name'],
+    params:   ['locale', 'tenant'],
+  },
+  // Optional bucket-scoped defense-in-depth denylist. Each bucket has its
+  // own deny list, because a name (e.g. 'password') may be dangerous as a
+  // filter but legitimate as a `fields` entry. Wins over `allowed`.
+  excludeKeys: {
+    filters:  ['is_admin', 'tenant_id', 'password'],
+    includes: ['internal_audit_log'],
+    sorts:    ['secret_score'],
+    fields:   ['api_token'],
+    params:   ['debug'],
+  },
   // Optional. Default: () => window.location.search (returns "" in SSR).
   // Evaluated inside read(), so module-scope instantiation is safe.
   source: () => window.location.search,
@@ -202,14 +216,14 @@ const builder = useQueryBuilder({ adapter: urlAdapter })
 ```
 
 Configurable URL keys: `filter`, `sort`, `include`, `fields`. **`page` and
-`limit` are NOT auto-hydrated** — add them to `allowedParams` if you want
+`limit` are NOT auto-hydrated** — add them to `allowed.params` if you want
 them preserved as raw params.
 
 Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
 Renamed keys only apply when **reading from / writing to** the URL.
 
 The built-in writer **preserves any query params not managed by the adapter**
-(anything not matching `keys` or `allowedParams`) so third-party params like
+(anything not matching `keys` or `allowed.params`) so third-party params like
 `utm_source` are left untouched.
 
 ### Custom adapter — localStorage (two-way)
@@ -253,7 +267,7 @@ import {
 
 parseSearchParams("?filt[status]=active&srt=-name", {
   keys: { filter: "filt", sort: "srt" },
-  allowedParams: ["locale"],
+  allowed: { params: ["locale"] },
 })
 // → { filters: [{ attribute: "status", value: ["active"] }],
 //     sorts:   [{ attribute: "name",   direction: "desc"   }] }

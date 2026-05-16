@@ -299,21 +299,11 @@ The conflict is **bidirectional by default** — you only need to declare it onc
 
 ## Hydrating from URL
 
-The builder bridges to external state sources through an `adapter`. An adapter is any object that implements `QueryBuilderAdapter`:
+Say you have a list view with filters, sorts and pagination. A user picks "status = active", sorts by date, opens page 3 — and shares the link with a teammate. You want that link to open with the exact same filters already applied.
 
-```ts
-interface QueryBuilderAdapter<Aliases> {
-  read: () => Partial<GlobalState<Aliases>>;
-  write?: (state: GlobalState<Aliases>) => void;
-}
-```
+That's what an **adapter** does: it bridges the builder to an external source (URL, `localStorage`, anything you want). The built-in `createSearchParamsAdapter` handles the URL case.
 
-- `read()` is called **exactly once** when the builder is created — like the lazy form of `useState(() => ...)`. Its return value seeds the initial state.
-- `write(state)` is optional. When defined, it runs on every state change so the external source can stay in sync (two-way binding).
-
-### Reading the current URL
-
-For the most common case — reading the page's query string — use the built-in `createSearchParamsAdapter`:
+### The 30-second example
 
 ```ts
 import {
@@ -321,114 +311,200 @@ import {
   createSearchParamsAdapter,
 } from "@cgarciagarcia/react-query-builder";
 
-const urlAdapter = createSearchParamsAdapter({
-  // Optionally remap the keys the parser looks for in the URL.
-  // Anything you omit keeps its default ("filter", "sort", "include", "fields").
-  keys: {
-    filter: "filt",
-    sort:   "srt",
-    include:"inc",
-    fields: "fld",
-  },
-  // Query params that are not filter/sort/include/fields are ignored unless
-  // you list them here. They land in `state.params`.
-  allowedParams: ["locale", "tenant"],
-});
-
-const builder = useQueryBuilder({ adapter: urlAdapter });
-```
-
-Visiting `?filt[status]=active&srt=-name&inc=user&fld[user]=id,email&locale=es` produces a builder whose `build()` returns
-
-```
-?filter[status]=active&fields[user]=id,email&sort=-name&include=user&locale=es
-```
-
-(The output always uses the library's default keys — the renamed keys are only for **reading** from the URL.)
-
-### Notes
-
-- **One-shot read.** `read()` runs only at builder creation; later URL changes do **not** re-hydrate. Use `sync` (see below) if you want the URL to follow builder mutations.
-- **Precedence.** Explicit config wins over `adapter.read()`. Passing `filters: [...]` alongside an adapter overrides the seeded filters entirely.
-- **SSR friendly.** The default `source` of `createSearchParamsAdapter` is `() => window.location.search`, evaluated inside `read()`. The default returns `""` when `window` is not available, so it never throws in Node.
-- **`page` / `limit` are not auto-hydrated** out of the box — add them to `allowedParams` if you need them preserved as raw params.
-
-### Aliases (round-trip with `.build()`)
-
-When you pass `aliases` to the builder, the adapter automatically picks them up (via the `read({ aliases })` context) so the URL ends up in **wire / backend space** — exactly what `.build()` produces — while your state stays in **frontend space**. The reader applies the reverse map (URL `name` → state `userName`), the writer applies the forward map (state `userName` → URL `name`).
-
-```ts
-const aliases = { userName: "name" } as const;
-
-useQueryBuilder({
-  aliases,
+const builder = useQueryBuilder({
   adapter: createSearchParamsAdapter({ sync: true }),
 });
 
-// Navigating to ?filter[name]=John hydrates filters: [{ attribute: "userName", … }].
-// builder.filter("userName", "Jane") writes ?filter[name]=Jane to the URL.
+builder.filter("status", "active").sort("created_at", "desc");
+// URL bar is now: /?filter[status]=active&sort=-created_at
 ```
 
-You can also pass `aliases` directly to `createSearchParamsAdapter` if you don't want the adapter to depend on builder config.
+Refresh the page, share the link — the filters come back. That's it.
 
-### Defense-in-depth: `excludeKeys`
+What just happened:
+- On mount, the adapter **reads** the current URL and seeds the builder.
+- `sync: true` makes the adapter **write** back on every change (`history.replaceState`).
+- The URL output mirrors what `.build()` produces, so your backend and your URL bar agree.
 
-URL params are user-controlled. A crafted link like `?filter[is_admin]=true` would otherwise flow straight into your state and out to the backend. `excludeKeys` is an explicit denylist of attribute names that get silently dropped on read (and overrides `allowedParams`):
+### Read-only hydration (no URL writes)
+
+If you only want to hydrate at mount and never touch the URL after, just leave `sync` out:
 
 ```ts
-createSearchParamsAdapter({
-  allowedParams: ["locale"],
-  excludeKeys: ["is_admin", "password", "tenant_id", "secret_relation"],
+useQueryBuilder({
+  adapter: createSearchParamsAdapter(),
 });
 ```
 
-Applies to filter / sort / include / fields / params. Matched on the raw URL name (backend) before any reverse alias.
+Now `read()` runs once when the hook mounts — same semantics as `useState(() => …)` — and that's the end of it. URL changes after mount don't re-hydrate.
 
-### Two-way binding with `sync`
+### Customising the writer
 
-The built-in writer is opt-in via `sync`:
+`sync` accepts three forms depending on how aggressive you want the URL updates to be:
 
 ```ts
-// Replace the URL on every mutation (no extra history entries)
-createSearchParamsAdapter({ sync: true });          // or: sync: "replace"
+// 1) Default behavior: replaceState (no extra browser history entries)
+createSearchParamsAdapter({ sync: true });           // alias for "replace"
 
-// Add a history entry per mutation
+// 2) pushState (every change is a back-button step)
 createSearchParamsAdapter({ sync: "push" });
 
-// Full custom: hand the serialised search string to a router or debouncer
+// 3) Bring your own — useful for Next.js / React Router / debouncing
 createSearchParamsAdapter({
   sync: (search) => router.replace({ search }),
 });
 ```
 
-The default writer **preserves any query params not managed by this adapter** (anything that does not match the configured `keys` or `allowedParams`). Third-party params like `utm_source`, `gclid`, `theme`, etc. stay intact — only your managed keys are added, updated, or cleared.
+Don't worry about other apps' query params — the writer **preserves anything it doesn't recognise**. So `?utm_source=newsletter` or `?theme=dark` stays untouched while your filters get added, updated, or cleared.
 
-### Custom adapters
+### Aliases: keep your frontend names, ship backend names
 
-`QueryBuilderAdapter` is just `{ read, write? }`. Any source — `react-router`'s search params, a hash fragment, an in-memory store, `localStorage` — can be wrapped as an adapter:
+You probably name things one way in the UI (`userName`, `createdAt`) and another in the API (`name`, `created_at`). Pass `aliases` to the builder and the adapter handles the translation in **both directions** automatically:
 
 ```ts
-const memoryAdapter: QueryBuilderAdapter = {
-  read:  () => store.get(),
-  write: (state) => store.set(state),
+useQueryBuilder({
+  aliases: { userName: "name", createdAt: "created_at" },
+  adapter: createSearchParamsAdapter({ sync: true }),
+});
+
+// Your code keeps using frontend names:
+builder.filter("userName", "Jane").sort("createdAt", "desc");
+
+// The URL bar shows backend names (same as .build() would emit):
+// /?filter[name]=Jane&sort=-created_at
+
+// On refresh, ?filter[name]=Jane hydrates back as { userName: "Jane" }.
+```
+
+The adapter automatically reads aliases from the builder config, so you only declare them once.
+
+### Renaming the URL keys
+
+Sometimes the default URL is verbose:
+
+```
+?filter[status]=active&filter[role]=admin&sort=-created_at&include=author,tags&fields[user]=id,name
+```
+
+That's a mouthful — long enough to overflow in chat previews, ugly to share, and harder to scan. Remap the keys to shorten it:
+
+```ts
+createSearchParamsAdapter({
+  keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+  sync: true,
+});
+```
+
+Now the same state produces:
+
+```
+?filt[status]=active&filt[role]=admin&srt=-created_at&inc=author,tags&fld[user]=id,name
+```
+
+Why you might want this:
+
+- **Shorter, more shareable links** — saves bytes per param, big difference when you have many filters.
+- **Cleaner URL bar** — easier on the eye for users and for screenshots in support tickets.
+- **Brand or domain language** — your app says "query", not "filter"? Match the vocabulary your users already know.
+- **Avoiding collisions** — if the surrounding app already uses `?filter=...` or `?sort=...` for something else, rename to coexist.
+
+Both reader and writer use the new keys, so round-trips still work. This **only** affects the URL bar — `.build()` (what you pass to `fetch`) keeps using the canonical `filter`/`sort`/… names your backend expects.
+
+### Locking down which keys can come from the URL
+
+The URL is user input. Without limits, a crafted link like `?filter[is_admin]=true` would flow straight into your `.build()` call and out to your backend. You have two primitives, **per bucket**, and you pick the one that matches your situation:
+
+#### `allowed` — strict allowlist ("only these")
+
+Use it when you have a short, explicit list of what's legitimate:
+
+```ts
+createSearchParamsAdapter({
+  allowed: {
+    filters: ["status", "role", "created_at"],
+    sorts:   ["created_at", "name"],
+    params:  ["locale", "tenant"],   // anything not here is dropped
+  },
+});
+```
+
+Defaults when you omit a bucket:
+- `filters` / `sorts` / `includes` / `fields` → allow everything (so the URL can drive filtering freely)
+- `params` → allow nothing (the catch-all is deny-by-default — params are arbitrary, so you must opt-in by listing them)
+
+#### `excludeKeys` — targeted denylist ("everything except these")
+
+Use it when you trust the bucket in general but want to block a handful of dangerous names — without enumerating everything legitimate:
+
+```ts
+createSearchParamsAdapter({
+  // No allowed.filters → I accept any filter from the URL.
+  // I have 47 legitimate filter attributes and I add more every month;
+  // maintaining a full whitelist is brittle. But is_admin and password
+  // must NEVER come through the URL.
+  excludeKeys: {
+    filters: ["is_admin", "password"],
+  },
+});
+```
+
+#### Which one should I use?
+
+| Situation | Use |
+|---|---|
+| "Short, explicit list of what's allowed" | `allowed` |
+| "Accept everything, except these few" | `excludeKeys` |
+| "Whitelist plus a moving denylist on top" | both (defense in depth) |
+
+If you set `allowed.filters: ["status", "role"]`, listing `is_admin` in `excludeKeys.filters` is **redundant** — it's already dropped because it's not allowed. It doesn't break anything (and reads as documentation of intent), but it's not pulling weight in runtime. The combination is useful when you keep a stable allowlist and want a separate, fast-changing denylist on top.
+
+#### Details that apply to both
+
+- Both apply to the **reader and the writer** symmetrically — the URL bar is always inside your policy.
+- `excludeKeys` always wins over `allowed` (deny beats allow).
+- Matching happens on the **raw URL name (backend)** before reverse-aliasing — that's the threat surface.
+- For `fields`, you can match by short prop (`password`) or by `entity.prop` (`user.password`). Pick the precision you need.
+- `page` and `limit` are **not** auto-hydrated. If you want them on the URL, add them to `allowed.params` and treat them as raw params.
+- **Why per bucket?** `password` is dangerous as a filter but fine as a `fields` selection (it's just picking which column the API returns). One flat list would force you into all-or-nothing.
+
+### Want a different source? Write your own adapter
+
+`QueryBuilderAdapter` is just `{ read, write? }`. Wrap anything:
+
+```ts
+// Persist to localStorage instead of the URL
+const localStorageAdapter: QueryBuilderAdapter = {
+  read:  () => JSON.parse(localStorage.getItem("filters") ?? "{}"),
+  write: (state) => localStorage.setItem("filters", JSON.stringify(state)),
 };
 
-useQueryBuilder({ adapter: memoryAdapter });
+useQueryBuilder({ adapter: localStorageAdapter });
 ```
 
-### Lower level: `parseSearchParams`
+Same pattern works for `react-router` search params, hash routers, in-memory stores, IndexedDB — anything you can read from and write to.
 
-If you only need the parser without the adapter wrapper, it is exported as a pure function:
+### Going lower-level
+
+If you only want the URL parser without the hook integration, both pieces are exported as pure functions:
 
 ```ts
-import { parseSearchParams } from "@cgarciagarcia/react-query-builder";
+import {
+  parseSearchParams,
+  serializeSearchParams,
+} from "@cgarciagarcia/react-query-builder";
 
-parseSearchParams("?filt[status]=active", {
-  keys: { filter: "filt" },
-  allowedParams: ["locale"],
+// URL → state
+parseSearchParams("?filter[status]=active&sort=-name");
+// → { filters: [...], sorts: [{ attribute: "name", direction: "desc" }] }
+
+// state → URL
+serializeSearchParams({
+  filters: [{ attribute: "status", value: ["active"] }],
 });
-// → { filters: [{ attribute: "status", value: ["active"] }] }
+// → "filter[status]=active"
 ```
+
+Both accept the same `keys` / `aliases` / `allowed` / `excludeKeys` options as the adapter.
 
 ---
 
