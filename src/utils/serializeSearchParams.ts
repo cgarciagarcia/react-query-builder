@@ -3,7 +3,10 @@ import {
   type GlobalState,
   type SearchParamsAdapterOptions,
 } from "@/types";
-import { DEFAULT_URL_KEYS } from "@/utils/parseSearchParams";
+import {
+  DEFAULT_URL_KEYS,
+  prettifyBrackets,
+} from "@/utils/parseSearchParams";
 import { compilePolicy } from "@/utils/searchParamsPolicy";
 
 const DELIMITER = ",";
@@ -84,5 +87,5 @@ export const serializeSearchParams = <
   }
 
   const raw = sp.toString();
-  return raw ? decodeURIComponent(raw) : "";
+  return raw ? prettifyBrackets(raw) : "";
 };

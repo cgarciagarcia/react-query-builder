@@ -4,7 +4,11 @@ import {
   type QueryBuilderAdapter,
   type SearchParamsAdapterOptions,
 } from "@/types";
-import { DEFAULT_URL_KEYS, parseSearchParams } from "@/utils/parseSearchParams";
+import {
+  DEFAULT_URL_KEYS,
+  parseSearchParams,
+  prettifyBrackets,
+} from "@/utils/parseSearchParams";
 import { serializeSearchParams } from "@/utils/serializeSearchParams";
 
 const defaultSource = (): string =>
@@ -40,7 +44,7 @@ const mergeManagedSearch = (
     merged.append(k, v);
   }
   const raw = merged.toString();
-  return raw ? "?" + decodeURIComponent(raw) : "";
+  return raw ? "?" + prettifyBrackets(raw) : "";
 };
 
 const writeToHistory = (search: string, mode: "replace" | "push"): void => {

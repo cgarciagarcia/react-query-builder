@@ -179,6 +179,34 @@ describe("serializeSearchParams", () => {
     });
   });
 
+  describe("safe encoding for special characters in values", () => {
+    it("round-trips a value containing a literal percent sign", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "name", value: ["50%25discount"] }],
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+
+    it("round-trips values with =, &, # and spaces", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "q", value: ["a=b & c#1", "hello world"] }],
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+
+    it("keeps brackets readable in the output URL", () => {
+      expect(
+        serializeSearchParams({
+          filters: [{ attribute: "status", value: ["active"] }],
+        }),
+      ).toBe("filter[status]=active");
+    });
+  });
+
   it("round-trips with parseSearchParams for the canonical case", async () => {
     const { parseSearchParams } = await import("@/utils/parseSearchParams");
     const state: Partial<GlobalState> = {

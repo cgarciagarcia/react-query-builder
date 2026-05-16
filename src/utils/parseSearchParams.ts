@@ -18,6 +18,37 @@ export const DEFAULT_URL_KEYS: Record<ConfigurableURLKey, string> = {
   fields: "fields",
 };
 
+/**
+ * Selectively decodes the percent-escapes that `URLSearchParams.toString()`
+ * emits for characters that are part of THIS library's URL protocol, so the
+ * final string is human-readable: `filter[name]` instead of
+ * `filter%5Bname%5D`, `filter[age]=>=18` instead of `filter[age]=%3E%3D18`,
+ * etc.
+ *
+ * Crucially, it does NOT touch escapes for characters that, if decoded,
+ * would corrupt round-tripping through `URLSearchParams`:
+ *
+ * - `%25` (`%`): a blanket `decodeURIComponent` would double-decode a value
+ *   like `"50%25discount"` and corrupt it into `"50%discount"`.
+ * - `%26` (`&`): decoding would turn a value `"a&b"` into a new param.
+ * - `%2B` (`+`): `URLSearchParams` parses `+` as a space, so decoding would
+ *   corrupt values containing literal `+`.
+ *
+ * Limitations: values that legitimately contain a comma, `<`, `>` or `=`
+ * cannot survive a round-trip with the multi-value protocol (comma is the
+ * value separator; the others are operator prefixes). Those characters are
+ * decoded here for readability; consumers should avoid putting them inside
+ * filter values.
+ */
+export const prettifyBrackets = (raw: string): string =>
+  raw
+    .replace(/%5B/gi, "[")
+    .replace(/%5D/gi, "]")
+    .replace(/%2C/gi, ",")
+    .replace(/%3C/gi, "<")
+    .replace(/%3E/gi, ">")
+    .replace(/%3D/gi, "=");
+
 const OPERATOR_PREFIXES: OperatorType[] = (
   Object.values(FilterOperator) as OperatorType[]
 )

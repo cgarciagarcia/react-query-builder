@@ -505,7 +505,12 @@
         if (pass('params', k)) sp.append(k, v.join(','))
       }
       const raw = sp.toString()
-      return raw ? decodeURIComponent(raw) : ''
+      return raw
+        ? raw
+            .replace(/%5B/gi, '[').replace(/%5D/gi, ']')
+            .replace(/%2C/gi, ',')
+            .replace(/%3C/gi, '<').replace(/%3E/gi, '>').replace(/%3D/gi, '=')
+        : ''
     }
     function createSearchParamsAdapter(options = {}) {
       const defaultSource = () => (typeof window === 'undefined' ? '' : window.location.search)
