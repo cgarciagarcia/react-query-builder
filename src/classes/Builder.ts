@@ -81,7 +81,8 @@ export class Builder<
 
   constructor(config?: BaseConfig<Aliases>) {
     const { adapter, ...rest } = config ?? {};
-    const seeded: Partial<GlobalState<Aliases>> = adapter?.read() ?? {};
+    const seeded: Partial<GlobalState<Aliases>> =
+      adapter?.read({ aliases: rest.aliases }) ?? {};
 
     this.state = {
       aliases: {} as Aliases,

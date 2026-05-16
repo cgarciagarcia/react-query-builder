@@ -348,27 +348,60 @@ Visiting `?filt[status]=active&srt=-name&inc=user&fld[user]=id,email&locale=es` 
 
 ### Notes
 
-- **One-shot read.** `read()` runs only at builder creation; later URL changes do **not** re-hydrate. Define `write` (or add a router listener) if you need to keep the URL in sync with the builder.
+- **One-shot read.** `read()` runs only at builder creation; later URL changes do **not** re-hydrate. Use `sync` (see below) if you want the URL to follow builder mutations.
 - **Precedence.** Explicit config wins over `adapter.read()`. Passing `filters: [...]` alongside an adapter overrides the seeded filters entirely.
 - **SSR friendly.** The default `source` of `createSearchParamsAdapter` is `() => window.location.search`, evaluated inside `read()`. The default returns `""` when `window` is not available, so it never throws in Node.
 - **`page` / `limit` are not auto-hydrated** out of the box — add them to `allowedParams` if you need them preserved as raw params.
 
-### Two-way binding with `write`
+### Aliases (round-trip with `.build()`)
 
-Add a `write` function to push every state change back to the URL (or anywhere else):
+When you pass `aliases` to the builder, the adapter automatically picks them up (via the `read({ aliases })` context) so the URL ends up in **wire / backend space** — exactly what `.build()` produces — while your state stays in **frontend space**. The reader applies the reverse map (URL `name` → state `userName`), the writer applies the forward map (state `userName` → URL `name`).
 
 ```ts
-const adapter: QueryBuilderAdapter = {
-  read:  () => parseSearchParams(window.location.search),
-  write: (state) => {
-    const url = new URL(window.location.href);
-    url.search = buildAction(state); // or any custom serializer
-    window.history.replaceState(null, "", url);
-  },
-};
+const aliases = { userName: "name" } as const;
 
-useQueryBuilder({ adapter });
+useQueryBuilder({
+  aliases,
+  adapter: createSearchParamsAdapter({ sync: true }),
+});
+
+// Navigating to ?filter[name]=John hydrates filters: [{ attribute: "userName", … }].
+// builder.filter("userName", "Jane") writes ?filter[name]=Jane to the URL.
 ```
+
+You can also pass `aliases` directly to `createSearchParamsAdapter` if you don't want the adapter to depend on builder config.
+
+### Defense-in-depth: `excludeKeys`
+
+URL params are user-controlled. A crafted link like `?filter[is_admin]=true` would otherwise flow straight into your state and out to the backend. `excludeKeys` is an explicit denylist of attribute names that get silently dropped on read (and overrides `allowedParams`):
+
+```ts
+createSearchParamsAdapter({
+  allowedParams: ["locale"],
+  excludeKeys: ["is_admin", "password", "tenant_id", "secret_relation"],
+});
+```
+
+Applies to filter / sort / include / fields / params. Matched on the raw URL name (backend) before any reverse alias.
+
+### Two-way binding with `sync`
+
+The built-in writer is opt-in via `sync`:
+
+```ts
+// Replace the URL on every mutation (no extra history entries)
+createSearchParamsAdapter({ sync: true });          // or: sync: "replace"
+
+// Add a history entry per mutation
+createSearchParamsAdapter({ sync: "push" });
+
+// Full custom: hand the serialised search string to a router or debouncer
+createSearchParamsAdapter({
+  sync: (search) => router.replace({ search }),
+});
+```
+
+The default writer **preserves any query params not managed by this adapter** (anything that does not match the configured `keys` or `allowedParams`). Third-party params like `utm_source`, `gclid`, `theme`, etc. stay intact — only your managed keys are added, updated, or cleared.
 
 ### Custom adapters
 

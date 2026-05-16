@@ -172,6 +172,7 @@
         <button class="example-btn" onclick="loadExample('conflicts', this)">Conflicts</button>
         <button class="example-btn" onclick="loadExample('aliases', this)">Aliases</button>
         <button class="example-btn" onclick="loadExample('urlAdapter', this)">URL Adapter</button>
+        <button class="example-btn" onclick="loadExample('urlWriter', this)">Two-way URL</button>
         <button class="example-btn" onclick="loadExample('localStorageAdapter', this)">localStorage Adapter</button>
       </div>
       <div id="monaco-container"></div>
@@ -287,7 +288,7 @@
 
     class _Builder {
       constructor(config = {}) {
-        const seeded = config.adapter?.read?.() ?? {}
+        const seeded = config.adapter?.read?.({ aliases: config.aliases }) ?? {}
         const pick = (key) => (config[key] !== undefined ? config[key] : seeded[key])
 
         this._state = {
@@ -393,36 +394,58 @@
       if (!paramKey.startsWith(prefix + '[') || !paramKey.endsWith(']')) return null
       return paramKey.slice(prefix.length + 1, -1)
     }
+    function _reverseAliases(aliases) {
+      const reverse = new Map()
+      for (const [front, back] of Object.entries(aliases ?? {})) {
+        if (!reverse.has(back)) reverse.set(back, front)
+      }
+      return reverse
+    }
     function parseSearchParams(search, options = {}) {
       const trimmed = (search ?? '').replace(/^\?/, '').trim()
       if (!trimmed) return {}
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
       const allowed = new Set(options.allowedParams ?? [])
+      const excluded = new Set(options.excludeKeys ?? [])
+      const reverse = _reverseAliases(options.aliases)
+      const aliasOf = (n) => reverse.get(n) ?? n
       const params = new URLSearchParams(trimmed)
       const filters = [], fields = [], sorts = [], includes = [], collected = {}
 
       for (const [key, raw] of params.entries()) {
         const filterAttr = _bracketedKey(key, keys.filter)
         if (filterAttr !== null) {
+          if (excluded.has(filterAttr)) continue
           const { operator, rest } = _extractOperator(raw)
-          filters.push({ attribute: filterAttr, value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
+          filters.push({ attribute: aliasOf(filterAttr), value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
           continue
         }
         const fieldEntity = _bracketedKey(key, keys.fields)
         if (fieldEntity !== null) {
-          for (const prop of raw.split(',')) fields.push(`${fieldEntity}.${prop}`)
-          continue
-        }
-        if (key === keys.fields) { for (const f of raw.split(',')) fields.push(f); continue }
-        if (key === keys.sort) {
-          for (const item of raw.split(',')) {
-            const desc = item.startsWith('-')
-            sorts.push({ attribute: desc ? item.slice(1) : item, direction: desc ? 'desc' : 'asc' })
+          for (const prop of raw.split(',')) {
+            if (excluded.has(prop) || excluded.has(`${fieldEntity}.${prop}`)) continue
+            fields.push(`${fieldEntity}.${prop}`)
           }
           continue
         }
-        if (key === keys.include) { for (const inc of raw.split(',')) includes.push(inc); continue }
-        if (allowed.has(key)) collected[key] = raw.split(',')
+        if (key === keys.fields) {
+          for (const f of raw.split(',')) { if (!excluded.has(f)) fields.push(f) }
+          continue
+        }
+        if (key === keys.sort) {
+          for (const item of raw.split(',')) {
+            const desc = item.startsWith('-')
+            const attr = desc ? item.slice(1) : item
+            if (excluded.has(attr)) continue
+            sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
+          }
+          continue
+        }
+        if (key === keys.include) {
+          for (const inc of raw.split(',')) { if (!excluded.has(inc)) includes.push(inc) }
+          continue
+        }
+        if (allowed.has(key) && !excluded.has(key)) collected[key] = raw.split(',')
       }
       const result = {}
       if (filters.length)  result.filters  = filters
@@ -432,11 +455,54 @@
       if (Object.keys(collected).length) result.params = collected
       return result
     }
+    function serializeSearchParams(state, options = {}) {
+      const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
+      const allowed = new Set(options.allowedParams ?? [])
+      const aliases = options.aliases ?? state.aliases
+      const aliasOf = (n) => aliases?.[n] ?? n
+      const sp = new URLSearchParams()
+
+      for (const f of state.filters ?? []) {
+        const op = (f.operator && f.operator !== '=') ? f.operator : ''
+        sp.append(`${keys.filter}[${aliasOf(f.attribute)}]`, op + f.value.join(','))
+      }
+      const bare = [], grouped = {}
+      for (const fld of state.fields ?? []) {
+        const dot = fld.indexOf('.')
+        if (dot === -1) { bare.push(fld); continue }
+        const e = fld.slice(0, dot), p = fld.slice(dot + 1)
+        grouped[e] = grouped[e] ?? []; grouped[e].push(p)
+      }
+      if (bare.length) sp.append(keys.fields, bare.join(','))
+      for (const [e, ps] of Object.entries(grouped)) sp.append(`${keys.fields}[${e}]`, ps.join(','))
+
+      if ((state.sorts ?? []).length) {
+        sp.append(keys.sort, state.sorts.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
+      }
+      if ((state.includes ?? []).length) sp.append(keys.include, state.includes.join(','))
+      for (const [k, v] of Object.entries(state.params ?? {})) {
+        if (allowed.has(k)) sp.append(k, v.join(','))
+      }
+      const raw = sp.toString()
+      return raw ? decodeURIComponent(raw) : ''
+    }
     function createSearchParamsAdapter(options = {}) {
       const defaultSource = () => (typeof window === 'undefined' ? '' : window.location.search)
-      return {
-        read: () => parseSearchParams((options.source ?? defaultSource)(), options),
+      const adapter = {
+        read: (context = {}) => {
+          const aliases = options.aliases ?? context.aliases
+          return parseSearchParams((options.source ?? defaultSource)(), { ...options, aliases })
+        },
       }
+      if (options.sync !== undefined) {
+        adapter.write = (state) => {
+          const serialized = serializeSearchParams(state, options)
+          if (typeof options.sync === 'function') { options.sync(serialized); return }
+          // Playground stub: don't touch the real URL. Surface what would be written via console.log.
+          console.log('[adapter.write] ' + (serialized || '(empty)'))
+        }
+      }
+      return adapter
     }
 
     // ─── Examples ───────────────────────────────────────────────────────────────
@@ -572,6 +638,37 @@ builder.filter('role', 'admin').sort('name')
 console.log('\\nAfter further mutations:')
 console.log(builder.build())
 `,
+      urlWriter: `// Two-way URL adapter — read on mount + write on every mutation.
+//
+// In a real app, sync:true pushes to window.history.replaceState. The
+// playground uses a console.log stub (see runtime) so the URL bar isn't
+// touched — every "[adapter.write] ..." line below is what the URL WOULD
+// become.
+//
+// Also showcases: aliases (frontend→backend round-trip) and excludeKeys
+// (denylist that drops dangerous URL injections like ?filter[is_admin]).
+const adapter = createSearchParamsAdapter({
+  source: () => '?filter[name]=John&filter[is_admin]=true&utm_source=ad',
+  aliases: { userName: 'name' },
+  allowedParams: ['utm_source'],
+  excludeKeys: ['is_admin'],
+  sync: true,  // ← enables write
+})
+
+const builder = useQueryBuilder({
+  aliases: { userName: 'name' },  // shared with the adapter via context
+  adapter,
+})
+
+console.log('Hydrated (is_admin dropped, name → userName reversed):')
+console.log(builder.build())
+
+// Mutations trigger the writer. URL output uses BACKEND names (round-trip
+// with .build()) — userName becomes name on the wire.
+builder.filter('userName', 'Jane', true).sort('userName', 'asc')
+console.log('\\nAfter mutation, builder.build():')
+console.log(builder.build())
+`,
       localStorageAdapter: `// localStorage adapter — two-way binding with browser storage.
 // read() seeds the builder on mount; write() persists every mutation.
 //
@@ -702,8 +799,10 @@ interface GlobalState {
  * Bridge to an external source of state. \`read()\` seeds the builder once
  * at creation; the optional \`write()\` runs on every mutation.
  */
+interface AdapterReadContext { aliases?: Record<string, string>; }
+
 interface QueryBuilderAdapter {
-  read:   () => Partial<GlobalState>;
+  read:   (context?: AdapterReadContext) => Partial<GlobalState>;
   write?: (state: GlobalState) => void;
 }
 
@@ -712,10 +811,16 @@ type ConfigurableURLKey = 'filter' | 'sort' | 'include' | 'fields';
 interface SearchParamsAdapterOptions {
   /** Rename the URL keys the parser looks for. Defaults to identity. */
   keys?:          Partial<Record<ConfigurableURLKey, string>>;
+  /** Frontend → backend attribute map. Round-trip-safe with .build(). */
+  aliases?:       Record<string, string>;
   /** Allowlist of extra query params to preserve as \`params\`. Default: []. */
   allowedParams?: string[];
+  /** Defense-in-depth denylist. Drops matching attrs on read (overrides allowedParams). */
+  excludeKeys?:   string[];
   /** Provider of the query string. Default: () => window.location.search */
   source?:        () => string;
+  /** Enable two-way binding: true|'replace' → replaceState, 'push' → pushState, fn → custom */
+  sync?:          true | 'replace' | 'push' | ((search: string) => void);
 }
 
 /** Pure parser: query string → Partial<GlobalState>. No DOM needed. */
@@ -723,6 +828,12 @@ declare function parseSearchParams(
   search: string,
   options?: SearchParamsAdapterOptions,
 ): Partial<GlobalState>;
+
+/** Pure serializer: Partial<GlobalState> → query string. Inverse of parseSearchParams. */
+declare function serializeSearchParams(
+  state: Partial<GlobalState>,
+  options?: SearchParamsAdapterOptions,
+): string;
 
 /** Built-in adapter that reads window.location.search (or any \`source\`). */
 declare function createSearchParamsAdapter(
@@ -818,7 +929,7 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
 
         // Wrap in function with provided globals
         const fn = new Function(
-          'useQueryBuilder', 'FilterOperator', 'createSearchParamsAdapter', 'parseSearchParams', 'console',
+          'useQueryBuilder', 'FilterOperator', 'createSearchParamsAdapter', 'parseSearchParams', 'serializeSearchParams', 'console',
           jsCode + '\n;typeof builder !== "undefined" ? builder : null'
         )
 
@@ -827,6 +938,7 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
           FilterOperator,
           createSearchParamsAdapter,
           parseSearchParams,
+          serializeSearchParams,
           { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) },
         )
         _lastBuilder = result instanceof _Builder ? result : null

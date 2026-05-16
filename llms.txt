@@ -150,13 +150,14 @@ object with the shape:
 
 ```ts
 interface QueryBuilderAdapter<Aliases = undefined> {
-  read:  () => Partial<GlobalState<Aliases>>
+  read:  (context?: { aliases?: Aliases }) => Partial<GlobalState<Aliases>>
   write?: (state: GlobalState<Aliases>) => void
 }
 ```
 
-- `read()` runs **exactly once** at builder creation — lazy init, like
-  `useState(() => ...)`. Its return seeds the initial state.
+- `read(context)` runs **exactly once** at builder creation — lazy init, like
+  `useState(() => ...)`. The builder passes its `aliases` through `context`
+  so adapters can stay aligned without you declaring them twice.
 - `write?(state)` is optional. When defined, it runs on every state change
   (registered as an internal subscriber) — use for two-way binding.
 - Precedence: built-in defaults < `adapter.read()` < explicit `BaseConfig`
@@ -178,9 +179,23 @@ const urlAdapter = createSearchParamsAdapter({
   // Optional: explicit allowlist of extra query params to preserve as `params`.
   // Unknown params not in this list are ignored. Default: [] (nothing extra).
   allowedParams: ['locale', 'tenant'],
+  // Optional defense-in-depth denylist. Drops any matching attribute on read
+  // (overrides allowedParams). Use to block URL injection of sensitive keys
+  // like ?filter[is_admin]=true.
+  excludeKeys: ['is_admin', 'password', 'tenant_id'],
   // Optional. Default: () => window.location.search (returns "" in SSR).
   // Evaluated inside read(), so module-scope instantiation is safe.
   source: () => window.location.search,
+  // Optional: enable two-way binding (write).
+  //   true | 'replace' → history.replaceState (no extra history entries)
+  //   'push'           → history.pushState (each mutation adds a back step)
+  //   (search) => void → custom — receives the serialised query string
+  //                       (e.g. router integration, debouncing)
+  sync: true,
+  // Optional: frontend→backend attribute map. Reader applies the reverse map
+  // (URL holds backend names, state holds frontend names); writer applies
+  // forward. If omitted here, picked up from BaseConfig.aliases via context.
+  aliases: { userName: 'name' },
 })
 
 const builder = useQueryBuilder({ adapter: urlAdapter })
@@ -191,7 +206,11 @@ Configurable URL keys: `filter`, `sort`, `include`, `fields`. **`page` and
 them preserved as raw params.
 
 Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
-Renamed keys only apply when **reading** from the URL.
+Renamed keys only apply when **reading from / writing to** the URL.
+
+The built-in writer **preserves any query params not managed by the adapter**
+(anything not matching `keys` or `allowedParams`) so third-party params like
+`utm_source` are left untouched.
 
 ### Custom adapter — localStorage (two-way)
 
@@ -222,29 +241,15 @@ const localStorageAdapter: QueryBuilderAdapter = {
 const builder = useQueryBuilder({ adapter: localStorageAdapter })
 ```
 
-### Two-way URL binding
+### Lower-level: `parseSearchParams` / `serializeSearchParams`
+
+Both pure (no DOM), exported for ad-hoc use without the adapter wrapper:
 
 ```ts
-import { useQueryBuilder, parseSearchParams } from "@cgarciagarcia/react-query-builder"
-
-useQueryBuilder({
-  adapter: {
-    read:  () => parseSearchParams(window.location.search),
-    write: (state) => {
-      const url = new URL(window.location.href)
-      url.search = builder.build() // or any custom serializer
-      window.history.replaceState(null, "", url)
-    },
-  },
-})
-```
-
-### Lower-level: `parseSearchParams`
-
-Pure (no DOM) parser, exported if you need it without the adapter wrapper:
-
-```ts
-import { parseSearchParams } from "@cgarciagarcia/react-query-builder"
+import {
+  parseSearchParams,
+  serializeSearchParams,
+} from "@cgarciagarcia/react-query-builder"
 
 parseSearchParams("?filt[status]=active&srt=-name", {
   keys: { filter: "filt", sort: "srt" },
@@ -252,6 +257,12 @@ parseSearchParams("?filt[status]=active&srt=-name", {
 })
 // → { filters: [{ attribute: "status", value: ["active"] }],
 //     sorts:   [{ attribute: "name",   direction: "desc"   }] }
+
+serializeSearchParams({
+  filters: [{ attribute: "status", value: ["active"] }],
+  sorts:   [{ attribute: "name",   direction: "desc"   }],
+})
+// → "filter[status]=active&sort=-name"
 ```
 
 ## Integration with TanStack Query

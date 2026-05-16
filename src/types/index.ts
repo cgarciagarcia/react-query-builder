@@ -166,17 +166,71 @@ export interface SearchParamsAdapterOptions {
    */
   keys?: Partial<Record<ConfigurableURLKey, string>>;
   /**
+   * Frontend → backend attribute mapping. When set, the reader applies the
+   * REVERSE map (URL contains backend names → state holds frontend names),
+   * and the writer applies the forward map (state holds frontend names → URL
+   * contains backend names). Round-trip-safe with `.build()` since the
+   * builder's `.build()` already produces backend names.
+   *
+   * If you do not pass this here, `createSearchParamsAdapter` picks it up
+   * from the builder's `BaseConfig.aliases` at `read()` time.
+   */
+  aliases?: Record<string, string>;
+  /**
    * Explicit allowlist of query params that are NOT `filter`/`sort`/`include`/
    * `fields` and should be preserved as `params` in the builder state. Any
    * other unknown param is ignored.
    */
   allowedParams?: string[];
   /**
+   * Defense-in-depth denylist applied to filter / sort / include / field
+   * attribute names AND to params (overrides `allowedParams`). If a URL entry
+   * matches any name here it is silently dropped on read. Use it to block
+   * sensitive backend attributes from being injected via crafted URLs (for
+   * example `is_admin`, `password`, `tenant_id`, `internal_audit_log`).
+   *
+   * Matching is on the raw URL name (the backend name) before any reverse
+   * alias is applied, since the threat is what reaches the wire.
+   */
+  excludeKeys?: string[];
+  /**
    * Lazy provider of the query string to parse. Default:
    * `() => window.location.search`. Evaluated when `read()` is called, not
    * at adapter-creation time, so it is safe to instantiate at module scope.
    */
   source?: () => string;
+  /**
+   * Enable two-way binding. When set, the adapter exposes a `write(state)`
+   * function that the builder invokes on every mutation, serialising the
+   * state back to the URL using the same `keys` and `allowedParams`.
+   *
+   * - `true` (or `"replace"`) — `window.history.replaceState` (no extra
+   *   history entry per change). Best for filter/sort UI.
+   * - `"push"` — `window.history.pushState` (every change is a back-button
+   *   step). Use for major navigation steps.
+   * - `(search) => void` — full custom. Receives the serialised query string
+   *   (no leading `?`). Use for router integrations (Next.js, React Router)
+   *   or to add debouncing.
+   *
+   * Omit (or leave `undefined`) to keep the adapter read-only.
+   *
+   * The built-in writer preserves any query params not managed by this
+   * adapter (i.e. not matching the configured keys and not in
+   * `allowedParams`), so other consumers of the URL (analytics, locale
+   * switchers, etc.) are left untouched.
+   */
+  sync?: true | "replace" | "push" | ((search: string) => void);
+}
+
+/**
+ * Subset of the builder config passed to `QueryBuilderAdapter.read()` so
+ * adapters can react to user-level options (e.g., aliases) without the
+ * consumer having to declare them twice.
+ */
+export interface AdapterReadContext<
+  Aliases extends Record<string, string> | undefined = undefined,
+> {
+  aliases?: Aliases;
 }
 
 /**
@@ -189,10 +243,13 @@ export interface QueryBuilderAdapter<
   Aliases extends Record<string, string> | undefined = undefined,
 > {
   /**
-   * Called exactly once when the builder is created. Returns the partial
-   * state to seed the builder with.
+   * Called exactly once when the builder is created. The `context` argument
+   * exposes builder-level config (currently `aliases`) so adapters can stay
+   * aligned with the consumer's settings without duplicating them.
    */
-  read: () => Partial<GlobalState<Aliases>>;
+  read: (
+    context?: AdapterReadContext<Aliases>,
+  ) => Partial<GlobalState<Aliases>>;
   /**
    * Optional. When defined, the builder invokes this on every state change
    * (it is wired as an internal subscriber). Use it to keep an external

@@ -88,4 +88,82 @@ describe("parseSearchParams", () => {
       }),
     ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
+
+  describe("aliases (reverse lookup)", () => {
+    it("rewrites filter and sort attributes from backend → frontend", () => {
+      expect(
+        parseSearchParams("?filter[name]=John&sort=-created_at", {
+          aliases: { userName: "name", createdAt: "created_at" },
+        }),
+      ).toEqual({
+        filters: [{ attribute: "userName", value: ["John"] }],
+        sorts: [{ attribute: "createdAt", direction: "desc" }],
+      });
+    });
+
+    it("leaves attributes untouched when no alias matches", () => {
+      expect(
+        parseSearchParams("?filter[unknown]=x", {
+          aliases: { userName: "name" },
+        }),
+      ).toEqual({ filters: [{ attribute: "unknown", value: ["x"] }] });
+    });
+
+    it("first-wins on alias collisions (multiple frontends → same backend)", () => {
+      expect(
+        parseSearchParams("?filter[name]=John", {
+          aliases: { userName: "name", fullName: "name" },
+        }),
+      ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
+    });
+  });
+
+  describe("excludeKeys (defense in depth)", () => {
+    it("drops filters whose attribute is in the denylist", () => {
+      expect(
+        parseSearchParams(
+          "?filter[is_admin]=true&filter[status]=active",
+          { excludeKeys: ["is_admin"] },
+        ),
+      ).toEqual({ filters: [{ attribute: "status", value: ["active"] }] });
+    });
+
+    it("drops sorts and includes whose attribute is in the denylist", () => {
+      expect(
+        parseSearchParams("?sort=-is_admin,name&include=secret,user", {
+          excludeKeys: ["is_admin", "secret"],
+        }),
+      ).toEqual({
+        sorts: [{ attribute: "name", direction: "asc" }],
+        includes: ["user"],
+      });
+    });
+
+    it("drops fields (bare and bracketed) that match the denylist", () => {
+      expect(
+        parseSearchParams(
+          "?fields=id,password&fields[user]=name,password",
+          { excludeKeys: ["password"] },
+        ),
+      ).toEqual({ fields: ["id", "user.name"] });
+    });
+
+    it("denylist overrides the params allowlist", () => {
+      expect(
+        parseSearchParams("?locale=es&secret=leak", {
+          allowedParams: ["locale", "secret"],
+          excludeKeys: ["secret"],
+        }),
+      ).toEqual({ params: { locale: ["es"] } });
+    });
+
+    it("applies denylist BEFORE reverse alias (matches the backend name)", () => {
+      expect(
+        parseSearchParams("?filter[is_admin]=true", {
+          aliases: { isAdmin: "is_admin" },
+          excludeKeys: ["is_admin"],
+        }),
+      ).toEqual({});
+    });
+  });
 });

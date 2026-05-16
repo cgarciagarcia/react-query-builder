@@ -27,4 +27,71 @@ describe("createSearchParamsAdapter", () => {
   it("returns {} when no source is given and window is unavailable (SSR/node)", () => {
     expect(createSearchParamsAdapter().read()).toEqual({});
   });
+
+  it("does not expose write() unless sync is configured", () => {
+    expect(createSearchParamsAdapter().write).toBeUndefined();
+    expect(
+      createSearchParamsAdapter({ source: () => "" }).write,
+    ).toBeUndefined();
+  });
+
+  it("invokes a custom sync callback with the serialised search string", () => {
+    const sync = vi.fn();
+    const adapter = createSearchParamsAdapter<Record<string, string>>({
+      keys: { filter: "filt" },
+      allowedParams: ["locale"],
+      sync,
+    });
+
+    expect(adapter.write).toBeDefined();
+    adapter.write?.({
+      aliases: {},
+      filters: [{ attribute: "status", value: ["active"] }],
+      includes: [],
+      sorts: [],
+      fields: [],
+      params: { locale: ["es"], dropped: ["x"] },
+      pruneConflictingFilters: {},
+      delimiters: {
+        global: ",",
+        fields: null,
+        filters: null,
+        sorts: null,
+        includes: null,
+        params: null,
+      },
+      useQuestionMark: true,
+      pagination: {},
+    });
+
+    expect(sync).toHaveBeenCalledTimes(1);
+    expect(sync).toHaveBeenCalledWith("filt[status]=active&locale=es");
+  });
+
+  it("default writer is a no-op when window is unavailable (SSR/node)", () => {
+    const adapter = createSearchParamsAdapter<Record<string, string>>({
+      sync: true,
+    });
+    expect(() =>
+      adapter.write?.({
+        aliases: {},
+        filters: [{ attribute: "status", value: ["active"] }],
+        includes: [],
+        sorts: [],
+        fields: [],
+        params: {},
+        pruneConflictingFilters: {},
+        delimiters: {
+          global: ",",
+          fields: null,
+          filters: null,
+          sorts: null,
+          includes: null,
+          params: null,
+        },
+        useQuestionMark: true,
+        pagination: {},
+      }),
+    ).not.toThrow();
+  });
 });
