@@ -89,6 +89,18 @@ describe("parseSearchParams", () => {
     ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
 
+  it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
+    const { compilePolicy } = await import("@/utils/searchParamsPolicy");
+    const policy = compilePolicy({ allowed: { filters: ["status"] } });
+    expect(
+      parseSearchParams(
+        "?filter[status]=active&filter[is_admin]=true",
+        undefined,
+        policy,
+      ),
+    ).toEqual({ filters: [{ attribute: "status", value: ["active"] }] });
+  });
+
   describe("aliases (reverse lookup)", () => {
     it("rewrites filter and sort attributes from backend → frontend", () => {
       expect(

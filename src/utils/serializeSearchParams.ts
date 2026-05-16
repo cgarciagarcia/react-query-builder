@@ -3,11 +3,11 @@ import {
   type GlobalState,
   type SearchParamsAdapterOptions,
 } from "@/types";
+import { DEFAULT_URL_KEYS, prettifyBrackets } from "@/utils/parseSearchParams";
 import {
-  DEFAULT_URL_KEYS,
-  prettifyBrackets,
-} from "@/utils/parseSearchParams";
-import { compilePolicy } from "@/utils/searchParamsPolicy";
+  compilePolicy,
+  type PolicyGate,
+} from "@/utils/searchParamsPolicy";
 
 const DELIMITER = ",";
 
@@ -27,11 +27,12 @@ export const serializeSearchParams = <
 >(
   state: Partial<GlobalState<Aliases>>,
   options?: SearchParamsAdapterOptions,
+  policy?: PolicyGate,
 ): string => {
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
   const aliases = options?.aliases ?? state.aliases;
   const aliasOf = (name: string): string => aliases?.[name] ?? name;
-  const { pass } = compilePolicy(options);
+  const { pass } = policy ?? compilePolicy(options);
   const sp = new URLSearchParams();
 
   for (const filter of state.filters ?? []) {

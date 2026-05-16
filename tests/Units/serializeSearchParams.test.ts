@@ -179,6 +179,23 @@ describe("serializeSearchParams", () => {
     });
   });
 
+  it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
+    const { compilePolicy } = await import("@/utils/searchParamsPolicy");
+    const policy = compilePolicy({ allowed: { filters: ["status"] } });
+    expect(
+      serializeSearchParams(
+        {
+          filters: [
+            { attribute: "status", value: ["active"] },
+            { attribute: "is_admin", value: ["true"] },
+          ],
+        },
+        undefined,
+        policy,
+      ),
+    ).toBe("filter[status]=active");
+  });
+
   describe("safe encoding for special characters in values", () => {
     it("round-trips a value containing a literal percent sign", async () => {
       const { parseSearchParams } = await import("@/utils/parseSearchParams");

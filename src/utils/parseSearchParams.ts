@@ -9,7 +9,10 @@ import {
   type SearchParamsAdapterOptions,
   type Sort,
 } from "@/types";
-import { compilePolicy } from "@/utils/searchParamsPolicy";
+import {
+  compilePolicy,
+  type PolicyGate,
+} from "@/utils/searchParamsPolicy";
 
 export const DEFAULT_URL_KEYS: Record<ConfigurableURLKey, string> = {
   filter: "filter",
@@ -86,12 +89,13 @@ export const parseSearchParams = <
 >(
   search: string,
   options?: SearchParamsAdapterOptions,
+  policy?: PolicyGate,
 ): Partial<GlobalState<Aliases>> => {
   const trimmed = search.replace(/^\?/, "").trim();
   if (trimmed === "") return {};
 
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
-  const { pass } = compilePolicy(options);
+  const { pass } = policy ?? compilePolicy(options);
   const reverse = buildReverseAliases(options?.aliases);
   const aliasOf = (name: string): string => reverse.get(name) ?? name;
 

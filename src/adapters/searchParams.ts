@@ -9,6 +9,10 @@ import {
   parseSearchParams,
   prettifyBrackets,
 } from "@/utils/parseSearchParams";
+import {
+  compilePolicy,
+  type PolicyGate,
+} from "@/utils/searchParamsPolicy";
 import { serializeSearchParams } from "@/utils/serializeSearchParams";
 
 const defaultSource = (): string =>
@@ -57,10 +61,11 @@ const writeToHistory = (search: string, mode: "replace" | "push"): void => {
 
 const makeWriter = <A extends Record<string, string> | undefined = undefined>(
   options: SearchParamsAdapterOptions,
+  policy: PolicyGate,
 ): ((state: GlobalState<A>) => void) => {
   const sync = options.sync;
   return (state) => {
-    const serialized = serializeSearchParams<A>(state, options);
+    const serialized = serializeSearchParams<A>(state, options, policy);
     if (typeof sync === "function") {
       sync(serialized);
       return;
@@ -96,16 +101,26 @@ export const createSearchParamsAdapter = <
 >(
   options?: SearchParamsAdapterOptions,
 ): QueryBuilderAdapter<Aliases> => {
+  // Compile the allow/deny policy once at adapter creation. `options` is
+  // immutable for the adapter's lifetime, so the resulting gate is reused
+  // on every read AND every write — keeping the hot path (write fires on
+  // each mutation) free of repeated Set construction.
+  const policy = compilePolicy(options);
+
   const adapter: QueryBuilderAdapter<Aliases> = {
     read(context?: AdapterReadContext<Aliases>): Partial<GlobalState<Aliases>> {
       const source = options?.source ?? defaultSource;
       const aliases = options?.aliases ?? context?.aliases;
-      return parseSearchParams<Aliases>(source(), { ...options, aliases });
+      return parseSearchParams<Aliases>(
+        source(),
+        { ...options, aliases },
+        policy,
+      );
     },
   };
 
   if (options?.sync !== undefined) {
-    adapter.write = makeWriter<Aliases>(options);
+    adapter.write = makeWriter<Aliases>(options, policy);
   }
 
   return adapter;
