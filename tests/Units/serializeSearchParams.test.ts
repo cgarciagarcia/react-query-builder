@@ -62,7 +62,9 @@ describe("serializeSearchParams", () => {
           includes: ["user"],
           fields: ["user.id"],
         },
-        { keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" } },
+        {
+          keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+        },
       ),
     ).toBe("filt[status]=active&fld[user]=id&srt=-name&inc=user");
   });
@@ -71,9 +73,110 @@ describe("serializeSearchParams", () => {
     expect(
       serializeSearchParams(
         { params: { locale: ["es"], tenant: ["acme"], secret: ["leak"] } },
-        { allowedParams: ["locale", "tenant"] },
+        { allowed: { params: ["locale", "tenant"] } },
       ),
     ).toBe("locale=es&tenant=acme");
+  });
+
+  describe("writer respects allowed + excludeKeys (symmetric with reader)", () => {
+    it("drops filters not in allowed.filters", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "status", value: ["active"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+          },
+          { allowed: { filters: ["status"] } },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
+    it("drops sorts/includes/fields not in their bucket allowlist", () => {
+      expect(
+        serializeSearchParams(
+          {
+            sorts: [
+              { attribute: "name", direction: "asc" },
+              { attribute: "secret", direction: "asc" },
+            ],
+            includes: ["user", "internal_log"],
+            fields: ["id", "password"],
+          },
+          {
+            allowed: {
+              sorts: ["name"],
+              includes: ["user"],
+              fields: ["id"],
+            },
+          },
+        ),
+      ).toBe("fields=id&sort=name&include=user");
+    });
+
+    it("excludeKeys drops on write across all buckets", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "name", value: ["x"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+            sorts: [
+              { attribute: "name", direction: "asc" },
+              { attribute: "secret_score", direction: "desc" },
+            ],
+            includes: ["user", "internal_log"],
+            params: { locale: ["es"], debug: ["1"] },
+          },
+          {
+            allowed: { params: ["locale", "debug"] },
+            excludeKeys: {
+              filters: ["is_admin"],
+              sorts: ["secret_score"],
+              includes: ["internal_log"],
+              params: ["debug"],
+            },
+          },
+        ),
+      ).toBe("filter[name]=x&sort=name&include=user&locale=es");
+    });
+
+    it("excludeKeys wins over allowed when both are set", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "name", value: ["x"] },
+              { attribute: "status", value: ["y"] },
+            ],
+          },
+          {
+            allowed: { filters: ["name", "status"] },
+            excludeKeys: { filters: ["status"] },
+          },
+        ),
+      ).toBe("filter[name]=x");
+    });
+
+    it("allowed.fields filters bracketed (entity.prop) fields too", () => {
+      expect(
+        serializeSearchParams(
+          { fields: ["user.id", "user.password", "admin.role"] },
+          { allowed: { fields: ["user.id", "admin.role"] } },
+        ),
+      ).toBe("fields[user]=id&fields[admin]=role");
+    });
+
+    it("applies excludeKeys to fields by short prop or entity.prop", () => {
+      expect(
+        serializeSearchParams(
+          { fields: ["id", "user.password", "user.name", "admin.password"] },
+          { excludeKeys: { fields: ["password"] } },
+        ),
+      ).toBe("fields=id&fields[user]=name");
+    });
   });
 
   it("round-trips with parseSearchParams for the canonical case", async () => {
@@ -86,11 +189,11 @@ describe("serializeSearchParams", () => {
       params: { locale: ["es"] },
     };
     const serialized = serializeSearchParams(state, {
-      allowedParams: ["locale"],
+      allowed: { params: ["locale"] },
     });
-    expect(parseSearchParams(serialized, { allowedParams: ["locale"] })).toEqual(
-      state,
-    );
+    expect(
+      parseSearchParams(serialized, { allowed: { params: ["locale"] } }),
+    ).toEqual(state);
   });
 
   describe("aliases (forward map)", () => {

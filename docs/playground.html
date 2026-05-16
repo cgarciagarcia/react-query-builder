@@ -401,21 +401,34 @@
       }
       return reverse
     }
+    function _compilePolicy(options = {}) {
+      const buckets = ['filters', 'sorts', 'includes', 'fields', 'params']
+      const allowed = {}, excluded = {}
+      for (const b of buckets) {
+        const a = options.allowed?.[b]
+        allowed[b] = a ? new Set(a) : null
+        excluded[b] = new Set(options.excludeKeys?.[b] ?? [])
+      }
+      return (bucket, ...candidates) => {
+        if (candidates.some(c => excluded[bucket].has(c))) return false
+        const allow = allowed[bucket]
+        if (allow !== null) return candidates.some(c => allow.has(c))
+        return bucket !== 'params'
+      }
+    }
     function parseSearchParams(search, options = {}) {
       const trimmed = (search ?? '').replace(/^\?/, '').trim()
       if (!trimmed) return {}
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
-      const allowed = new Set(options.allowedParams ?? [])
-      const excluded = new Set(options.excludeKeys ?? [])
+      const pass = _compilePolicy(options)
       const reverse = _reverseAliases(options.aliases)
       const aliasOf = (n) => reverse.get(n) ?? n
-      const params = new URLSearchParams(trimmed)
       const filters = [], fields = [], sorts = [], includes = [], collected = {}
 
-      for (const [key, raw] of params.entries()) {
+      for (const [key, raw] of new URLSearchParams(trimmed).entries()) {
         const filterAttr = _bracketedKey(key, keys.filter)
         if (filterAttr !== null) {
-          if (excluded.has(filterAttr)) continue
+          if (!pass('filters', filterAttr)) continue
           const { operator, rest } = _extractOperator(raw)
           filters.push({ attribute: aliasOf(filterAttr), value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
           continue
@@ -423,29 +436,28 @@
         const fieldEntity = _bracketedKey(key, keys.fields)
         if (fieldEntity !== null) {
           for (const prop of raw.split(',')) {
-            if (excluded.has(prop) || excluded.has(`${fieldEntity}.${prop}`)) continue
-            fields.push(`${fieldEntity}.${prop}`)
+            const full = `${fieldEntity}.${prop}`
+            if (pass('fields', prop, full)) fields.push(full)
           }
           continue
         }
         if (key === keys.fields) {
-          for (const f of raw.split(',')) { if (!excluded.has(f)) fields.push(f) }
+          for (const f of raw.split(',')) { if (pass('fields', f)) fields.push(f) }
           continue
         }
         if (key === keys.sort) {
           for (const item of raw.split(',')) {
             const desc = item.startsWith('-')
             const attr = desc ? item.slice(1) : item
-            if (excluded.has(attr)) continue
-            sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
+            if (pass('sorts', attr)) sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
           }
           continue
         }
         if (key === keys.include) {
-          for (const inc of raw.split(',')) { if (!excluded.has(inc)) includes.push(inc) }
+          for (const inc of raw.split(',')) { if (pass('includes', inc)) includes.push(inc) }
           continue
         }
-        if (allowed.has(key) && !excluded.has(key)) collected[key] = raw.split(',')
+        if (pass('params', key)) collected[key] = raw.split(',')
       }
       const result = {}
       if (filters.length)  result.filters  = filters
@@ -457,31 +469,40 @@
     }
     function serializeSearchParams(state, options = {}) {
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
-      const allowed = new Set(options.allowedParams ?? [])
       const aliases = options.aliases ?? state.aliases
       const aliasOf = (n) => aliases?.[n] ?? n
+      const pass = _compilePolicy(options)
       const sp = new URLSearchParams()
 
       for (const f of state.filters ?? []) {
+        const wire = aliasOf(f.attribute)
+        if (!pass('filters', wire)) continue
         const op = (f.operator && f.operator !== '=') ? f.operator : ''
-        sp.append(`${keys.filter}[${aliasOf(f.attribute)}]`, op + f.value.join(','))
+        sp.append(`${keys.filter}[${wire}]`, op + f.value.join(','))
       }
       const bare = [], grouped = {}
       for (const fld of state.fields ?? []) {
         const dot = fld.indexOf('.')
-        if (dot === -1) { bare.push(fld); continue }
+        if (dot === -1) {
+          if (pass('fields', fld)) bare.push(fld)
+          continue
+        }
         const e = fld.slice(0, dot), p = fld.slice(dot + 1)
-        grouped[e] = grouped[e] ?? []; grouped[e].push(p)
+        if (pass('fields', p, fld)) (grouped[e] ??= []).push(p)
       }
       if (bare.length) sp.append(keys.fields, bare.join(','))
-      for (const [e, ps] of Object.entries(grouped)) sp.append(`${keys.fields}[${e}]`, ps.join(','))
-
-      if ((state.sorts ?? []).length) {
-        sp.append(keys.sort, state.sorts.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
+      for (const [e, ps] of Object.entries(grouped)) {
+        sp.append(`${keys.fields}[${e}]`, ps.join(','))
       }
-      if ((state.includes ?? []).length) sp.append(keys.include, state.includes.join(','))
+
+      const sortsKept = (state.sorts ?? []).filter(s => pass('sorts', aliasOf(s.attribute)))
+      if (sortsKept.length) {
+        sp.append(keys.sort, sortsKept.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
+      }
+      const includesKept = (state.includes ?? []).filter(i => pass('includes', i))
+      if (includesKept.length) sp.append(keys.include, includesKept.join(','))
       for (const [k, v] of Object.entries(state.params ?? {})) {
-        if (allowed.has(k)) sp.append(k, v.join(','))
+        if (pass('params', k)) sp.append(k, v.join(','))
       }
       const raw = sp.toString()
       return raw ? decodeURIComponent(raw) : ''
@@ -621,7 +642,7 @@ console.log('has userName:', builder.hasFilter('userName'))
 const urlAdapter = createSearchParamsAdapter({
   source: () => '?filt[status]=active&srt=-created_at&inc=user&fld[user]=id,email&locale=es',
   keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
-  allowedParams: ['locale'],  // anything outside this list is ignored
+  allowed: { params: ['locale'] },  // anything outside this list is ignored
 })
 
 const builder = useQueryBuilder({ adapter: urlAdapter })
@@ -648,10 +669,20 @@ console.log(builder.build())
 // Also showcases: aliases (frontend→backend round-trip) and excludeKeys
 // (denylist that drops dangerous URL injections like ?filter[is_admin]).
 const adapter = createSearchParamsAdapter({
-  source: () => '?filter[name]=John&filter[is_admin]=true&utm_source=ad',
+  source: () => '?filter[name]=John&filter[is_admin]=true&fields[user]=password,name&utm_source=ad',
   aliases: { userName: 'name' },
-  allowedParams: ['utm_source'],
-  excludeKeys: ['is_admin'],
+  // Bucket-scoped allowlist: only listed names enter; everything else is
+  // ignored. Omit a bucket → its default behavior (filters/sorts/etc. =
+  // allow-all; params = deny-all).
+  allowed: {
+    filters: ['name', 'status'],          // is_admin not listed → dropped
+    fields:  ['user.name', 'user.email'], // password not listed → dropped
+    params:  ['utm_source'],
+  },
+  // Bucket-scoped denylist: complements allowed (deny wins).
+  excludeKeys: {
+    includes: ['internal_audit_log'],
+  },
   sync: true,  // ← enables write
 })
 
@@ -813,10 +844,24 @@ interface SearchParamsAdapterOptions {
   keys?:          Partial<Record<ConfigurableURLKey, string>>;
   /** Frontend → backend attribute map. Round-trip-safe with .build(). */
   aliases?:       Record<string, string>;
-  /** Allowlist of extra query params to preserve as \`params\`. Default: []. */
-  allowedParams?: string[];
-  /** Defense-in-depth denylist. Drops matching attrs on read (overrides allowedParams). */
-  excludeKeys?:   string[];
+  /** Allowlist per bucket. When defined, only entries in the list pass
+   *  (read + write). Omit a bucket for its default behavior: filters/sorts/
+   *  includes/fields = allow-all; params = deny-all. */
+  allowed?: {
+    filters?:  string[];
+    sorts?:    string[];
+    includes?: string[];
+    fields?:   string[];
+    params?:   string[];
+  };
+  /** Defense-in-depth denylist, scoped per bucket. */
+  excludeKeys?:   {
+    filters?:  string[];
+    sorts?:    string[];
+    includes?: string[];
+    fields?:   string[];
+    params?:   string[];
+  };
   /** Provider of the query string. Default: () => window.location.search */
   source?:        () => string;
   /** Enable two-way binding: true|'replace' → replaceState, 'push' → pushState, fn → custom */

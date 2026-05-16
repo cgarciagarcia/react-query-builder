@@ -11,11 +11,11 @@ describe("createSearchParamsAdapter", () => {
     expect(source).toHaveBeenCalledTimes(1);
   });
 
-  it("forwards source, keys, and allowedParams to the parser", () => {
+  it("forwards source, keys, and allowed.params to the parser", () => {
     const adapter = createSearchParamsAdapter({
       source: () => "?filt[status]=active&locale=es&unwanted=1",
       keys: { filter: "filt" },
-      allowedParams: ["locale"],
+      allowed: { params: ["locale"] },
     });
 
     expect(adapter.read()).toEqual({
@@ -39,7 +39,7 @@ describe("createSearchParamsAdapter", () => {
     const sync = vi.fn();
     const adapter = createSearchParamsAdapter<Record<string, string>>({
       keys: { filter: "filt" },
-      allowedParams: ["locale"],
+      allowed: { params: ["locale"] },
       sync,
     });
 

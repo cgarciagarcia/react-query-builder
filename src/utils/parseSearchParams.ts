@@ -9,6 +9,7 @@ import {
   type SearchParamsAdapterOptions,
   type Sort,
 } from "@/types";
+import { compilePolicy } from "@/utils/searchParamsPolicy";
 
 export const DEFAULT_URL_KEYS: Record<ConfigurableURLKey, string> = {
   filter: "filter",
@@ -23,28 +24,21 @@ const OPERATOR_PREFIXES: OperatorType[] = (
   .filter((op) => op !== FilterOperator.Equals)
   .sort((a, b) => b.length - a.length);
 
-const stripLeadingQuestion = (search: string): string =>
-  search.startsWith("?") ? search.slice(1) : search;
-
 const splitCsv = (raw: string): string[] => (raw === "" ? [] : raw.split(","));
 
 const extractOperator = (
   raw: string,
 ): { operator?: OperatorType; rest: string } => {
   for (const op of OPERATOR_PREFIXES) {
-    if (raw.startsWith(op)) {
-      return { operator: op as OperatorType, rest: raw.slice(op.length) };
-    }
+    if (raw.startsWith(op)) return { operator: op, rest: raw.slice(op.length) };
   }
   return { rest: raw };
 };
 
-const bracketedKey = (paramKey: string, prefix: string): string | null => {
-  if (!paramKey.startsWith(`${prefix}[`) || !paramKey.endsWith("]")) {
-    return null;
-  }
-  return paramKey.slice(prefix.length + 1, -1);
-};
+const bracketedKey = (paramKey: string, prefix: string): string | null =>
+  paramKey.startsWith(`${prefix}[`) && paramKey.endsWith("]")
+    ? paramKey.slice(prefix.length + 1, -1)
+    : null;
 
 const buildReverseAliases = (
   aliases: Record<string, string> | undefined,
@@ -62,15 +56,13 @@ export const parseSearchParams = <
   search: string,
   options?: SearchParamsAdapterOptions,
 ): Partial<GlobalState<Aliases>> => {
-  const trimmed = stripLeadingQuestion(search).trim();
+  const trimmed = search.replace(/^\?/, "").trim();
   if (trimmed === "") return {};
 
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
-  const allowed = new Set(options?.allowedParams ?? []);
-  const excluded = new Set(options?.excludeKeys ?? []);
-  const reverseAliases = buildReverseAliases(options?.aliases);
-  const aliasOf = (name: string): string => reverseAliases.get(name) ?? name;
-  const params = new URLSearchParams(trimmed);
+  const { pass } = compilePolicy(options);
+  const reverse = buildReverseAliases(options?.aliases);
+  const aliasOf = (name: string): string => reverse.get(name) ?? name;
 
   const filters: Filter<Aliases>[] = [];
   const fields: Field[] = [];
@@ -78,10 +70,10 @@ export const parseSearchParams = <
   const includes: Include[] = [];
   const collectedParams: Record<string, (string | number)[]> = {};
 
-  for (const [key, rawValue] of params.entries()) {
+  for (const [key, rawValue] of new URLSearchParams(trimmed).entries()) {
     const filterAttr = bracketedKey(key, keys.filter);
     if (filterAttr !== null) {
-      if (excluded.has(filterAttr)) continue;
+      if (!pass("filters", filterAttr)) continue;
       const { operator, rest } = extractOperator(rawValue);
       filters.push({
         attribute: aliasOf(filterAttr) as Filter<Aliases>["attribute"],
@@ -94,18 +86,15 @@ export const parseSearchParams = <
     const fieldEntity = bracketedKey(key, keys.fields);
     if (fieldEntity !== null) {
       for (const prop of splitCsv(rawValue)) {
-        if (excluded.has(prop) || excluded.has(`${fieldEntity}.${prop}`)) {
-          continue;
-        }
-        fields.push(`${fieldEntity}.${prop}`);
+        const full = `${fieldEntity}.${prop}`;
+        if (pass("fields", prop, full)) fields.push(full);
       }
       continue;
     }
 
     if (key === keys.fields) {
       for (const f of splitCsv(rawValue)) {
-        if (excluded.has(f)) continue;
-        fields.push(f);
+        if (pass("fields", f)) fields.push(f);
       }
       continue;
     }
@@ -114,7 +103,7 @@ export const parseSearchParams = <
       for (const item of splitCsv(rawValue)) {
         const desc = item.startsWith("-");
         const attr = desc ? item.slice(1) : item;
-        if (excluded.has(attr)) continue;
+        if (!pass("sorts", attr)) continue;
         sorts.push({
           attribute: aliasOf(attr) as Sort<Aliases>["attribute"],
           direction: desc ? "desc" : "asc",
@@ -125,15 +114,12 @@ export const parseSearchParams = <
 
     if (key === keys.include) {
       for (const inc of splitCsv(rawValue)) {
-        if (excluded.has(inc)) continue;
-        includes.push(inc);
+        if (pass("includes", inc)) includes.push(inc);
       }
       continue;
     }
 
-    if (allowed.has(key) && !excluded.has(key)) {
-      collectedParams[key] = splitCsv(rawValue);
-    }
+    if (pass("params", key)) collectedParams[key] = splitCsv(rawValue);
   }
 
   const result: Partial<GlobalState<Aliases>> = {};

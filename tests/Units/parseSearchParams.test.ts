@@ -84,7 +84,7 @@ describe("parseSearchParams", () => {
   it("captures only allowlisted unknown params (ignores the rest)", () => {
     expect(
       parseSearchParams("?locale=es&tenant=acme&spy=1", {
-        allowedParams: ["locale", "tenant"],
+        allowed: { params: ["locale", "tenant"] },
       }),
     ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
@@ -118,20 +118,100 @@ describe("parseSearchParams", () => {
     });
   });
 
-  describe("excludeKeys (defense in depth)", () => {
-    it("drops filters whose attribute is in the denylist", () => {
+  describe("allowed (allowlist per bucket)", () => {
+    it("undefined bucket → default behavior (allow-all for filters/sorts/etc, deny-all for params)", () => {
+      expect(
+        parseSearchParams("?filter[anything]=x&sort=anything&locale=es"),
+      ).toEqual({
+        filters: [{ attribute: "anything", value: ["x"] }],
+        sorts: [{ attribute: "anything", direction: "asc" }],
+        // locale dropped because allowed.params is undefined (deny-all)
+      });
+    });
+
+    it("defined bucket → only listed entries pass", () => {
       expect(
         parseSearchParams(
-          "?filter[is_admin]=true&filter[status]=active",
-          { excludeKeys: ["is_admin"] },
+          "?filter[status]=active&filter[is_admin]=true&filter[role]=admin",
+          { allowed: { filters: ["status", "role"] } },
         ),
+      ).toEqual({
+        filters: [
+          { attribute: "status", value: ["active"] },
+          { attribute: "role", value: ["admin"] },
+        ],
+      });
+    });
+
+    it("allowlists are independent per bucket", () => {
+      expect(
+        parseSearchParams("?filter[name]=x&sort=name&sort=created_at", {
+          allowed: { filters: ["name"], sorts: ["created_at"] },
+        }),
+      ).toEqual({
+        filters: [{ attribute: "name", value: ["x"] }],
+        sorts: [{ attribute: "created_at", direction: "asc" }],
+      });
+    });
+
+    it("includes allowlist filters incoming relations", () => {
+      expect(
+        parseSearchParams("?include=author,secret_log,tags", {
+          allowed: { includes: ["author", "tags"] },
+        }),
+      ).toEqual({ includes: ["author", "tags"] });
+    });
+
+    it("fields allowlist matches both short prop and entity.prop forms", () => {
+      expect(
+        parseSearchParams(
+          "?fields=id,password&fields[user]=name,email,password",
+          { allowed: { fields: ["id", "name", "user.email"] } },
+        ),
+      ).toEqual({ fields: ["id", "user.name", "user.email"] });
+    });
+
+    it("excludeKeys still wins when both are set on the same bucket", () => {
+      expect(
+        parseSearchParams("?filter[name]=x&filter[status]=y&filter[role]=z", {
+          allowed: { filters: ["name", "status", "role"] },
+          excludeKeys: { filters: ["status"] },
+        }),
+      ).toEqual({
+        filters: [
+          { attribute: "name", value: ["x"] },
+          { attribute: "role", value: ["z"] },
+        ],
+      });
+    });
+  });
+
+  describe("excludeKeys (defense in depth, per bucket)", () => {
+    it("only blocks within the bucket it is declared for", () => {
+      // 'password' is dangerous as a filter but legitimate as a field
+      expect(
+        parseSearchParams(
+          "?filter[password]=anything&fields[user]=name,password",
+          { excludeKeys: { filters: ["password"] } },
+        ),
+      ).toEqual({ fields: ["user.name", "user.password"] });
+    });
+
+    it("drops filters in the filters bucket only", () => {
+      expect(
+        parseSearchParams("?filter[is_admin]=true&filter[status]=active", {
+          excludeKeys: { filters: ["is_admin"] },
+        }),
       ).toEqual({ filters: [{ attribute: "status", value: ["active"] }] });
     });
 
-    it("drops sorts and includes whose attribute is in the denylist", () => {
+    it("drops sorts and includes via their own bucket lists", () => {
       expect(
         parseSearchParams("?sort=-is_admin,name&include=secret,user", {
-          excludeKeys: ["is_admin", "secret"],
+          excludeKeys: {
+            sorts: ["is_admin"],
+            includes: ["secret"],
+          },
         }),
       ).toEqual({
         sorts: [{ attribute: "name", direction: "asc" }],
@@ -139,31 +219,39 @@ describe("parseSearchParams", () => {
       });
     });
 
-    it("drops fields (bare and bracketed) that match the denylist", () => {
+    it("drops fields by short prop name or by entity.prop form", () => {
       expect(
         parseSearchParams(
-          "?fields=id,password&fields[user]=name,password",
-          { excludeKeys: ["password"] },
+          "?fields=id,password&fields[user]=name,password&fields[admin]=role",
+          { excludeKeys: { fields: ["password", "admin.role"] } },
         ),
       ).toEqual({ fields: ["id", "user.name"] });
     });
 
-    it("denylist overrides the params allowlist", () => {
+    it("params bucket: excludeKeys overrides the allowlist", () => {
       expect(
         parseSearchParams("?locale=es&secret=leak", {
-          allowedParams: ["locale", "secret"],
-          excludeKeys: ["secret"],
+          allowed: { params: ["locale", "secret"] },
+          excludeKeys: { params: ["secret"] },
         }),
       ).toEqual({ params: { locale: ["es"] } });
     });
 
-    it("applies denylist BEFORE reverse alias (matches the backend name)", () => {
+    it("matches the raw backend name BEFORE reverse alias", () => {
       expect(
         parseSearchParams("?filter[is_admin]=true", {
           aliases: { isAdmin: "is_admin" },
-          excludeKeys: ["is_admin"],
+          excludeKeys: { filters: ["is_admin"] },
         }),
       ).toEqual({});
+    });
+
+    it("does not leak across buckets (sorts list does not affect filters)", () => {
+      expect(
+        parseSearchParams("?filter[name]=x&sort=name", {
+          excludeKeys: { sorts: ["name"] },
+        }),
+      ).toEqual({ filters: [{ attribute: "name", value: ["x"] }] });
     });
   });
 });

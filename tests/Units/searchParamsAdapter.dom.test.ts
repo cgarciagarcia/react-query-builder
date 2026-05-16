@@ -3,9 +3,7 @@ import { createSearchParamsAdapter } from "@/adapters/searchParams";
 import { type GlobalState } from "@/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const fullState = <
-  A extends Record<string, string> | undefined = undefined,
->(
+const fullState = <A extends Record<string, string> | undefined = undefined>(
   overrides: Partial<GlobalState<A>>,
 ): GlobalState<A> => ({
   aliases: {} as A,
@@ -51,7 +49,7 @@ describe("createSearchParamsAdapter (browser env)", () => {
   it("sync:true writes to history.replaceState and preserves unmanaged params", () => {
     window.history.replaceState(null, "", "/users?utm_source=newsletter");
     const adapter = createSearchParamsAdapter({
-      allowedParams: ["locale"],
+      allowed: { params: ["locale"] },
       sync: true,
     });
 
@@ -73,9 +71,7 @@ describe("createSearchParamsAdapter (browser env)", () => {
     const initialLength = window.history.length;
     const adapter = createSearchParamsAdapter({ sync: "push" });
 
-    adapter.write?.(
-      fullState({ filters: [{ attribute: "x", value: ["1"] }] }),
-    );
+    adapter.write?.(fullState({ filters: [{ attribute: "x", value: ["1"] }] }));
 
     expect(window.history.length).toBe(initialLength + 1);
     expect(window.location.search).toContain("filter[x]=1");

@@ -4,10 +4,7 @@ import {
   type QueryBuilderAdapter,
   type SearchParamsAdapterOptions,
 } from "@/types";
-import {
-  DEFAULT_URL_KEYS,
-  parseSearchParams,
-} from "@/utils/parseSearchParams";
+import { DEFAULT_URL_KEYS, parseSearchParams } from "@/utils/parseSearchParams";
 import { serializeSearchParams } from "@/utils/serializeSearchParams";
 
 const defaultSource = (): string =>
@@ -18,7 +15,7 @@ const isManagedKey = (
   options: SearchParamsAdapterOptions,
 ): boolean => {
   const keys = { ...DEFAULT_URL_KEYS, ...(options.keys ?? {}) };
-  const allowed = options.allowedParams ?? [];
+  const managedParams = options.allowed?.params ?? [];
   return (
     key === keys.filter ||
     key.startsWith(`${keys.filter}[`) ||
@@ -26,7 +23,7 @@ const isManagedKey = (
     key.startsWith(`${keys.fields}[`) ||
     key === keys.sort ||
     key === keys.include ||
-    allowed.includes(key)
+    managedParams.includes(key)
   );
 };
 
@@ -54,9 +51,7 @@ const writeToHistory = (search: string, mode: "replace" | "push"): void => {
   window.history[method](null, "", url);
 };
 
-const makeWriter = <
-  A extends Record<string, string> | undefined = undefined,
->(
+const makeWriter = <A extends Record<string, string> | undefined = undefined>(
   options: SearchParamsAdapterOptions,
 ): ((state: GlobalState<A>) => void) => {
   const sync = options.sync;
@@ -66,11 +61,7 @@ const makeWriter = <
       sync(serialized);
       return;
     }
-    const next = mergeManagedSearch(
-      typeof window === "undefined" ? "" : window.location.search,
-      serialized,
-      options,
-    );
+    const next = mergeManagedSearch(defaultSource(), serialized, options);
     writeToHistory(next, sync === "push" ? "push" : "replace");
   };
 };
@@ -89,7 +80,7 @@ const makeWriter = <
  * ```ts
  * const urlAdapter = createSearchParamsAdapter({
  *   keys: { filter: "filt", sort: "srt" },
- *   allowedParams: ["locale"],
+ *   allowed: { params: ["locale"] },
  *   sync: true, // two-way binding via history.replaceState
  * });
  *
@@ -102,9 +93,7 @@ export const createSearchParamsAdapter = <
   options?: SearchParamsAdapterOptions,
 ): QueryBuilderAdapter<Aliases> => {
   const adapter: QueryBuilderAdapter<Aliases> = {
-    read(
-      context?: AdapterReadContext<Aliases>,
-    ): Partial<GlobalState<Aliases>> {
+    read(context?: AdapterReadContext<Aliases>): Partial<GlobalState<Aliases>> {
       const source = options?.source ?? defaultSource;
       const aliases = options?.aliases ?? context?.aliases;
       return parseSearchParams<Aliases>(source(), { ...options, aliases });

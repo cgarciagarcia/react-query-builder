@@ -102,7 +102,7 @@ describe("useQueryBuilder", () => {
       source: () =>
         "?filt[status]=active&srt=-name&inc=user&fld[user]=id,email&locale=es",
       keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
-      allowedParams: ["locale"],
+      allowed: { params: ["locale"] },
     });
 
     const { result } = renderHook(() => useQueryBuilder({ adapter }));

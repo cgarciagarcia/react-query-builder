@@ -177,22 +177,71 @@ export interface SearchParamsAdapterOptions {
    */
   aliases?: Record<string, string>;
   /**
-   * Explicit allowlist of query params that are NOT `filter`/`sort`/`include`/
-   * `fields` and should be preserved as `params` in the builder state. Any
-   * other unknown param is ignored.
-   */
-  allowedParams?: string[];
-  /**
-   * Defense-in-depth denylist applied to filter / sort / include / field
-   * attribute names AND to params (overrides `allowedParams`). If a URL entry
-   * matches any name here it is silently dropped on read. Use it to block
-   * sensitive backend attributes from being injected via crafted URLs (for
-   * example `is_admin`, `password`, `tenant_id`, `internal_audit_log`).
+   * Bucket-scoped allowlist. **When a bucket is defined**, only entries
+   * matching the list pass through (both on read AND on write — for
+   * round-trip safety). **When omitted**, the bucket's default behavior
+   * applies:
    *
-   * Matching is on the raw URL name (the backend name) before any reverse
-   * alias is applied, since the threat is what reaches the wire.
+   * - `filters` / `sorts` / `includes` / `fields` → default allow-all
+   *   (the whole point of the feature is URL-driven filtering, so being
+   *   strict by default would require enumerating every legal attribute).
+   * - `params` → default deny-all (params are arbitrary app-specific data;
+   *   if you do not declare it, it does not enter).
+   *
+   * ```ts
+   * allowed: {
+   *   filters:  ["status", "role", "created_at"],
+   *   sorts:    ["created_at", "name"],
+   *   includes: ["author", "tags"],
+   *   fields:   ["id", "title", "user.name"],
+   *   params:   ["locale", "tenant"],
+   * }
+   * ```
+   *
+   * Combine with `excludeKeys` (denylist) for layered defense: `allowed`
+   * narrows the input set, `excludeKeys` removes specific entries from
+   * what remains.
    */
-  excludeKeys?: string[];
+  allowed?: {
+    filters?: string[];
+    sorts?: string[];
+    includes?: string[];
+    fields?: string[];
+    params?: string[];
+  };
+  /**
+   * Defense-in-depth denylist, **scoped per bucket**. Each list drops the
+   * matching names from the corresponding bucket on read AND on write;
+   * `params` wins over `allowed.params` (deny over allow). Matching is on
+   * the raw URL name (backend) before any reverse alias is applied, since
+   * the threat is what reaches the wire.
+   *
+   * Per-bucket scoping is intentional: a name like `password` is dangerous
+   * as a filter but legitimate as a `fields` entry (selecting the column).
+   * Saying "deny `password` everywhere" would silently break legitimate
+   * use cases.
+   *
+   * For `fields`, both the short prop name (`password`) and the
+   * fully-qualified `entity.prop` form (`user.password`) match — pick the
+   * precision you need.
+   *
+   * ```ts
+   * excludeKeys: {
+   *   filters:  ["is_admin", "tenant_id"],
+   *   includes: ["internal_audit_log"],
+   *   sorts:    ["secret_score"],
+   *   fields:   ["password", "api_token"],
+   *   params:   ["debug"],
+   * }
+   * ```
+   */
+  excludeKeys?: {
+    filters?: string[];
+    sorts?: string[];
+    includes?: string[];
+    fields?: string[];
+    params?: string[];
+  };
   /**
    * Lazy provider of the query string to parse. Default:
    * `() => window.location.search`. Evaluated when `read()` is called, not
@@ -202,7 +251,8 @@ export interface SearchParamsAdapterOptions {
   /**
    * Enable two-way binding. When set, the adapter exposes a `write(state)`
    * function that the builder invokes on every mutation, serialising the
-   * state back to the URL using the same `keys` and `allowedParams`.
+   * state back to the URL using the same `keys`, `allowed`, and
+   * `excludeKeys` policy as the reader.
    *
    * - `true` (or `"replace"`) — `window.history.replaceState` (no extra
    *   history entry per change). Best for filter/sort UI.
@@ -216,7 +266,7 @@ export interface SearchParamsAdapterOptions {
    *
    * The built-in writer preserves any query params not managed by this
    * adapter (i.e. not matching the configured keys and not in
-   * `allowedParams`), so other consumers of the URL (analytics, locale
+   * `allowed.params`), so other consumers of the URL (analytics, locale
    * switchers, etc.) are left untouched.
    */
   sync?: true | "replace" | "push" | ((search: string) => void);
