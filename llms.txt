@@ -279,6 +279,18 @@ serializeSearchParams({
 // → "filter[status]=active&sort=-name"
 ```
 
+### Known protocol limitations (URL adapter)
+
+Filter values must not contain control symbols of the protocol; they
+silently corrupt on round-trip:
+
+- `,`  → multi-value separator (`filter[tag]=a,b` → `["a", "b"]`).
+- Leading `<`, `>`, `<=`, `>=`, `<>` → operator prefixes (`filter[age]=>=18`
+  → operator `>=`, value `["18"]`).
+
+Other "special-looking" characters (`%`, `&`, `+`, spaces) ARE safe — they
+travel URL-escaped and round-trip intact.
+
 ## Integration with TanStack Query
 
 ```ts

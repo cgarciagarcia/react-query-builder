@@ -159,6 +159,23 @@ export interface QueryBuilder<
  */
 export type ConfigurableURLKey = "filter" | "sort" | "include" | "fields";
 
+/**
+ * Options for the built-in URL adapter / parser / serializer.
+ *
+ * ## Known protocol limitations
+ *
+ * Filter values **must not** contain any of these characters; the URL
+ * protocol uses them as control symbols and a round-trip through the
+ * adapter would silently corrupt the value:
+ *
+ * - `,` — the multi-value separator (`filter[tag]=a,b` → `["a", "b"]`).
+ * - `<`, `>`, `<=`, `>=`, `<>` as the **leading** characters of a value —
+ *   they are parsed as operator prefixes (`filter[age]=>=18` → operator
+ *   `>=`, value `["18"]`).
+ *
+ * Values containing `%`, `&`, `+` and spaces ARE safe — they go through the
+ * URL escaped and survive the round-trip intact.
+ */
 export interface SearchParamsAdapterOptions {
   /**
    * Remap the URL keys the parser looks for. Any omitted key falls back to

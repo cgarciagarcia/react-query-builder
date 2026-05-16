@@ -506,6 +506,19 @@ serializeSearchParams({
 
 Both accept the same `keys` / `aliases` / `allowed` / `excludeKeys` options as the adapter.
 
+### Known limitations
+
+The URL protocol uses a few characters as control symbols. Filter values containing them **silently corrupt** on round-trip — the writer emits the value, but the reader splits it differently. Until we lift this limitation, treat these as off-limits inside filter values:
+
+| Character | Why it breaks |
+|---|---|
+| `,` | Multi-value separator — `filter[tag]=a,b` becomes `["a", "b"]` on parse |
+| `<`, `>`, `<=`, `>=`, `<>` (as a **leading** prefix) | Operator syntax — `filter[age]=>=18` becomes operator `>=` + value `["18"]` |
+
+Other "special-looking" characters like `%`, `&`, `+` and spaces are fine — they travel URL-escaped and survive the round-trip intact.
+
+If you need any of these characters inside a value (e.g. tags with commas), keep that piece of state outside the URL adapter, or escape it on your side before passing it to `.filter()`.
+
 ---
 
 ## Support
