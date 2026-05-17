@@ -89,6 +89,36 @@ describe("parseSearchParams", () => {
     ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
 
+  describe("repeated URL params (?sort=a&sort=b)", () => {
+    it("accumulates sort entries the same way as the CSV form", () => {
+      // ?sort=name&sort=-created_at  is equivalent in result to
+      // ?sort=name,-created_at — both produce two sort entries.
+      expect(parseSearchParams("?sort=name&sort=-created_at")).toEqual({
+        sorts: [
+          { attribute: "name", direction: "asc" },
+          { attribute: "created_at", direction: "desc" },
+        ],
+      });
+    });
+
+    it("accumulates include entries across repeated params", () => {
+      expect(parseSearchParams("?include=author&include=tags")).toEqual({
+        includes: ["author", "tags"],
+      });
+    });
+
+    it("treats the same filter key twice as two separate filter entries", () => {
+      expect(
+        parseSearchParams("?filter[status]=active&filter[status]=pending"),
+      ).toEqual({
+        filters: [
+          { attribute: "status", value: ["active"] },
+          { attribute: "status", value: ["pending"] },
+        ],
+      });
+    });
+  });
+
   it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
     const { compilePolicy } = await import("@/utils/searchParamsPolicy");
     const policy = compilePolicy({ allowed: { filters: ["status"] } });
