@@ -709,15 +709,28 @@ function UserList() {
                 <span class="w-2 h-2 rounded-full bg-gray-400"></span> Configuration
                 <a href="#api-config" class="anchor-link" title="Copy link">#</a>
             </h3>
-            <p class="t-muted text-sm mb-4">All fields are optional. Pass a config object to set initial state or
-                customize behavior.</p>
+            <p class="t-muted text-sm mb-4">All fields are optional. Pass a config object to set initial state, plug an
+                adapter, or customize behavior. The config is read <strong>once</strong> on the first render — see
+                <a href="url-adapter.html" class="text-emerald-500 hover:underline">URL Adapter</a> for the
+                <code class="text-emerald-400">adapter</code> contract in detail.</p>
             <pre><code class="language-typescript">const builder = useQueryBuilder({
   aliases: { frontend_key: 'backend_key' }, // map names transparently
+
+  // ── Initial state (all optional) ──────────────────────────────────
   filters:  [],          // pre-set filters
   includes: [],          // pre-set includes
   sorts:    [],          // pre-set sorts
   fields:   [],          // pre-set fields
   params:   {},          // extra custom params
+  pagination: { page: 1, limit: 20 },
+
+  // ── Hydrate / persist from an external source ─────────────────────
+  // The hook calls `adapter.read({ aliases })` once on the first render
+  // (lazy init, same semantics as `useState(() => …)`). If `write` is
+  // defined, it's wired as a subscriber and fires on every mutation.
+  adapter: createSearchParamsAdapter({ sync: true }),
+
+  // ── Behavior ──────────────────────────────────────────────────────
   pruneConflictingFilters: {
     date: ['between_dates'],  // mutually exclusive filters
   },
@@ -730,8 +743,13 @@ function UserList() {
     params:   null,
   },
   useQuestionMark: true,   // prepend "?" to build() output
-  pagination: { page: 1, limit: 20 },
 })</code></pre>
+
+            <p class="t-muted text-sm mt-4">
+                Explicit fields always win over what an adapter's
+                <code class="text-emerald-400">read()</code> returned, so
+                <code class="text-emerald-400">filters: [...]</code> here overrides whatever the URL had at mount time.
+            </p>
         </div>
 
         <div id="api-filters" class="mb-14">
