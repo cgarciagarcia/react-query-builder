@@ -348,6 +348,7 @@
             <a href="#install" class="t-nav-link">Install</a>
             <a href="#quickstart" class="t-nav-link">Quick Start</a>
             <a href="#api" class="t-nav-link">API</a>
+            <a href="url-adapter.html" class="t-nav-link">URL Adapter</a>
             <a href="#integrations" class="t-nav-link">Integrations</a>
             <a href="playground.html" class="t-nav-link font-medium text-emerald-500 hover:text-emerald-400">Playground
                 ▶</a>
@@ -408,6 +409,7 @@
         <a href="#install" onclick="toggleMenu()" class="t-nav-link py-1">Install</a>
         <a href="#quickstart" onclick="toggleMenu()" class="t-nav-link py-1">Quick Start</a>
         <a href="#api" onclick="toggleMenu()" class="t-nav-link py-1">API Reference</a>
+        <a href="url-adapter.html" onclick="toggleMenu()" class="t-nav-link py-1">URL Adapter</a>
         <a href="#integrations" onclick="toggleMenu()" class="t-nav-link py-1">Integrations</a>
         <a href="playground.html" onclick="toggleMenu()" class="py-1 font-medium text-emerald-500">Playground ▶</a>
     </div>
@@ -571,6 +573,47 @@ builder.build()
                 single expression, or spread them across handlers.</p>
         </div>
 
+    </div>
+</section>
+
+<!-- URL ADAPTER TEASER -->
+<section class="t-border-t py-14 sm:py-20 px-4 sm:px-6">
+    <div class="max-w-5xl mx-auto">
+        <div class="t-card rounded-2xl p-6 sm:p-10" style="border:1px solid var(--c-border-card)">
+            <div class="grid md:grid-cols-[1fr_auto] gap-8 items-center">
+                <div>
+                    <div class="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1 text-xs text-purple-400 font-semibold mb-4">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                        New · URL state sync
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold t-heading mb-2">
+                        Hydrate the builder from the URL
+                    </h2>
+                    <p class="t-muted text-sm sm:text-base leading-relaxed mb-5">
+                        Share filtered links, deep-link to state, restore on refresh. With aliases,
+                        per-bucket allowlist / denylist, custom adapters for
+                        <code class="text-purple-400">localStorage</code> &amp; co. Read-only or two-way
+                        binding via <code class="text-purple-400">history.replaceState</code> /
+                        <code class="text-purple-400">pushState</code> / your router.
+                    </p>
+<pre class="mb-0"><code class="language-typescript">const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+builder.filter("status", "active").sort("created_at", "desc")
+// URL bar: /?filter[status]=active&sort=-created_at</code></pre>
+                </div>
+                <div class="flex md:flex-col items-stretch gap-3 md:w-44">
+                    <a href="url-adapter.html" class="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-400 text-white font-semibold rounded-xl px-4 py-2.5 text-sm transition-colors whitespace-nowrap">
+                        Read the guide
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="playground.html" class="flex-1 inline-flex items-center justify-center gap-2 t-card font-medium rounded-xl px-4 py-2.5 text-sm t-muted transition-colors whitespace-nowrap" style="border:1px solid var(--c-border-card)">
+                        Try it live
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 

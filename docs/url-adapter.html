@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html data-theme="dark" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>URL Adapter — react-query-builder</title>
+    <meta name="description"
+          content="Sync the builder state with the URL — hydrate on mount, push to history on every change, with aliases, allowlist, denylist and custom adapters."/>
+    <meta property="og:title" content="URL Adapter — @cgarciagarcia/react-query-builder"/>
+    <meta property="og:description"
+          content="Read filters/sort/include/fields from the URL and (optionally) keep the URL in sync as the builder mutates."/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link id="hljs-theme" rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+    <script>
+      ;(function () {
+        const saved = localStorage.getItem('theme')
+        const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        const theme = saved || preferred
+        document.documentElement.setAttribute('data-theme', theme)
+        if (theme === 'light') {
+          document.getElementById('hljs-theme').href =
+            'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+        }
+      })()
+    </script>
+    <script>hljs.highlightAll()</script>
+    <style>
+        :root {
+            --c-bg: #0a0f1a;
+            --c-nav: rgba(10, 15, 26, 0.92);
+            --c-nav-solid: #0a0f1a;
+            --c-card: #0d1117;
+            --c-code: #0d1117;
+            --c-border: rgba(255, 255, 255, 0.06);
+            --c-border-card: rgba(255, 255, 255, 0.08);
+            --c-border-input: rgba(255, 255, 255, 0.10);
+            --c-text: #e2e8f0;
+            --c-text-muted: #94a3b8;
+            --c-text-faint: #64748b;
+            --c-text-heading: #ffffff;
+            --c-shadow: rgba(0, 0, 0, 0.4);
+            --hero-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(168, 85, 247, 0.15), transparent);
+            --c-table-head: rgba(255, 255, 255, 0.04);
+            --c-table-row: rgba(255, 255, 255, 0.02);
+        }
+
+        [data-theme="light"] {
+            --c-bg: #f8fafc;
+            --c-nav: rgba(255, 255, 255, 0.92);
+            --c-nav-solid: #ffffff;
+            --c-card: #ffffff;
+            --c-code: #f1f5f9;
+            --c-border: rgba(0, 0, 0, 0.06);
+            --c-border-card: rgba(0, 0, 0, 0.08);
+            --c-border-input: rgba(0, 0, 0, 0.10);
+            --c-text: #334155;
+            --c-text-muted: #64748b;
+            --c-text-faint: #94a3b8;
+            --c-text-heading: #0f172a;
+            --c-shadow: rgba(0, 0, 0, 0.08);
+            --hero-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(168, 85, 247, 0.08), transparent);
+            --c-table-head: rgba(0, 0, 0, 0.04);
+            --c-table-row: rgba(0, 0, 0, 0.02);
+        }
+
+        html { scroll-behavior: smooth; }
+        body { background: var(--c-bg); color: var(--c-text); transition: background 0.2s, color 0.2s; }
+
+        pre { overflow-x: auto; max-width: 100%; }
+        .hljs { background: var(--c-code) !important; border-radius: 0.75rem; padding: 1rem !important; font-size: 0.8rem; line-height: 1.6; }
+        @media (min-width: 640px) { .hljs { padding: 1.25rem !important; font-size: 0.875rem; } }
+
+        .t-nav { background: var(--c-nav); border-bottom: 1px solid var(--c-border); }
+        .t-nav-solid { background: var(--c-nav-solid); }
+        .t-nav-link { color: var(--c-text-muted); transition: color 0.15s; }
+        .t-nav-link:hover { color: var(--c-text-heading); }
+        .t-nav-link.active { color: #a855f7; }
+
+        .t-card { background: var(--c-card); border: 1px solid var(--c-border-card); }
+        .t-install { background: var(--c-code); border: 1px solid var(--c-border-input); }
+        .t-border-t { border-top: 1px solid var(--c-border); }
+
+        .t-heading { color: var(--c-text-heading); }
+        .t-body { color: var(--c-text); }
+        .t-muted { color: var(--c-text-muted); }
+        .t-faint { color: var(--c-text-faint); }
+
+        .gradient-text { background: linear-gradient(135deg, #a855f7, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-glow { background: var(--hero-glow); }
+
+        .section-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.65rem; border-radius: 9999px; }
+
+        #mobile-menu { display: none; }
+        #mobile-menu.open { display: flex; }
+
+        .theme-toggle { width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.15s; color: var(--c-text-muted); }
+        .theme-toggle:hover { background: var(--c-border-card); color: var(--c-text-heading); }
+        #icon-sun { display: none; } #icon-moon { display: block; }
+        [data-theme="light"] #icon-sun { display: block; } [data-theme="light"] #icon-moon { display: none; }
+
+        .copy-block { position: relative; }
+        .copy-block-btn { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 10; display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 600; font-family: sans-serif; background: rgba(255, 255, 255, 1); color: var(--c-text-muted); border: 1px solid var(--c-border-card); cursor: pointer; opacity: 1; transition: opacity 0.15s, background 0.15s, color 0.15s; user-select: none; }
+        [data-theme="light"] .copy-block-btn { background: rgba(0, 0, 0, 1); }
+        .copy-block:hover .copy-block-btn { opacity: 1; }
+        .copy-block-btn:hover { background: rgba(168, 85, 247, 1); color: #a855f7; border-color: rgba(168, 85, 247, 0.3); }
+        .copy-block-btn.copied { background: rgba(168, 85, 247, 1); color: #a855f7; border-color: rgba(168, 85, 247, 0.4); opacity: 1; }
+
+        .anchor-link { opacity: 0; transition: opacity 0.15s; color: var(--c-text-faint); text-decoration: none; }
+        .anchor-heading:hover .anchor-link { opacity: 1; }
+        .anchor-link:hover { color: #a855f7; }
+
+        /* In-page table-of-contents */
+        .toc { position: sticky; top: 4.5rem; }
+        .toc-link { display: block; padding: 0.25rem 0.75rem; border-left: 2px solid transparent; color: var(--c-text-muted); font-size: 0.825rem; transition: all 0.15s; }
+        .toc-link:hover { color: var(--c-text-heading); border-left-color: var(--c-border-card); }
+        .toc-link.active { color: #a855f7; border-left-color: #a855f7; }
+
+        /* Diff / before-after table */
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.825rem; border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--c-border-card); }
+        .compare-table th { text-align: left; padding: 0.75rem 1rem; background: var(--c-table-head); color: var(--c-text-heading); font-weight: 600; border-bottom: 1px solid var(--c-border-card); }
+        .compare-table td { padding: 0.75rem 1rem; border-top: 1px solid var(--c-border); vertical-align: top; }
+        .compare-table tr:nth-child(odd) td { background: var(--c-table-row); }
+        .compare-table code { font-size: 0.78rem; }
+
+        /* Callout boxes */
+        .callout { border-left: 3px solid; padding: 1rem 1.25rem; border-radius: 0.5rem; background: var(--c-card); margin: 1.5rem 0; }
+        .callout-info  { border-color: #3b82f6; }
+        .callout-warn  { border-color: #f59e0b; }
+        .callout-tip   { border-color: #a855f7; }
+        .callout-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+        .callout-info  .callout-title { color: #60a5fa; }
+        .callout-warn  .callout-title { color: #fbbf24; }
+        .callout-tip   .callout-title { color: #c084fc; }
+        .callout p:last-child { margin-bottom: 0; }
+
+        [data-theme="light"] code.text-emerald-400 { color: #059669; }
+        [data-theme="light"] code.text-purple-400 { color: #7c3aed; }
+        [data-theme="light"] code.text-cyan-400   { color: #0891b2; }
+        [data-theme="light"] code.text-red-400    { color: #dc2626; }
+        [data-theme="light"] code.text-amber-400  { color: #d97706; }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+<!-- NAV -->
+<nav class="t-nav fixed top-0 left-0 right-0 z-50 backdrop-blur">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Laravel" fill="#FF2D20">
+                <path d="M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.316.316 0 01-.066.027c-.008.002-.016.008-.024.01a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.008-.042-.014-.062-.025L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.033.005-.066.014-.098.003-.012.01-.02.014-.032a.369.369 0 01.023-.058c.004-.013.015-.022.023-.033l.033-.045c.012-.01.025-.018.037-.027.014-.012.027-.024.041-.034H.53L5.043.05a.375.375 0 01.375 0L9.93 2.647h.002c.015.01.027.021.04.033l.038.027c.013.014.02.03.033.045.008.011.02.021.025.033.01.02.017.038.024.058.003.011.01.021.013.032.01.031.014.064.014.098v9.652l3.76-2.164V5.527c0-.033.004-.066.013-.098.003-.01.01-.02.013-.032a.487.487 0 01.024-.059c.007-.012.018-.02.025-.033.012-.015.021-.03.033-.043.012-.012.025-.02.037-.028.014-.01.026-.023.041-.032h.001l4.513-2.598a.375.375 0 01.375 0l4.513 2.598c.016.01.027.021.042.031.012.01.025.018.036.028.013.014.022.03.034.044.008.012.019.021.024.033.011.02.018.04.024.06.006.01.012.021.015.032zm-.74 5.032V6.179l-1.578.908-2.182 1.256v4.283zm-4.51 7.75v-4.287l-2.147 1.225-6.126 3.498v4.325zM1.093 3.624v14.588l8.273 4.761v-4.325l-4.322-2.445-.002-.003H5.04c-.014-.01-.025-.021-.04-.031-.011-.01-.024-.018-.035-.027l-.001-.002c-.013-.012-.021-.025-.031-.04-.01-.011-.021-.022-.028-.036h-.002c-.008-.014-.013-.031-.02-.047-.006-.016-.014-.027-.018-.043a.49.49 0 01-.008-.057c-.002-.014-.006-.027-.006-.041V5.789l-2.18-1.257zM5.23.81L1.47 2.974l3.76 2.164 3.758-2.164zm1.956 13.505l2.182-1.256V3.624l-1.58.91-2.182 1.255v9.435zm11.581-10.95l-3.76 2.163 3.76 2.163 3.759-2.164zm-.376 4.978L16.21 7.087 14.63 6.18v4.283l2.182 1.256 1.58.908zm-8.65 9.654l5.514-3.148 2.756-1.572-3.757-2.163-4.323 2.489-3.941 2.27z"/>
+            </svg>
+            <span class="text-red-400 text-base leading-none select-none">♥</span>
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Spatie">
+                <rect width="24" height="24" rx="4.8" fill="#197593"/>
+                <text x="12" y="17.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="16" fill="white">S</text>
+            </svg>
+            <span class="font-bold text-sm tracking-tight t-heading">react-query-builder</span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-6 text-sm">
+            <a href="index.html" class="t-nav-link">Home</a>
+            <a href="index.html#api" class="t-nav-link">API</a>
+            <a href="url-adapter.html" class="t-nav-link active font-medium">URL Adapter</a>
+            <a href="playground.html" class="t-nav-link font-medium text-emerald-500 hover:text-emerald-400">Playground ▶</a>
+            <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="t-nav-link flex items-center gap-1.5 font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+            </a>
+            <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+                <svg id="icon-sun"  class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+
+        <div class="flex md:hidden items-center gap-2">
+            <button onclick="toggleTheme()" class="theme-toggle" aria-label="Toggle theme">
+                <svg class="w-[1.1rem] h-[1.1rem]" id="icon-moon-mobile" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+                <svg class="w-[1.1rem] h-[1.1rem]" id="icon-sun-mobile" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+            <button onclick="toggleMenu()" class="theme-toggle" aria-label="Menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-menu" class="t-nav-solid md:hidden flex-col t-border-t px-6 py-4 gap-4 text-sm">
+        <a href="index.html" onclick="toggleMenu()" class="t-nav-link py-1">Home</a>
+        <a href="index.html#api" onclick="toggleMenu()" class="t-nav-link py-1">API</a>
+        <a href="url-adapter.html" onclick="toggleMenu()" class="t-nav-link active py-1 font-medium">URL Adapter</a>
+        <a href="playground.html" onclick="toggleMenu()" class="py-1 font-medium text-emerald-500">Playground ▶</a>
+        <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" onclick="toggleMenu()" class="t-nav-link py-1">GitHub</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-glow pt-24 sm:pt-32 pb-12 sm:pb-16 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 text-sm text-purple-400 mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+            URL state sync
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-5 t-heading">
+            Hydrate the builder
+            <span class="gradient-text block sm:inline">from the URL</span>
+        </h1>
+
+        <p class="text-base sm:text-lg t-muted max-w-2xl mx-auto mb-10 leading-relaxed">
+            Share filtered links, deep-link to state, restore on refresh.
+            All without writing serialization or hydration logic.
+        </p>
+
+        <div class="text-left max-w-2xl mx-auto">
+<pre><code class="language-typescript">import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+builder.filter("status", "active").sort("created_at", "desc")
+// URL bar is now: /?filter[status]=active&sort=-created_at
+// Refresh, share, deep-link — the filters come back.</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- BODY: TOC + content -->
+<section class="t-border-t py-12 sm:py-16 px-4 sm:px-6">
+    <div class="max-w-6xl mx-auto grid lg:grid-cols-[200px_1fr] gap-10">
+
+        <!-- TOC -->
+        <aside class="hidden lg:block">
+            <nav class="toc">
+                <p class="text-xs font-bold uppercase tracking-wider t-faint mb-3 px-3">On this page</p>
+                <a href="#what" class="toc-link">What it solves</a>
+                <a href="#quickstart" class="toc-link">30-second example</a>
+                <a href="#readonly" class="toc-link">Read-only mode</a>
+                <a href="#sync" class="toc-link">Two-way binding</a>
+                <a href="#aliases" class="toc-link">Aliases</a>
+                <a href="#keys" class="toc-link">Renaming URL keys</a>
+                <a href="#policy" class="toc-link">Locking it down</a>
+                <a href="#custom" class="toc-link">Custom adapters</a>
+                <a href="#lowlevel" class="toc-link">Low-level utilities</a>
+                <a href="#limits" class="toc-link">Known limitations</a>
+            </nav>
+        </aside>
+
+        <!-- CONTENT -->
+        <article class="min-w-0 space-y-14">
+
+            <!-- WHAT -->
+            <div id="what">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    What it solves
+                    <a href="#what" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted leading-relaxed">
+                    A user picks <em>status = active</em>, sorts by date, opens page 3 — and shares
+                    the link with a teammate. You want that link to open with the exact same
+                    filters already applied. No bespoke serialization, no manual re-hydration.
+                </p>
+                <p class="t-muted leading-relaxed mt-3">
+                    That's what an <strong class="t-heading">adapter</strong> does: bridges the
+                    builder to an external source (URL, <code class="text-purple-400">localStorage</code>,
+                    anything). The built-in <code class="text-purple-400">createSearchParamsAdapter</code>
+                    handles the URL case.
+                </p>
+            </div>
+
+            <!-- QUICKSTART -->
+            <div id="quickstart">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    30-second example
+                    <a href="#quickstart" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    Pass an adapter, set <code class="text-purple-400">sync: true</code>, and you're done.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+builder.filter("status", "active").sort("created_at", "desc")
+// URL bar:  /?filter[status]=active&sort=-created_at</code></pre>
+                </div>
+                <p class="t-muted mt-4 text-sm leading-relaxed">
+                    What just happened:
+                </p>
+                <ul class="t-muted text-sm space-y-1.5 mt-2 list-disc list-inside leading-relaxed">
+                    <li>On mount, the adapter <strong>read</strong> the URL and seeded the builder.</li>
+                    <li><code class="text-purple-400">sync: true</code> makes it <strong>write</strong> back on every change via <code class="text-purple-400">history.replaceState</code>.</li>
+                    <li>The URL output mirrors what <code class="text-purple-400">.build()</code> emits, so backend and URL bar agree.</li>
+                </ul>
+            </div>
+
+            <!-- READ-ONLY -->
+            <div id="readonly">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Read-only mode
+                    <a href="#readonly" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    Only want to hydrate on mount and never touch the URL after? Just leave
+                    <code class="text-purple-400">sync</code> out.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">useQueryBuilder({
+  adapter: createSearchParamsAdapter(),
+})
+// `read()` runs once at mount — same semantics as `useState(() => …)`.
+// URL changes after mount do NOT re-hydrate.</code></pre>
+                </div>
+            </div>
+
+            <!-- SYNC -->
+            <div id="sync">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Two-way binding
+                    <a href="#sync" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    <code class="text-purple-400">sync</code> accepts three forms depending on how
+                    aggressive the URL updates should be.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">// 1) Default: replaceState — no extra history entries
+createSearchParamsAdapter({ sync: true })           // alias for "replace"
+
+// 2) pushState — every change is a back-button step
+createSearchParamsAdapter({ sync: "push" })
+
+// 3) Bring your own — Next.js / React Router / debouncing
+createSearchParamsAdapter({
+  sync: (search) => router.replace({ search }),
+})</code></pre>
+                </div>
+
+                <div class="callout callout-info mt-6">
+                    <p class="callout-title">Other apps' query params are safe</p>
+                    <p class="t-muted text-sm leading-relaxed">
+                        The writer preserves anything it doesn't recognise. So
+                        <code class="text-purple-400">?utm_source=newsletter</code> or
+                        <code class="text-purple-400">?theme=dark</code> stays untouched while your
+                        filters get added, updated, or cleared.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ALIASES -->
+            <div id="aliases">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Aliases
+                    <a href="#aliases" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    You probably name things one way in the UI (<code class="text-purple-400">userName</code>,
+                    <code class="text-purple-400">createdAt</code>) and another in the API
+                    (<code class="text-purple-400">name</code>, <code class="text-purple-400">created_at</code>).
+                    Pass <code class="text-purple-400">aliases</code> to the builder and the adapter
+                    translates in <strong>both directions</strong> automatically.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">useQueryBuilder({
+  aliases: { userName: "name", createdAt: "created_at" },
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+// Your code uses frontend names:
+builder.filter("userName", "Jane").sort("createdAt", "desc")
+
+// URL bar shows backend names (same as .build()):
+//   /?filter[name]=Jane&sort=-created_at
+
+// On refresh, ?filter[name]=Jane hydrates as { userName: "Jane" }.</code></pre>
+                </div>
+                <p class="t-muted mt-4 text-sm leading-relaxed">
+                    The adapter reads the aliases from the builder config automatically, so you
+                    only declare them once.
+                </p>
+            </div>
+
+            <!-- KEYS -->
+            <div id="keys">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Renaming URL keys
+                    <a href="#keys" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    The default URL can get long fast:
+                </p>
+<pre><code class="language-typescript">?filter[status]=active&filter[role]=admin&sort=-created_at&include=author,tags&fields[user]=id,name</code></pre>
+                <p class="t-muted my-4 leading-relaxed">
+                    Remap the keys to shorten it:
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">createSearchParamsAdapter({
+  keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+  sync: true,
+})
+// → ?filt[status]=active&filt[role]=admin&srt=-created_at&inc=author,tags&fld[user]=id,name</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Why you might want this:
+                </p>
+                <ul class="t-muted text-sm space-y-1.5 mt-2 list-disc list-inside leading-relaxed">
+                    <li><strong>Shorter, more shareable links</strong> — saves bytes per param.</li>
+                    <li><strong>Cleaner URL bar</strong> — easier on the eye for users and screenshots.</li>
+                    <li><strong>Brand / domain language</strong> — your app says "query", not "filter".</li>
+                    <li><strong>Collision avoidance</strong> — the surrounding app already uses <code class="text-purple-400">?filter=…</code> for something else.</li>
+                </ul>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Reader and writer use the same keys, so round-trips still work. This only
+                    affects the URL bar — <code class="text-purple-400">.build()</code> (what you
+                    pass to <code class="text-purple-400">fetch</code>) keeps using the canonical
+                    names your backend expects.
+                </p>
+            </div>
+
+            <!-- POLICY -->
+            <div id="policy">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Locking it down
+                    <a href="#policy" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-6 leading-relaxed">
+                    The URL is user input. Without limits, a crafted link like
+                    <code class="text-amber-400">?filter[is_admin]=true</code> would flow straight
+                    into your <code class="text-purple-400">.build()</code> call and out to your
+                    backend. Two primitives, <strong>per bucket</strong>, cover the two opposite
+                    needs.
+                </p>
+
+                <h3 class="text-lg font-bold mb-2 t-heading"><code class="text-purple-400">allowed</code> — strict allowlist ("only these")</h3>
+                <p class="t-muted text-sm mb-4 leading-relaxed">
+                    Use it when you have a short, explicit list of what's legitimate.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">createSearchParamsAdapter({
+  allowed: {
+    filters: ["status", "role", "created_at"],
+    sorts:   ["created_at", "name"],
+    params:  ["locale", "tenant"],   // anything else is dropped
+  },
+})</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Defaults when you omit a bucket:
+                </p>
+                <ul class="t-muted text-sm space-y-1.5 mt-2 list-disc list-inside leading-relaxed">
+                    <li><code class="text-purple-400">filters</code> / <code class="text-purple-400">sorts</code> / <code class="text-purple-400">includes</code> / <code class="text-purple-400">fields</code> → <strong>allow everything</strong> (so URL-driven filtering keeps working).</li>
+                    <li><code class="text-purple-400">params</code> → <strong>deny everything</strong> (the catch-all is deny-by-default; you must opt in by listing keys).</li>
+                </ul>
+
+                <h3 class="text-lg font-bold mb-2 mt-10 t-heading"><code class="text-purple-400">excludeKeys</code> — targeted denylist ("everything except these")</h3>
+                <p class="t-muted text-sm mb-4 leading-relaxed">
+                    Use it when you trust the bucket in general but want to block a handful of
+                    dangerous names — without enumerating everything legitimate.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">createSearchParamsAdapter({
+  // No allowed.filters → any filter from the URL is accepted.
+  // I have 47 legitimate filter attributes and add more every month;
+  // maintaining a whitelist is brittle. But is_admin and password
+  // must NEVER come through the URL.
+  excludeKeys: {
+    filters: ["is_admin", "password"],
+  },
+})</code></pre>
+                </div>
+
+                <h3 class="text-lg font-bold mb-3 mt-10 t-heading">Which one should I use?</h3>
+                <table class="compare-table">
+                    <thead>
+                        <tr><th>Situation</th><th>Use</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>"Short, explicit list of what's allowed"</td><td><code class="text-purple-400">allowed</code></td></tr>
+                        <tr><td>"Accept everything, except these few"</td><td><code class="text-purple-400">excludeKeys</code></td></tr>
+                        <tr><td>"Whitelist plus a moving denylist on top"</td><td>both — defense in depth</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="callout callout-tip mt-6">
+                    <p class="callout-title">Alias-aware on filters and sorts</p>
+                    <p class="t-muted text-sm leading-relaxed">
+                        When you set <code class="text-purple-400">aliases</code>, the policy
+                        matches if <strong>either</strong> the URL-side name (backend) OR the
+                        state-side name (frontend) is in the list. Write your rules in whichever
+                        vocabulary you think in — and listing one form on the deny side blocks
+                        both, so an attacker can't bypass by switching vocabularies.
+                    </p>
+                </div>
+
+                <p class="t-muted text-sm mt-6 leading-relaxed">
+                    A few more details:
+                </p>
+                <ul class="t-muted text-sm space-y-1.5 mt-2 list-disc list-inside leading-relaxed">
+                    <li>Both apply to the reader <strong>and</strong> the writer symmetrically — the URL bar is always inside your policy.</li>
+                    <li><code class="text-purple-400">excludeKeys</code> always wins over <code class="text-purple-400">allowed</code> (deny beats allow).</li>
+                    <li>For <code class="text-purple-400">fields</code>, match by short prop (<code class="text-purple-400">password</code>) or by <code class="text-purple-400">entity.prop</code> (<code class="text-purple-400">user.password</code>). Pick the precision you need.</li>
+                    <li><strong>Why per bucket?</strong> <code class="text-purple-400">password</code> is dangerous as a filter but fine as a <code class="text-purple-400">fields</code> selection (just picking which column the API returns). One flat list would force you into all-or-nothing.</li>
+                </ul>
+            </div>
+
+            <!-- CUSTOM ADAPTERS -->
+            <div id="custom">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Custom adapters
+                    <a href="#custom" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    <code class="text-purple-400">QueryBuilderAdapter</code> is just
+                    <code class="text-purple-400">{ read, write? }</code>. Wrap anything:
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">// Persist to localStorage instead of the URL
+const localStorageAdapter: QueryBuilderAdapter = {
+  read:  () => JSON.parse(localStorage.getItem("filters") ?? "{}"),
+  write: (state) => localStorage.setItem("filters", JSON.stringify(state)),
+}
+
+useQueryBuilder({ adapter: localStorageAdapter })</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Same pattern works for <code class="text-purple-400">react-router</code> search
+                    params, hash routers, in-memory stores, IndexedDB — anything you can read
+                    from and write to.
+                </p>
+            </div>
+
+            <!-- LOW LEVEL -->
+            <div id="lowlevel">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Low-level utilities
+                    <a href="#lowlevel" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    If you only want the URL parser/serializer without the hook integration, both
+                    pieces are exported as pure functions.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">import {
+  parseSearchParams,
+  serializeSearchParams,
+} from "@cgarciagarcia/react-query-builder"
+
+// URL → state
+parseSearchParams("?filter[status]=active&sort=-name")
+// → { filters: [...], sorts: [{ attribute: "name", direction: "desc" }] }
+
+// state → URL
+serializeSearchParams({
+  filters: [{ attribute: "status", value: ["active"] }],
+})
+// → "filter[status]=active"</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Both accept the same <code class="text-purple-400">keys</code> /
+                    <code class="text-purple-400">aliases</code> /
+                    <code class="text-purple-400">allowed</code> /
+                    <code class="text-purple-400">excludeKeys</code> options as the adapter, plus an
+                    optional pre-compiled <code class="text-purple-400">PolicyGate</code> as the
+                    third argument for the very perf-conscious.
+                </p>
+            </div>
+
+            <!-- LIMITATIONS -->
+            <div id="limits">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Known limitations
+                    <a href="#limits" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    The URL protocol uses a few characters as control symbols. Filter values
+                    containing them <strong>silently corrupt</strong> on round-trip — the writer
+                    emits the value, but the reader splits it differently. Until we lift this
+                    limitation, treat these as off-limits inside filter values:
+                </p>
+                <table class="compare-table">
+                    <thead>
+                        <tr><th>Character</th><th>Why it breaks</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code class="text-amber-400">,</code></td><td>Multi-value separator — <code class="text-purple-400">filter[tag]=a,b</code> becomes <code class="text-purple-400">["a", "b"]</code> on parse.</td></tr>
+                        <tr><td><code class="text-amber-400">&lt;</code>, <code class="text-amber-400">&gt;</code>, <code class="text-amber-400">&lt;=</code>, <code class="text-amber-400">&gt;=</code>, <code class="text-amber-400">&lt;&gt;</code> (leading)</td><td>Operator syntax — <code class="text-purple-400">filter[age]=&gt;=18</code> becomes operator <code class="text-purple-400">&gt;=</code> + value <code class="text-purple-400">["18"]</code>.</td></tr>
+                    </tbody>
+                </table>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Other "special-looking" characters like <code class="text-purple-400">%</code>,
+                    <code class="text-purple-400">&amp;</code>, <code class="text-purple-400">+</code>
+                    and spaces are fine — they travel URL-escaped and survive the round-trip
+                    intact.
+                </p>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    If you need any of these inside a value (e.g. tags with commas), keep that
+                    piece of state outside the URL adapter, or escape it on your side before
+                    passing it to <code class="text-purple-400">.filter()</code>.
+                </p>
+            </div>
+
+            <!-- CTA -->
+            <div class="t-card rounded-2xl p-8 text-center mt-8" style="border:1px solid var(--c-border-card)">
+                <p class="text-lg font-bold t-heading mb-3">Try it live</p>
+                <p class="t-muted text-sm mb-5 leading-relaxed max-w-md mx-auto">
+                    The playground has dedicated examples for the URL adapter, two-way sync, and a localStorage adapter.
+                </p>
+                <a href="playground.html" class="inline-flex items-center gap-2 bg-purple-500 hover:bg-purple-400 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                    Open Playground
+                </a>
+            </div>
+
+        </article>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="t-border-t py-14 px-6 text-center text-sm t-faint">
+    <div class="max-w-4xl mx-auto">
+        <p class="t-heading font-bold text-base mb-1">@cgarciagarcia/react-query-builder</p>
+        <p class="mb-6 t-muted">MIT License · Made by <a href="https://github.com/cgarciagarcia" target="_blank" class="text-emerald-500 hover:underline">Carlos Garcia</a></p>
+        <div class="flex flex-wrap justify-center gap-6 text-sm t-muted">
+            <a href="index.html" class="hover:text-emerald-500 transition-colors">Home</a>
+            <a href="playground.html" class="hover:text-emerald-500 transition-colors">Playground</a>
+            <a href="https://github.com/cgarciagarcia/react-query-builder" target="_blank" class="hover:text-emerald-500 transition-colors">GitHub</a>
+            <a href="https://www.npmjs.com/package/@cgarciagarcia/react-query-builder" target="_blank" class="hover:text-emerald-500 transition-colors">npm</a>
+            <a href="https://github.com/cgarciagarcia/react-query-builder/discussions" target="_blank" class="hover:text-emerald-500 transition-colors">Discussions</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+  const HLJS_DARK  = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+  const HLJS_LIGHT = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+
+  function toggleTheme () {
+    const html = document.documentElement
+    const isDark = html.getAttribute('data-theme') === 'dark'
+    const next = isDark ? 'light' : 'dark'
+    html.setAttribute('data-theme', next)
+    localStorage.setItem('theme', next)
+    document.getElementById('hljs-theme').href = next === 'light' ? HLJS_LIGHT : HLJS_DARK
+    document.getElementById('icon-sun-mobile').style.display  = next === 'light' ? 'block' : 'none'
+    document.getElementById('icon-moon-mobile').style.display = next === 'dark'  ? 'block' : 'none'
+  }
+
+  function copyBlock (btn) {
+    const code = btn.closest('.copy-block').querySelector('code')
+    navigator.clipboard.writeText(code.innerText)
+    btn.classList.add('copied')
+    btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'
+    setTimeout(() => {
+      btn.classList.remove('copied')
+      btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy'
+    }, 2000)
+  }
+
+  function toggleMenu () { document.getElementById('mobile-menu').classList.toggle('open') }
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) document.getElementById('mobile-menu').classList.remove('open')
+  })
+
+  // Sync mobile icons to initial theme
+  ;(function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    document.getElementById('icon-sun-mobile').style.display  = isDark ? 'none'  : 'block'
+    document.getElementById('icon-moon-mobile').style.display = isDark ? 'block' : 'none'
+  })()
+
+  // TOC scroll-spy
+  ;(function () {
+    const tocLinks = document.querySelectorAll('.toc-link')
+    const sections = Array.from(tocLinks).map(a => document.querySelector(a.getAttribute('href')))
+    const setActive = (id) => {
+      tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id))
+    }
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id) })
+    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 })
+    sections.forEach(s => s && obs.observe(s))
+  })()
+</script>
+</body>
+</html>
