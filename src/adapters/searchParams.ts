@@ -9,10 +9,7 @@ import {
   parseSearchParams,
   prettifyBrackets,
 } from "@/utils/parseSearchParams";
-import {
-  compilePolicy,
-  type PolicyGate,
-} from "@/utils/searchParamsPolicy";
+import { compilePolicy, type PolicyGate } from "@/utils/searchParamsPolicy";
 import { serializeSearchParams } from "@/utils/serializeSearchParams";
 
 const defaultSource = (): string =>
