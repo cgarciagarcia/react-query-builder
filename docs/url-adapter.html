@@ -277,7 +277,7 @@ builder.filter("status", "active").sort("created_at", "desc")
                 </p>
                 <ul class="t-muted text-sm space-y-1.5 mt-2 list-disc list-inside leading-relaxed">
                     <li>On mount, the adapter <strong>read</strong> the URL and seeded the builder.</li>
-                    <li><code class="text-purple-400">sync: true</code> makes it <strong>write</strong> back on every change via <code class="text-purple-400">history.replaceState</code>.</li>
+                    <li><code class="text-purple-400">sync: true</code> then <strong>writes once right after mount</strong> to normalise the URL against the final state (defaults, <code class="text-purple-400">urlOmit</code>, a stale link — no mutation required), and on every subsequent change.</li>
                     <li>The URL output mirrors what <code class="text-purple-400">.build()</code> emits, so backend and URL bar agree.</li>
                 </ul>
             </div>
@@ -326,7 +326,21 @@ createSearchParamsAdapter({
 })</code></pre>
                 </div>
 
-                <div class="callout callout-info mt-6">
+                <div class="callout callout-tip mt-6">
+                    <p class="callout-title">Mount-time normalisation</p>
+                    <p class="t-muted text-sm leading-relaxed">
+                        The writer fires once right after the builder is constructed in all three
+                        modes, so the URL bar lands on the final state immediately — no mutation
+                        needed for <code class="text-purple-400">urlOmit</code>, defaults, or stale
+                        links to take effect. For <code class="text-purple-400">sync: "push"</code>
+                        the very first call still uses <code class="text-purple-400">replaceState</code>
+                        (so this mount fire doesn't add a phantom back-button entry). Custom
+                        callbacks also fire on mount — guard with a closure flag if your router
+                        would loop on a redirect.
+                    </p>
+                </div>
+
+                <div class="callout callout-info mt-4">
                     <p class="callout-title">Other apps' query params are safe</p>
                     <p class="t-muted text-sm leading-relaxed">
                         The writer preserves anything it doesn't recognise. So

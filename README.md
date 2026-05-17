@@ -323,7 +323,7 @@ Refresh the page, share the link — the filters come back. That's it.
 
 What just happened:
 - On mount, the adapter **reads** the current URL and seeds the builder.
-- `sync: true` makes the adapter **write** back on every change (`history.replaceState`).
+- `sync: true` then **writes once right after mount** to normalise the URL against the final state (so `BaseConfig` defaults, `urlOmit`, or a stale link the user landed on get reconciled immediately — no mutation required), and on every subsequent change.
 - The URL output mirrors what `.build()` produces, so your backend and your URL bar agree.
 
 ### Read-only hydration (no URL writes)
@@ -346,7 +346,7 @@ Now `read()` runs once when the hook mounts — same semantics as `useState(() =
 // 1) Default behavior: replaceState (no extra browser history entries)
 createSearchParamsAdapter({ sync: true });           // alias for "replace"
 
-// 2) pushState (every change is a back-button step)
+// 2) pushState (every mutation is a back-button step)
 createSearchParamsAdapter({ sync: "push" });
 
 // 3) Bring your own — useful for Next.js / React Router / debouncing
@@ -354,6 +354,8 @@ createSearchParamsAdapter({
   sync: (search) => router.replace({ search }),
 });
 ```
+
+**Mount-time normalisation** runs in all three modes — the writer fires once right after the builder is constructed so the URL bar reflects the final state immediately. For `sync: "push"` the very first call still uses `replaceState` (so the mount fire doesn't add a phantom back-button entry); your custom callback also fires once on mount, guard it with a closure flag if that surprises your router.
 
 Don't worry about other apps' query params — the writer **preserves anything it doesn't recognise**. So `?utm_source=newsletter` or `?theme=dark` stays untouched while your filters get added, updated, or cleared.
 

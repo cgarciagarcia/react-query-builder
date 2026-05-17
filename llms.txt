@@ -158,8 +158,14 @@ interface QueryBuilderAdapter<Aliases = undefined> {
 - `read(context)` runs **exactly once** at builder creation — lazy init, like
   `useState(() => ...)`. The builder passes its `aliases` through `context`
   so adapters can stay aligned without you declaring them twice.
-- `write?(state)` is optional. When defined, it runs on every state change
-  (registered as an internal subscriber) — use for two-way binding.
+- `write?(state)` is optional. When defined, the builder fires it once
+  right after construction (to normalise the external source against the
+  final state — `BaseConfig` defaults, `urlOmit`, etc. — without waiting
+  for a mutation), then on every state change.
+  The built-in URL adapter forces `replaceState` on that first call so
+  `sync: "push"` doesn't add a phantom history entry; custom callbacks
+  fire on mount too — guard with a closure flag if your router would
+  loop on a redirect-on-mount.
 - Precedence: built-in defaults < `adapter.read()` < explicit `BaseConfig`
   fields. Passing `filters: [...]` alongside an adapter overrides what
   `read()` returned for that field.
