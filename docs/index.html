@@ -255,33 +255,30 @@
             font-size: 0.7rem;
             font-weight: 600;
             font-family: sans-serif;
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.06);
             color: var(--c-text-muted);
             border: 1px solid var(--c-border-card);
             cursor: pointer;
             opacity: 1;
-            transition: opacity 0.15s, background 0.15s, color 0.15s;
+            transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
             user-select: none;
+            backdrop-filter: blur(6px);
         }
 
         [data-theme="light"] .copy-block-btn {
-            background: rgba(0, 0, 0, 1);
-        }
-
-        .copy-block:hover .copy-block-btn {
-            opacity: 1;
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .copy-block-btn:hover {
-            background: rgba(52, 211, 153, 1);
+            background: rgba(52, 211, 153, 0.15);
             color: #34d399;
-            border-color: rgba(52, 211, 153, 0.3);
+            border-color: rgba(52, 211, 153, 0.4);
         }
 
         .copy-block-btn.copied {
-            background: rgba(52, 211, 153, 1);
-            color: #34d399;
-            border-color: rgba(52, 211, 153, 0.4);
+            background: #34d399;
+            color: #0a0f1a;
+            border-color: #34d399;
             opacity: 1;
         }
 

@@ -102,11 +102,31 @@
         [data-theme="light"] #icon-sun { display: block; } [data-theme="light"] #icon-moon { display: none; }
 
         .copy-block { position: relative; }
-        .copy-block-btn { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 10; display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 600; font-family: sans-serif; background: rgba(255, 255, 255, 1); color: var(--c-text-muted); border: 1px solid var(--c-border-card); cursor: pointer; opacity: 1; transition: opacity 0.15s, background 0.15s, color 0.15s; user-select: none; }
-        [data-theme="light"] .copy-block-btn { background: rgba(0, 0, 0, 1); }
-        .copy-block:hover .copy-block-btn { opacity: 1; }
-        .copy-block-btn:hover { background: rgba(168, 85, 247, 1); color: #a855f7; border-color: rgba(168, 85, 247, 0.3); }
-        .copy-block-btn.copied { background: rgba(168, 85, 247, 1); color: #a855f7; border-color: rgba(168, 85, 247, 0.4); opacity: 1; }
+        .copy-block-btn {
+            position: absolute; top: 0.6rem; right: 0.6rem; z-index: 10;
+            display: flex; align-items: center; gap: 0.35rem;
+            padding: 0.25rem 0.6rem; border-radius: 0.4rem;
+            font-size: 0.7rem; font-weight: 600; font-family: sans-serif;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--c-text-muted);
+            border: 1px solid var(--c-border-card);
+            cursor: pointer; opacity: 1;
+            transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+            user-select: none;
+            backdrop-filter: blur(6px);
+        }
+        [data-theme="light"] .copy-block-btn { background: rgba(0, 0, 0, 0.05); }
+        .copy-block-btn:hover {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+        .copy-block-btn.copied {
+            background: #34d399;
+            color: #0a0f1a;
+            border-color: #34d399;
+            opacity: 1;
+        }
 
         .anchor-link { opacity: 0; transition: opacity 0.15s; color: var(--c-text-faint); text-decoration: none; }
         .anchor-heading:hover .anchor-link { opacity: 1; }
