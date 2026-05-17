@@ -287,6 +287,47 @@ describe("serializeSearchParams", () => {
       ).toBe("");
     });
 
+    it("urlOmit hides entries from the URL but keeps them in state output of .build()", () => {
+      // Writer skips listed names; the items are still in `state` (the
+      // caller's responsibility — we verify the URL output only here).
+      expect(
+        serializeSearchParams({
+          filters: [{ attribute: "status", value: ["active"] }],
+          includes: ["organization", "permissions", "author"],
+          fields: ["id", "user.email", "internal_token"],
+        }, {
+          urlOmit: {
+            includes: ["organization", "permissions"],
+            fields:   ["internal_token"],
+          },
+        }),
+      ).toBe("filter[status]=active&fields=id&fields[user]=email&include=author");
+    });
+
+    it("urlOmit is alias-aware on filters and sorts", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "dni",  value: ["123"] },
+              { attribute: "name", value: ["x"] },
+            ],
+            sorts: [
+              { attribute: "dni",  direction: "asc" },
+              { attribute: "name", direction: "asc" },
+            ],
+          },
+          {
+            urlAliases: { dni: "documento" },
+            urlOmit: {
+              filters: ["documento"], // listed by WIRE name → state "dni" also dropped
+              sorts:   ["dni"],       // listed by STATE name → wire "dni" also dropped
+            },
+          },
+        ),
+      ).toBe("filter[name]=x&sort=name");
+    });
+
     it("round-trips through parseSearchParams with the same urlAliases on both ends", async () => {
       const { parseSearchParams } = await import("@/utils/parseSearchParams");
       const urlAliases = { userName: "name", createdAt: "created_at" };

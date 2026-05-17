@@ -405,24 +405,29 @@
     }
     function _compilePolicy(options = {}) {
       const buckets = ['filters', 'sorts', 'includes', 'fields', 'params']
-      const allowed = {}, excluded = {}
+      const allowed = {}, excluded = {}, omitted = {}
       for (const b of buckets) {
         const a = options.allowed?.[b]
         allowed[b] = a ? new Set(a) : null
         excluded[b] = new Set(options.excludeKeys?.[b] ?? [])
+        omitted[b]  = new Set(options.urlOmit?.[b] ?? [])
       }
-      return (bucket, ...candidates) => {
-        if (candidates.some(c => excluded[bucket].has(c))) return false
-        const allow = allowed[bucket]
-        if (allow !== null) return candidates.some(c => allow.has(c))
-        return bucket !== 'params'
+      return {
+        pass: (bucket, ...candidates) => {
+          if (candidates.some(c => excluded[bucket].has(c))) return false
+          const allow = allowed[bucket]
+          if (allow !== null) return candidates.some(c => allow.has(c))
+          return bucket !== 'params'
+        },
+        omit: (bucket, ...candidates) =>
+          candidates.some(c => omitted[bucket].has(c)),
       }
     }
     function parseSearchParams(search, options = {}) {
       const trimmed = (search ?? '').replace(/^\?/, '').trim()
       if (!trimmed) return {}
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
-      const pass = _compilePolicy(options)
+      const { pass } = _compilePolicy(options)
       const forward = options.urlAliases ?? {}
       const reverse = _reverseAliases(options.urlAliases)
       const aliasOf = (n) => reverse.get(n) ?? n
@@ -475,11 +480,12 @@
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
       const aliases = options.urlAliases ?? state.aliases
       const aliasOf = (n) => aliases?.[n] ?? n
-      const pass = _compilePolicy(options)
+      const { pass, omit } = _compilePolicy(options)
       const sp = new URLSearchParams()
 
       for (const f of state.filters ?? []) {
         const wire = aliasOf(f.attribute)
+        if (omit('filters', f.attribute, wire)) continue
         if (!pass('filters', f.attribute, wire)) continue
         const op = (f.operator && f.operator !== '=') ? f.operator : ''
         sp.append(`${keys.filter}[${wire}]`, op + f.value.join(','))
@@ -488,10 +494,12 @@
       for (const fld of state.fields ?? []) {
         const dot = fld.indexOf('.')
         if (dot === -1) {
+          if (omit('fields', fld)) continue
           if (pass('fields', fld)) bare.push(fld)
           continue
         }
         const e = fld.slice(0, dot), p = fld.slice(dot + 1)
+        if (omit('fields', p, fld)) continue
         if (pass('fields', p, fld)) (grouped[e] ??= []).push(p)
       }
       if (bare.length) sp.append(keys.fields, bare.join(','))
@@ -499,13 +507,17 @@
         sp.append(`${keys.fields}[${e}]`, ps.join(','))
       }
 
-      const sortsKept = (state.sorts ?? []).filter(s => pass('sorts', s.attribute, aliasOf(s.attribute)))
+      const sortsKept = (state.sorts ?? []).filter(s => {
+        const wire = aliasOf(s.attribute)
+        return !omit('sorts', s.attribute, wire) && pass('sorts', s.attribute, wire)
+      })
       if (sortsKept.length) {
         sp.append(keys.sort, sortsKept.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
       }
-      const includesKept = (state.includes ?? []).filter(i => pass('includes', i))
+      const includesKept = (state.includes ?? []).filter(i => !omit('includes', i) && pass('includes', i))
       if (includesKept.length) sp.append(keys.include, includesKept.join(','))
       for (const [k, v] of Object.entries(state.params ?? {})) {
+        if (omit('params', k)) continue
         if (pass('params', k)) sp.append(k, v.join(','))
       }
       const raw = sp.toString()
@@ -869,6 +881,16 @@ interface SearchParamsAdapterOptions {
   };
   /** Defense-in-depth denylist, scoped per bucket. */
   excludeKeys?:   {
+    filters?:  string[];
+    sorts?:    string[];
+    includes?: string[];
+    fields?:   string[];
+    params?:   string[];
+  };
+  /** Writer-only denylist per bucket. Listed names stay in state (so
+   *  .build() still emits them to the API) but are skipped on URL write.
+   *  Use for backend-required context the user shouldn't see in the URL. */
+  urlOmit?:       {
     filters?:  string[];
     sorts?:    string[];
     includes?: string[];

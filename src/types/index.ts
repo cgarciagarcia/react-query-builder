@@ -290,6 +290,40 @@ export interface SearchParamsAdapterOptions {
     params?: string[];
   };
   /**
+   * Writer-only denylist: keep these entries in the builder state (so
+   * `.build()` still emits them to the API) but **omit them from the URL
+   * bar**. Per-bucket, alias-aware (matches both the state name and the
+   * URL/wire name, so you can write your rule in whichever vocabulary).
+   *
+   * Use it when your backend needs context that the user doesn't care
+   * about — typical case: relations or fields the API always requires
+   * (`include=organization,permissions`) that would just clutter the
+   * shareable link.
+   *
+   * ```ts
+   * useQueryBuilder({
+   *   includes: ["organization", "permissions"], // always sent to the API
+   *   adapter: createSearchParamsAdapter({
+   *     sync: true,
+   *     urlOmit: { includes: ["organization", "permissions"] },
+   *   }),
+   * });
+   * // .build() → ?include=organization,permissions&…   (backend gets them)
+   * // URL bar   → ?…                                   (clean for the user)
+   * ```
+   *
+   * The reader is **not** affected — if a malicious URL contains one of
+   * these names, it still goes through the policy. Add the same names to
+   * `excludeKeys` if you also want to refuse them on hydration.
+   */
+  urlOmit?: {
+    filters?: string[];
+    sorts?: string[];
+    includes?: string[];
+    fields?: string[];
+    params?: string[];
+  };
+  /**
    * Lazy provider of the query string to parse. Default:
    * `() => window.location.search`. Evaluated when `read()` is called, not
    * at adapter-creation time, so it is safe to instantiate at module scope.

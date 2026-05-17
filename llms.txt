@@ -212,6 +212,10 @@ const urlAdapter = createSearchParamsAdapter({
   // Pass `urlAliases: {}` to opt out of any translation (URL == state).
   // Set explicitly when you want URL ≠ backend, e.g. user-friendly URL.
   urlAliases: { dni: 'documento' },
+  // Writer-only denylist per bucket. Listed names stay in state (so
+  // .build() still emits them to the API) but are skipped on URL write.
+  // Use for backend-required context the user shouldn't see in the URL.
+  urlOmit: { includes: ['organization', 'permissions'] },
 })
 
 const builder = useQueryBuilder({ adapter: urlAdapter })

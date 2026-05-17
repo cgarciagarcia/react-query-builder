@@ -418,6 +418,30 @@ adapter: createSearchParamsAdapter({
 }),
 ```
 
+### Hide noisy state from the URL: `urlOmit`
+
+Sometimes the builder carries entries your **backend needs but your user shouldn't see in the URL bar**. Typical case: default includes/fields the API always requires (`include=organization,permissions`) that just clutter shareable links.
+
+`urlOmit` is a writer-only denylist per bucket. The listed names stay in state (so `.build()` still emits them to the API), they just don't reach the URL:
+
+```ts
+useQueryBuilder({
+  includes: ["organization", "permissions"],     // always sent to API
+  adapter: createSearchParamsAdapter({
+    sync: true,
+    urlOmit: { includes: ["organization", "permissions"] },
+  }),
+});
+
+builder.filter("status", "active");
+// .build() → ?filter[status]=active&include=organization,permissions   ← backend
+// URL bar  → ?filter[status]=active                                    ← user
+```
+
+Alias-aware on `filters` and `sorts` — list a name in either vocabulary (state or URL) and both forms are skipped.
+
+**Note**: `urlOmit` only affects the writer. If a crafted URL contains one of these names, the reader still processes it. Add the same names to `excludeKeys` if you also want to refuse them on hydration.
+
 ### Renaming the URL keys
 
 Sometimes the default URL is verbose:

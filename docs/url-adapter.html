@@ -218,6 +218,7 @@ builder.filter("status", "active").sort("created_at", "desc")
                 <a href="#readonly" class="toc-link">Read-only mode</a>
                 <a href="#sync" class="toc-link">Two-way binding</a>
                 <a href="#aliases" class="toc-link">Aliases</a>
+                <a href="#omit" class="toc-link">Hide from URL</a>
                 <a href="#keys" class="toc-link">Renaming URL keys</a>
                 <a href="#policy" class="toc-link">Locking it down</a>
                 <a href="#custom" class="toc-link">Custom adapters</a>
@@ -423,6 +424,51 @@ builder.filter("dni", "12345").filter("rol", "admin")
   urlAliases: { dni: "documento", rol: "type" },
   allowed: { filters: ["documento", "type"] },   // backend-name attempts → dropped
 })</code></pre>
+                </div>
+            </div>
+
+            <!-- URL OMIT -->
+            <div id="omit">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Hide noisy state from the URL
+                    <a href="#omit" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    Sometimes the builder carries entries your backend needs but the user
+                    shouldn't see in the URL bar — typical case: default
+                    <code class="text-purple-400">include</code>s the API always requires
+                    (<code class="text-purple-400">organization</code>,
+                    <code class="text-purple-400">permissions</code>) that just clutter
+                    shareable links. <code class="text-purple-400">urlOmit</code> is a
+                    writer-only denylist per bucket:
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">useQueryBuilder({
+  includes: ["organization", "permissions"],   // always sent to API
+  adapter: createSearchParamsAdapter({
+    sync: true,
+    urlOmit: { includes: ["organization", "permissions"] },
+  }),
+})
+
+builder.filter("status", "active")
+// .build() → ?filter[status]=active&include=organization,permissions   ← backend gets them
+// URL bar   → ?filter[status]=active                                    ← user sees only this</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Alias-aware on <code class="text-purple-400">filters</code> and
+                    <code class="text-purple-400">sorts</code> — list a name in either
+                    vocabulary (state or URL) and both forms are skipped.
+                </p>
+                <div class="callout callout-warn mt-4">
+                    <p class="callout-title">Reader is not affected</p>
+                    <p class="t-muted text-sm leading-relaxed">
+                        <code class="text-amber-400">urlOmit</code> only skips on write.
+                        If a crafted URL contains one of these names, the reader still
+                        processes it. Add the same names to <code class="text-amber-400">excludeKeys</code>
+                        if you also want to refuse them on hydration.
+                    </p>
                 </div>
             </div>
 
