@@ -20,9 +20,8 @@ const DELIMITER = ",";
  * API). Use it to keep the URL bar clean while feeding the backend the
  * context it needs.
  *
- * Pagination (`page` / `limit`) is intentionally NOT written — same contract
- * as the parser. Add them to `allowed.params` and set them via `setParam` if
- * you want them on the URL.
+ * Pagination (`page` / `limit`) is emitted unconditionally when set, so a
+ * link like `/list?page=3` round-trips back into `state.pagination`.
  */
 export const serializeSearchParams = <
   Aliases extends Record<string, string> | undefined = undefined,
@@ -94,6 +93,13 @@ export const serializeSearchParams = <
   for (const [k, v] of Object.entries(state.params ?? {})) {
     if (omit("params", k)) continue;
     if (pass("params", k)) sp.append(k, v.join(DELIMITER));
+  }
+
+  if (state.pagination?.page !== undefined) {
+    sp.append("page", String(state.pagination.page));
+  }
+  if (state.pagination?.limit !== undefined) {
+    sp.append("limit", String(state.pagination.limit));
   }
 
   const raw = sp.toString();

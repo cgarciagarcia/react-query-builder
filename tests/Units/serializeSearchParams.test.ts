@@ -179,6 +179,33 @@ describe("serializeSearchParams", () => {
     });
   });
 
+  describe("pagination", () => {
+    it("emits page and limit when present in state", () => {
+      expect(
+        serializeSearchParams({ pagination: { page: 3, limit: 20 } }),
+      ).toBe("page=3&limit=20");
+    });
+
+    it("emits page only when limit is undefined", () => {
+      expect(serializeSearchParams({ pagination: { page: 5 } })).toBe("page=5");
+    });
+
+    it("emits nothing when pagination is absent or empty", () => {
+      expect(serializeSearchParams({})).toBe("");
+      expect(serializeSearchParams({ pagination: {} })).toBe("");
+    });
+
+    it("round-trips pagination through parseSearchParams", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "status", value: ["active"] }],
+        pagination: { page: 7, limit: 50 },
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+  });
+
   it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
     const { compilePolicy } = await import("@/utils/searchParamsPolicy");
     const policy = compilePolicy({ allowed: { filters: ["status"] } });
@@ -291,17 +318,22 @@ describe("serializeSearchParams", () => {
       // Writer skips listed names; the items are still in `state` (the
       // caller's responsibility — we verify the URL output only here).
       expect(
-        serializeSearchParams({
-          filters: [{ attribute: "status", value: ["active"] }],
-          includes: ["organization", "permissions", "author"],
-          fields: ["id", "user.email", "internal_token"],
-        }, {
-          urlOmit: {
-            includes: ["organization", "permissions"],
-            fields:   ["internal_token"],
+        serializeSearchParams(
+          {
+            filters: [{ attribute: "status", value: ["active"] }],
+            includes: ["organization", "permissions", "author"],
+            fields: ["id", "user.email", "internal_token"],
           },
-        }),
-      ).toBe("filter[status]=active&fields=id&fields[user]=email&include=author");
+          {
+            urlOmit: {
+              includes: ["organization", "permissions"],
+              fields: ["internal_token"],
+            },
+          },
+        ),
+      ).toBe(
+        "filter[status]=active&fields=id&fields[user]=email&include=author",
+      );
     });
 
     it("urlOmit is alias-aware on filters and sorts", () => {
@@ -309,11 +341,11 @@ describe("serializeSearchParams", () => {
         serializeSearchParams(
           {
             filters: [
-              { attribute: "dni",  value: ["123"] },
+              { attribute: "dni", value: ["123"] },
               { attribute: "name", value: ["x"] },
             ],
             sorts: [
-              { attribute: "dni",  direction: "asc" },
+              { attribute: "dni", direction: "asc" },
               { attribute: "name", direction: "asc" },
             ],
           },
@@ -321,7 +353,7 @@ describe("serializeSearchParams", () => {
             urlAliases: { dni: "documento" },
             urlOmit: {
               filters: ["documento"], // listed by WIRE name → state "dni" also dropped
-              sorts:   ["dni"],       // listed by STATE name → wire "dni" also dropped
+              sorts: ["dni"], // listed by STATE name → wire "dni" also dropped
             },
           },
         ),

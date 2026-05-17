@@ -128,8 +128,15 @@ export const parseSearchParams = <
   const sorts: Sort<Aliases>[] = [];
   const includes: Include[] = [];
   const collectedParams: Record<string, (string | number)[]> = {};
+  const pagination: { page?: number; limit?: number } = {};
 
   for (const [key, rawValue] of new URLSearchParams(trimmed).entries()) {
+    if (key === "page" || key === "limit") {
+      const n = Number(rawValue);
+      if (Number.isFinite(n)) pagination[key] = n;
+      continue;
+    }
+
     const filterAttr = bracketedKey(key, keys.filter);
     if (filterAttr !== null) {
       if (!pass("filters", filterAttr, altNameOf(filterAttr))) continue;
@@ -187,6 +194,9 @@ export const parseSearchParams = <
   if (sorts.length > 0) result.sorts = sorts;
   if (includes.length > 0) result.includes = includes;
   if (Object.keys(collectedParams).length > 0) result.params = collectedParams;
+  if (pagination.page !== undefined || pagination.limit !== undefined) {
+    result.pagination = pagination;
+  }
 
   return result;
 };

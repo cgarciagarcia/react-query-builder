@@ -539,7 +539,7 @@ If you set `allowed.filters: ["status", "role"]`, listing `is_admin` in `exclude
 
   Same on the deny side: `excludeKeys: { filters: ["is_admin"] }` blocks both `?filter[is_admin]=...` AND `?filter[adminFlag]=...` (the alias key), so an attacker can't bypass the denylist by switching vocabularies.
 - For `fields`, you can match by short prop (`password`) or by `entity.prop` (`user.password`). Pick the precision you need.
-- `page` and `limit` are **not** auto-hydrated. If you want them on the URL, add them to `allowed.params` and treat them as raw params.
+- `page` and `limit` are **auto-hydrated** when present in the URL and emitted by the writer when set in `state.pagination`. Round-trips out of the box — no extra config.
 - **Why per bucket?** `password` is dangerous as a filter but fine as a `fields` selection (it's just picking which column the API returns). One flat list would force you into all-or-nothing.
 
 ### Want a different source? Write your own adapter

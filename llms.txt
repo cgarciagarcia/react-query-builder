@@ -227,9 +227,10 @@ const urlAdapter = createSearchParamsAdapter({
 const builder = useQueryBuilder({ adapter: urlAdapter })
 ```
 
-Configurable URL keys: `filter`, `sort`, `include`, `fields`. **`page` and
-`limit` are NOT auto-hydrated** — add them to `allowed.params` if you want
-them preserved as raw params.
+Configurable URL keys: `filter`, `sort`, `include`, `fields`.
+Pagination (`page` / `limit`) is **auto-hydrated** when present in the
+URL and emitted by the writer when set on the builder — round-trips out
+of the box, no extra config.
 
 Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
 Renamed keys only apply when **reading from / writing to** the URL.

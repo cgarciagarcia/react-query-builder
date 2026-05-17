@@ -133,6 +133,34 @@ describe("parseSearchParams", () => {
     });
   });
 
+  describe("pagination", () => {
+    it("hydrates page and limit from the URL", () => {
+      expect(parseSearchParams("?page=3&limit=20")).toEqual({
+        pagination: { page: 3, limit: 20 },
+      });
+    });
+
+    it("hydrates page only when limit is absent", () => {
+      expect(parseSearchParams("?page=5")).toEqual({
+        pagination: { page: 5 },
+      });
+    });
+
+    it("ignores non-numeric values", () => {
+      expect(parseSearchParams("?page=abc&limit=20")).toEqual({
+        pagination: { limit: 20 },
+      });
+    });
+
+    it("does not also collect page/limit into params bucket", () => {
+      expect(
+        parseSearchParams("?page=2", {
+          allowed: { params: ["page"] }, // would otherwise capture it
+        }),
+      ).toEqual({ pagination: { page: 2 } });
+    });
+  });
+
   it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
     const { compilePolicy } = await import("@/utils/searchParamsPolicy");
     const policy = compilePolicy({ allowed: { filters: ["status"] } });

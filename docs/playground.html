@@ -434,7 +434,13 @@
       const altNameOf = (n) => reverse.get(n) ?? forward[n] ?? n
       const filters = [], fields = [], sorts = [], includes = [], collected = {}
 
+      const pagination = {}
       for (const [key, raw] of new URLSearchParams(trimmed).entries()) {
+        if (key === 'page' || key === 'limit') {
+          const n = Number(raw)
+          if (Number.isFinite(n)) pagination[key] = n
+          continue
+        }
         const filterAttr = _bracketedKey(key, keys.filter)
         if (filterAttr !== null) {
           if (!pass('filters', filterAttr, altNameOf(filterAttr))) continue
@@ -474,6 +480,9 @@
       if (sorts.length)    result.sorts    = sorts
       if (includes.length) result.includes = includes
       if (Object.keys(collected).length) result.params = collected
+      if (pagination.page !== undefined || pagination.limit !== undefined) {
+        result.pagination = pagination
+      }
       return result
     }
     function serializeSearchParams(state, options = {}) {
@@ -520,6 +529,8 @@
         if (omit('params', k)) continue
         if (pass('params', k)) sp.append(k, v.join(','))
       }
+      if (state.pagination?.page !== undefined) sp.append('page', String(state.pagination.page))
+      if (state.pagination?.limit !== undefined) sp.append('limit', String(state.pagination.limit))
       const raw = sp.toString()
       return raw
         ? raw
