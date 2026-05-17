@@ -22,17 +22,16 @@ export const useQueryBuilder = <
   config?: BaseConfig<Aliases>,
 ): QueryBuilder<Aliases> => {
   const builder = useRef<Builder<Aliases> | null>(null);
-  if (builder.current === null) {
-    builder.current = new Builder<Aliases>(config);
-  }
+  builder.current ??= new Builder<Aliases>(config);
+  const instance = builder.current;
 
   const [, setReRendersCounter] = useState(0);
 
   useMount(() => {
-    builder.current?.addSubscriber(() => {
+    instance.addSubscriber(() => {
       setReRendersCounter((r) => r + 1);
     });
   });
 
-  return builder.current;
+  return instance;
 };
