@@ -89,6 +89,20 @@ describe("parseSearchParams", () => {
     ).toEqual({ params: { locale: ["es"], tenant: ["acme"] } });
   });
 
+  describe("malformed URL keys", () => {
+    it("ignores filter[a][b] (nested brackets are not part of the protocol)", () => {
+      expect(
+        parseSearchParams("?filter[a][b]=x&filter[status]=active"),
+      ).toEqual({ filters: [{ attribute: "status", value: ["active"] }] });
+    });
+
+    it("ignores fields[a][b] the same way", () => {
+      expect(parseSearchParams("?fields[user][nested]=name&fields=id")).toEqual(
+        { fields: ["id"] },
+      );
+    });
+  });
+
   describe("repeated URL params (?sort=a&sort=b)", () => {
     it("accumulates sort entries the same way as the CSV form", () => {
       // ?sort=name&sort=-created_at  is equivalent in result to

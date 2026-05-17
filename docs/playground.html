@@ -392,7 +392,8 @@
     }
     function _bracketedKey(paramKey, prefix) {
       if (!paramKey.startsWith(prefix + '[') || !paramKey.endsWith(']')) return null
-      return paramKey.slice(prefix.length + 1, -1)
+      const inner = paramKey.slice(prefix.length + 1, -1)
+      return inner.includes('[') || inner.includes(']') ? null : inner
     }
     function _reverseAliases(aliases) {
       const reverse = new Map()

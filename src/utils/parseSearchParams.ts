@@ -66,10 +66,16 @@ const extractOperator = (
   return { rest: raw };
 };
 
-const bracketedKey = (paramKey: string, prefix: string): string | null =>
-  paramKey.startsWith(`${prefix}[`) && paramKey.endsWith("]")
-    ? paramKey.slice(prefix.length + 1, -1)
-    : null;
+const bracketedKey = (paramKey: string, prefix: string): string | null => {
+  if (!paramKey.startsWith(`${prefix}[`) || !paramKey.endsWith("]")) {
+    return null;
+  }
+  const inner = paramKey.slice(prefix.length + 1, -1);
+  // Reject nested brackets (e.g. `filter[a][b]`): the library does not
+  // model nested filters, and accepting them would let a malformed URL
+  // round-trip into a state attribute like `"a][b"`.
+  return inner.includes("[") || inner.includes("]") ? null : inner;
+};
 
 const buildReverseAliases = (
   aliases: Record<string, string> | undefined,
