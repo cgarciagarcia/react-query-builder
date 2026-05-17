@@ -11,6 +11,21 @@ import {
 } from "@/types";
 import { compilePolicy, type PolicyGate } from "@/utils/searchParamsPolicy";
 
+/**
+ * Default mapping between the four configurable URL keys and the strings
+ * the library uses when no `keys` override is passed. Exported as part of
+ * the public API so consumers writing custom adapters or composing the
+ * pure functions can reference it directly — e.g. to layer overrides on
+ * top:
+ *
+ * ```ts
+ * import { DEFAULT_URL_KEYS } from "@cgarciagarcia/react-query-builder";
+ *
+ * const myKeys = { ...DEFAULT_URL_KEYS, filter: "filt" };
+ * ```
+ *
+ * Changes to these values are a semver-major bump.
+ */
 export const DEFAULT_URL_KEYS: Record<ConfigurableURLKey, string> = {
   filter: "filter",
   sort: "sort",
