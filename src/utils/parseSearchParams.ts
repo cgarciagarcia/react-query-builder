@@ -9,10 +9,7 @@ import {
   type SearchParamsAdapterOptions,
   type Sort,
 } from "@/types";
-import {
-  compilePolicy,
-  type PolicyGate,
-} from "@/utils/searchParamsPolicy";
+import { compilePolicy, type PolicyGate } from "@/utils/searchParamsPolicy";
 
 export const DEFAULT_URL_KEYS: Record<ConfigurableURLKey, string> = {
   filter: "filter",
@@ -96,8 +93,14 @@ export const parseSearchParams = <
 
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
   const { pass } = policy ?? compilePolicy(options);
+  const forward = options?.aliases ?? {};
   const reverse = buildReverseAliases(options?.aliases);
   const aliasOf = (name: string): string => reverse.get(name) ?? name;
+  // Returns the alternate alias-space name (frontend if URL name is backend,
+  // backend if URL name is frontend). Used to make policy checks recognise
+  // both vocabularies — see JSDoc on SearchParamsAdapterOptions.allowed.
+  const altNameOf = (urlName: string): string =>
+    reverse.get(urlName) ?? forward[urlName] ?? urlName;
 
   const filters: Filter<Aliases>[] = [];
   const fields: Field[] = [];
@@ -108,7 +111,7 @@ export const parseSearchParams = <
   for (const [key, rawValue] of new URLSearchParams(trimmed).entries()) {
     const filterAttr = bracketedKey(key, keys.filter);
     if (filterAttr !== null) {
-      if (!pass("filters", filterAttr)) continue;
+      if (!pass("filters", filterAttr, altNameOf(filterAttr))) continue;
       const { operator, rest } = extractOperator(rawValue);
       filters.push({
         attribute: aliasOf(filterAttr) as Filter<Aliases>["attribute"],
@@ -138,7 +141,7 @@ export const parseSearchParams = <
       for (const item of splitCsv(rawValue)) {
         const desc = item.startsWith("-");
         const attr = desc ? item.slice(1) : item;
-        if (!pass("sorts", attr)) continue;
+        if (!pass("sorts", attr, altNameOf(attr))) continue;
         sorts.push({
           attribute: aliasOf(attr) as Sort<Aliases>["attribute"],
           direction: desc ? "desc" : "asc",

@@ -205,6 +205,19 @@ export interface SearchParamsAdapterOptions {
    * - `params` → default deny-all (params are arbitrary app-specific data;
    *   if you do not declare it, it does not enter).
    *
+   * For `filters` and `sorts`, when `aliases` are present the policy is
+   * **alias-aware**: an entry matches if **either** the URL-side name
+   * (backend / wire) OR its aliased counterpart (frontend / state) is in
+   * the list. You can write your allowlist in whichever vocabulary you
+   * think in:
+   *
+   * ```ts
+   * aliases: { userName: "name" },
+   * allowed: { filters: ["userName"] }   // works
+   * // — or —
+   * allowed: { filters: ["name"] }       // also works
+   * ```
+   *
    * ```ts
    * allowed: {
    *   filters:  ["status", "role", "created_at"],
@@ -229,9 +242,14 @@ export interface SearchParamsAdapterOptions {
   /**
    * Defense-in-depth denylist, **scoped per bucket**. Each list drops the
    * matching names from the corresponding bucket on read AND on write;
-   * `params` wins over `allowed.params` (deny over allow). Matching is on
-   * the raw URL name (backend) before any reverse alias is applied, since
-   * the threat is what reaches the wire.
+   * `params` wins over `allowed.params` (deny over allow).
+   *
+   * For `filters` and `sorts`, the check is **alias-aware**: an entry is
+   * dropped if **either** the URL name OR its aliased counterpart is in
+   * the list. This closes the bypass where an attacker uses the frontend
+   * alias key in the URL (`?filter[adminFlag]=true`) to defeat a denylist
+   * declared with the backend name (`excludeKeys.filters: ["is_admin"]`)
+   * — both names are checked, so listing either form blocks both.
    *
    * Per-bucket scoping is intentional: a name like `password` is dangerous
    * as a filter but legitimate as a `fields` entry (selecting the column).

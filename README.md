@@ -462,7 +462,16 @@ If you set `allowed.filters: ["status", "role"]`, listing `is_admin` in `exclude
 
 - Both apply to the **reader and the writer** symmetrically — the URL bar is always inside your policy.
 - `excludeKeys` always wins over `allowed` (deny beats allow).
-- Matching happens on the **raw URL name (backend)** before reverse-aliasing — that's the threat surface.
+- **Alias-aware on `filters` and `sorts`.** When you set `aliases`, the policy matches if **either** the URL-side name (backend) OR the state-side name (frontend) is in the list. Write your rules in whichever vocabulary you think in:
+
+  ```ts
+  aliases: { userName: "name" },
+  allowed: { filters: ["userName"] }   // ✓ allows ?filter[name]=...
+  // — or —
+  allowed: { filters: ["name"] }       // ✓ also allows it
+  ```
+
+  Same on the deny side: `excludeKeys: { filters: ["is_admin"] }` blocks both `?filter[is_admin]=...` AND `?filter[adminFlag]=...` (the alias key), so an attacker can't bypass the denylist by switching vocabularies.
 - For `fields`, you can match by short prop (`password`) or by `entity.prop` (`user.password`). Pick the precision you need.
 - `page` and `limit` are **not** auto-hydrated. If you want them on the URL, add them to `allowed.params` and treat them as raw params.
 - **Why per bucket?** `password` is dangerous as a filter but fine as a `fields` selection (it's just picking which column the API returns). One flat list would force you into all-or-nothing.

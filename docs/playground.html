@@ -421,14 +421,16 @@
       if (!trimmed) return {}
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
       const pass = _compilePolicy(options)
+      const forward = options.aliases ?? {}
       const reverse = _reverseAliases(options.aliases)
       const aliasOf = (n) => reverse.get(n) ?? n
+      const altNameOf = (n) => reverse.get(n) ?? forward[n] ?? n
       const filters = [], fields = [], sorts = [], includes = [], collected = {}
 
       for (const [key, raw] of new URLSearchParams(trimmed).entries()) {
         const filterAttr = _bracketedKey(key, keys.filter)
         if (filterAttr !== null) {
-          if (!pass('filters', filterAttr)) continue
+          if (!pass('filters', filterAttr, altNameOf(filterAttr))) continue
           const { operator, rest } = _extractOperator(raw)
           filters.push({ attribute: aliasOf(filterAttr), value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
           continue
@@ -449,7 +451,7 @@
           for (const item of raw.split(',')) {
             const desc = item.startsWith('-')
             const attr = desc ? item.slice(1) : item
-            if (pass('sorts', attr)) sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
+            if (pass('sorts', attr, altNameOf(attr))) sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
           }
           continue
         }
@@ -476,7 +478,7 @@
 
       for (const f of state.filters ?? []) {
         const wire = aliasOf(f.attribute)
-        if (!pass('filters', wire)) continue
+        if (!pass('filters', f.attribute, wire)) continue
         const op = (f.operator && f.operator !== '=') ? f.operator : ''
         sp.append(`${keys.filter}[${wire}]`, op + f.value.join(','))
       }
@@ -495,7 +497,7 @@
         sp.append(`${keys.fields}[${e}]`, ps.join(','))
       }
 
-      const sortsKept = (state.sorts ?? []).filter(s => pass('sorts', aliasOf(s.attribute)))
+      const sortsKept = (state.sorts ?? []).filter(s => pass('sorts', s.attribute, aliasOf(s.attribute)))
       if (sortsKept.length) {
         sp.append(keys.sort, sortsKept.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
       }

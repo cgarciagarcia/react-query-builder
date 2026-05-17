@@ -4,10 +4,7 @@ import {
   type SearchParamsAdapterOptions,
 } from "@/types";
 import { DEFAULT_URL_KEYS, prettifyBrackets } from "@/utils/parseSearchParams";
-import {
-  compilePolicy,
-  type PolicyGate,
-} from "@/utils/searchParamsPolicy";
+import { compilePolicy, type PolicyGate } from "@/utils/searchParamsPolicy";
 
 const DELIMITER = ",";
 
@@ -37,7 +34,7 @@ export const serializeSearchParams = <
 
   for (const filter of state.filters ?? []) {
     const wire = aliasOf(filter.attribute);
-    if (!pass("filters", wire)) continue;
+    if (!pass("filters", filter.attribute, wire)) continue;
     const op =
       filter.operator && filter.operator !== FilterOperator.Equals
         ? filter.operator
@@ -63,7 +60,7 @@ export const serializeSearchParams = <
   }
 
   const sortsKept = (state.sorts ?? []).filter((s) =>
-    pass("sorts", aliasOf(s.attribute)),
+    pass("sorts", s.attribute, aliasOf(s.attribute)),
   );
   if (sortsKept.length > 0) {
     sp.append(

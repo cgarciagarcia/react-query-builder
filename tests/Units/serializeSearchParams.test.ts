@@ -263,6 +263,30 @@ describe("serializeSearchParams", () => {
       ).toBe("filter[name]=John");
     });
 
+    it("policy is alias-aware on write: allowed.filters with FRONTEND name passes", () => {
+      expect(
+        serializeSearchParams(
+          { filters: [{ attribute: "userName", value: ["John"] }] },
+          {
+            aliases: { userName: "name" },
+            allowed: { filters: ["userName"] },
+          },
+        ),
+      ).toBe("filter[name]=John");
+    });
+
+    it("policy is alias-aware on write: excludeKeys with BACKEND name drops a state entry that aliases to it", () => {
+      expect(
+        serializeSearchParams(
+          { filters: [{ attribute: "adminFlag", value: ["true"] }] },
+          {
+            aliases: { adminFlag: "is_admin" },
+            excludeKeys: { filters: ["is_admin"] },
+          },
+        ),
+      ).toBe("");
+    });
+
     it("round-trips through parseSearchParams with aliases on both ends", async () => {
       const { parseSearchParams } = await import("@/utils/parseSearchParams");
       const aliases = { userName: "name", createdAt: "created_at" };

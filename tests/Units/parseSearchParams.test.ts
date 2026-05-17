@@ -198,6 +198,64 @@ describe("parseSearchParams", () => {
     });
   });
 
+  describe("policy is alias-aware (matches both frontend and backend names)", () => {
+    const aliases = { userName: "name", adminFlag: "is_admin" };
+
+    it("DX: allowed.filters with FRONTEND name hydrates a URL with backend name", () => {
+      // Dev writes the name they think in (frontend), URL has the wire name.
+      expect(
+        parseSearchParams("?filter[name]=John", {
+          aliases,
+          allowed: { filters: ["userName"] },
+        }),
+      ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
+    });
+
+    it("DX: allowed.filters with BACKEND name also works (existing behaviour)", () => {
+      expect(
+        parseSearchParams("?filter[name]=John", {
+          aliases,
+          allowed: { filters: ["name"] },
+        }),
+      ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
+    });
+
+    it("security: excludeKeys.filters with backend name blocks attacker using FRONTEND name", () => {
+      // Attacker tries to bypass `is_admin` denylist by using the alias key.
+      expect(
+        parseSearchParams("?filter[adminFlag]=true", {
+          aliases,
+          excludeKeys: { filters: ["is_admin"] },
+        }),
+      ).toEqual({});
+    });
+
+    it("security: excludeKeys.filters with frontend name still blocks backend URL form", () => {
+      expect(
+        parseSearchParams("?filter[is_admin]=true", {
+          aliases,
+          excludeKeys: { filters: ["adminFlag"] },
+        }),
+      ).toEqual({});
+    });
+
+    it("sorts get the same dual-name treatment", () => {
+      expect(
+        parseSearchParams("?sort=-name", {
+          aliases,
+          allowed: { sorts: ["userName"] },
+        }),
+      ).toEqual({ sorts: [{ attribute: "userName", direction: "desc" }] });
+
+      expect(
+        parseSearchParams("?sort=adminFlag", {
+          aliases,
+          excludeKeys: { sorts: ["is_admin"] },
+        }),
+      ).toEqual({});
+    });
+  });
+
   describe("excludeKeys (defense in depth, per bucket)", () => {
     it("only blocks within the bucket it is declared for", () => {
       // 'password' is dangerous as a filter but legitimate as a field
