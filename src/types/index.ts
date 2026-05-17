@@ -382,10 +382,25 @@ export interface QueryBuilderAdapter<
     context?: AdapterReadContext<Aliases>,
   ) => Partial<GlobalState<Aliases>>;
   /**
-   * Optional. When defined, the builder invokes this on every state change
-   * (it is wired as an internal subscriber). Use it to keep an external
-   * source in sync — for example, `history.replaceState` for two-way URL
-   * binding, or a `localStorage` write.
+   * Optional. When defined, the builder invokes this:
+   *
+   * 1. **Once on mount**, right after `read()` has seeded and any
+   *    `BaseConfig` overrides have been merged in. This "normalises" the
+   *    external source (typically the URL bar) so it matches the builder's
+   *    final state — useful when `BaseConfig.includes` defaults or
+   *    `urlOmit` make the rendered state diverge from a stale URL the
+   *    user landed on.
+   * 2. **On every subsequent state change** — it's wired as an internal
+   *    subscriber after the initial mount call.
+   *
+   * Custom adapters can guard against the mount call with a closure flag
+   * if they don't want it (e.g. an adapter wrapping a router that would
+   * loop on a redirect-on-mount). The built-in URL adapter already does
+   * this: it forces `replaceState` on the first call regardless of the
+   * configured `sync` mode (so `"push"` doesn't add a phantom history
+   * entry), and skips the mount call entirely when `sync` is a custom
+   * function (so the consumer's callback doesn't fire before any user
+   * action).
    */
   write?: (state: GlobalState<Aliases>) => void;
 }

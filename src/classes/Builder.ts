@@ -111,6 +111,11 @@ export class Builder<
 
     if (adapter?.write) {
       this.addSubscriber(adapter.write);
+      // Normalise the external source against the final state, so it
+      // reflects defaults and `urlOmit` even before the first mutation.
+      // Adapters that don't want this can no-op their first call (the
+      // built-in URL adapter already does so for "push" and custom-fn sync).
+      adapter.write(this.state);
     }
   }
 

@@ -67,14 +67,20 @@ describe("createSearchParamsAdapter (browser env)", () => {
     expect(window.location.pathname).toBe("/users");
   });
 
-  it("sync:'push' uses history.pushState (adds a back-button entry)", () => {
+  it("sync:'push' uses history.pushState for mutations but replaceState on first call", () => {
     const initialLength = window.history.length;
     const adapter = createSearchParamsAdapter({ sync: "push" });
 
+    // First call is the mount-time normalisation — always replaceState,
+    // even with sync:"push", so we don't add a phantom history entry.
     adapter.write?.(fullState({ filters: [{ attribute: "x", value: ["1"] }] }));
-
-    expect(window.history.length).toBe(initialLength + 1);
+    expect(window.history.length).toBe(initialLength);
     expect(window.location.search).toContain("filter[x]=1");
+
+    // Second call is a real mutation → pushState adds an entry.
+    adapter.write?.(fullState({ filters: [{ attribute: "x", value: ["2"] }] }));
+    expect(window.history.length).toBe(initialLength + 1);
+    expect(window.location.search).toContain("filter[x]=2");
   });
 
   it("subsequent writes overwrite the previously managed keys", () => {

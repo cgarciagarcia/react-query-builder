@@ -112,11 +112,15 @@ describe("useQueryBuilder", () => {
     );
   });
 
-  it("should call adapter.write on every state mutation", () => {
+  it("should call adapter.write once on mount and on every state mutation", () => {
     const write = vi.fn();
     const { result } = renderHook(() =>
       useQueryBuilder({ adapter: { read: () => ({}), write } }),
     );
+
+    // First call fires at construction to normalise the external source
+    // against the final state (defaults, urlOmit, etc.).
+    expect(write).toHaveBeenCalledTimes(1);
 
     act(() => {
       result.current.filter("status", "active");
@@ -125,7 +129,8 @@ describe("useQueryBuilder", () => {
       result.current.sort("name");
     });
 
-    expect(write).toHaveBeenCalledTimes(2);
+    // +1 per mutation.
+    expect(write).toHaveBeenCalledTimes(3);
     expect(write).toHaveBeenLastCalledWith(
       expect.objectContaining({
         filters: [{ attribute: "status", value: ["active"] }],

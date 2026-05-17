@@ -61,14 +61,26 @@ const makeWriter = <A extends Record<string, string> | undefined = undefined>(
   policy: PolicyGate,
 ): ((state: GlobalState<A>) => void) => {
   const sync = options.sync;
+  // The Builder fires `write(state)` once on mount (to normalise the URL
+  // bar against the final state) and then on every mutation. The first
+  // call always uses `replaceState`, even when `sync === "push"`, so the
+  // mount-time normalisation doesn't add a phantom back-button entry —
+  // subsequent mutations honour the configured mode.
+  let isFirstCall = true;
   return (state) => {
+    const firstCall = isFirstCall;
+    isFirstCall = false;
+
     const serialized = serializeSearchParams<A>(state, options, policy);
+
     if (typeof sync === "function") {
       sync(serialized);
       return;
     }
+
     const next = mergeManagedSearch(defaultSource(), serialized, options);
-    writeToHistory(next, sync === "push" ? "push" : "replace");
+    const mode = !firstCall && sync === "push" ? "push" : "replace";
+    writeToHistory(next, mode);
   };
 };
 
@@ -131,6 +143,7 @@ export const createSearchParamsAdapter = <
       );
     },
   };
+
 
   if (options?.sync !== undefined) {
     adapter.write = makeWriter<Aliases>(options, policy);
