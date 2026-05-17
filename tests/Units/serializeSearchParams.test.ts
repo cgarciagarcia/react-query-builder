@@ -242,19 +242,19 @@ describe("serializeSearchParams", () => {
   });
 
   describe("aliases (forward map)", () => {
-    it("rewrites filter and sort attributes from frontend → backend via options", () => {
+    it("rewrites filter and sort attributes from frontend → backend via urlAliases", () => {
       expect(
         serializeSearchParams(
           {
             filters: [{ attribute: "userName", value: ["John"] }],
             sorts: [{ attribute: "createdAt", direction: "desc" }],
           },
-          { aliases: { userName: "name", createdAt: "created_at" } },
+          { urlAliases: { userName: "name", createdAt: "created_at" } },
         ),
       ).toBe("filter[name]=John&sort=-created_at");
     });
 
-    it("falls back to state.aliases when options.aliases is absent", () => {
+    it("falls back to state.aliases when options.urlAliases is absent", () => {
       expect(
         serializeSearchParams<{ userName: "name" }>({
           aliases: { userName: "name" },
@@ -268,7 +268,7 @@ describe("serializeSearchParams", () => {
         serializeSearchParams(
           { filters: [{ attribute: "userName", value: ["John"] }] },
           {
-            aliases: { userName: "name" },
+            urlAliases: { userName: "name" },
             allowed: { filters: ["userName"] },
           },
         ),
@@ -280,22 +280,22 @@ describe("serializeSearchParams", () => {
         serializeSearchParams(
           { filters: [{ attribute: "adminFlag", value: ["true"] }] },
           {
-            aliases: { adminFlag: "is_admin" },
+            urlAliases: { adminFlag: "is_admin" },
             excludeKeys: { filters: ["is_admin"] },
           },
         ),
       ).toBe("");
     });
 
-    it("round-trips through parseSearchParams with aliases on both ends", async () => {
+    it("round-trips through parseSearchParams with the same urlAliases on both ends", async () => {
       const { parseSearchParams } = await import("@/utils/parseSearchParams");
-      const aliases = { userName: "name", createdAt: "created_at" };
+      const urlAliases = { userName: "name", createdAt: "created_at" };
       const state = {
         filters: [{ attribute: "userName", value: ["John"] }],
         sorts: [{ attribute: "createdAt", direction: "desc" as const }],
       };
-      const url = serializeSearchParams(state, { aliases });
-      expect(parseSearchParams(url, { aliases })).toEqual(state);
+      const url = serializeSearchParams(state, { urlAliases });
+      expect(parseSearchParams(url, { urlAliases })).toEqual(state);
     });
   });
 });

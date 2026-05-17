@@ -423,8 +423,8 @@
       if (!trimmed) return {}
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
       const pass = _compilePolicy(options)
-      const forward = options.aliases ?? {}
-      const reverse = _reverseAliases(options.aliases)
+      const forward = options.urlAliases ?? {}
+      const reverse = _reverseAliases(options.urlAliases)
       const aliasOf = (n) => reverse.get(n) ?? n
       const altNameOf = (n) => reverse.get(n) ?? forward[n] ?? n
       const filters = [], fields = [], sorts = [], includes = [], collected = {}
@@ -473,7 +473,7 @@
     }
     function serializeSearchParams(state, options = {}) {
       const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
-      const aliases = options.aliases ?? state.aliases
+      const aliases = options.urlAliases ?? state.aliases
       const aliasOf = (n) => aliases?.[n] ?? n
       const pass = _compilePolicy(options)
       const sp = new URLSearchParams()
@@ -520,8 +520,8 @@
       const defaultSource = () => (typeof window === 'undefined' ? '' : window.location.search)
       const adapter = {
         read: (context = {}) => {
-          const aliases = options.aliases ?? context.aliases
-          return parseSearchParams((options.source ?? defaultSource)(), { ...options, aliases })
+          const urlAliases = options.urlAliases ?? context.aliases
+          return parseSearchParams((options.source ?? defaultSource)(), { ...options, urlAliases })
         },
       }
       if (options.sync !== undefined) {
@@ -679,7 +679,8 @@ console.log(builder.build())
 // (denylist that drops dangerous URL injections like ?filter[is_admin]).
 const adapter = createSearchParamsAdapter({
   source: () => '?filter[name]=John&filter[is_admin]=true&fields[user]=password,name&utm_source=ad',
-  aliases: { userName: 'name' },
+  // urlAliases here would override; omitting it means the adapter
+  // inherits the builder's `aliases` below (URL == backend, common case).
   // Bucket-scoped allowlist: only listed names enter; everything else is
   // ignored. Omit a bucket → its default behavior (filters/sorts/etc. =
   // allow-all; params = deny-all).
@@ -851,8 +852,11 @@ type ConfigurableURLKey = 'filter' | 'sort' | 'include' | 'fields';
 interface SearchParamsAdapterOptions {
   /** Rename the URL keys the parser looks for. Defaults to identity. */
   keys?:          Partial<Record<ConfigurableURLKey, string>>;
-  /** Frontend → backend attribute map. Round-trip-safe with .build(). */
-  aliases?:       Record<string, string>;
+  /** state → URL attribute map for the URL namespace only. Independent
+   *  from BaseConfig.aliases (which is state → backend). Omit to inherit
+   *  the builder's aliases (URL == backend, common case). Set to `{}` to
+   *  opt out of any URL translation (URL == state). */
+  urlAliases?:    Record<string, string>;
   /** Allowlist per bucket. When defined, only entries in the list pass
    *  (read + write). Omit a bucket for its default behavior: filters/sorts/
    *  includes/fields = allow-all; params = deny-all. */

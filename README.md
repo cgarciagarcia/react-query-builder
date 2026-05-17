@@ -378,6 +378,46 @@ builder.filter("userName", "Jane").sort("createdAt", "desc");
 
 The adapter automatically reads aliases from the builder config, so you only declare them once.
 
+### Different names for URL and backend
+
+The URL and the backend don't have to share the same naming. Maybe you want the URL to speak the user's language (`?filter[documento]=…`) while your API keeps technical names (`?filter[code]=…`). Or your code uses `rol` in Spanish but the URL should read `type` for shareable links.
+
+Pass `urlAliases` to the adapter independently of the builder's `aliases`:
+
+```ts
+useQueryBuilder({
+  aliases:    { dni: "code", rol: "type" },        // state → backend (drives .build())
+  adapter: createSearchParamsAdapter({
+    sync: true,
+    urlAliases: { dni: "documento", rol: "type" }, // state → URL bar
+  }),
+});
+
+builder.filter("dni", "12345").filter("rol", "admin");
+// URL bar:  ?filter[documento]=12345&filter[type]=admin   ← user sees this
+// .build(): ?filter[code]=12345&filter[type]=admin        ← API receives this
+```
+
+Three independent namespaces for the same logical attribute:
+
+| Layer | Name | Controlled by |
+|---|---|---|
+| State (your code) | `dni`, `rol` | how you call `.filter()` |
+| URL bar | `documento`, `type` | `adapter.urlAliases` |
+| Backend | `code`, `type` | `builder.aliases` |
+
+Omit `urlAliases` to make the URL share the builder's names (the common case). Pass `urlAliases: {}` to explicitly opt out of any URL translation — the URL then mirrors your state-space names verbatim, even when `builder.aliases` is set.
+
+**Security note**: with URL ≠ backend, an attacker who knows the backend name could craft `?filter[code]=…` directly. Lock it down with an allowlist on the adapter:
+
+```ts
+adapter: createSearchParamsAdapter({
+  sync: true,
+  urlAliases: { dni: "documento", rol: "type" },
+  allowed: { filters: ["documento", "type"] },   // backend-name attempts → dropped
+}),
+```
+
 ### Renaming the URL keys
 
 Sometimes the default URL is verbose:
@@ -513,7 +553,7 @@ serializeSearchParams({
 // → "filter[status]=active"
 ```
 
-Both accept the same `keys` / `aliases` / `allowed` / `excludeKeys` options as the adapter.
+Both accept the same `keys` / `urlAliases` / `allowed` / `excludeKeys` options as the adapter.
 
 ### Known limitations
 

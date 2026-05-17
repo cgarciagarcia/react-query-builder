@@ -114,8 +114,8 @@ export const parseSearchParams = <
 
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
   const { pass } = policy ?? compilePolicy(options);
-  const forward = options?.aliases ?? {};
-  const reverse = buildReverseAliases(options?.aliases);
+  const forward = options?.urlAliases ?? {};
+  const reverse = buildReverseAliases(options?.urlAliases);
   const aliasOf = (name: string): string => reverse.get(name) ?? name;
   // Returns the alternate alias-space name (frontend if URL name is backend,
   // backend if URL name is frontend). Used to make policy checks recognise

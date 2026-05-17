@@ -149,7 +149,7 @@ describe("parseSearchParams", () => {
     it("rewrites filter and sort attributes from backend → frontend", () => {
       expect(
         parseSearchParams("?filter[name]=John&sort=-created_at", {
-          aliases: { userName: "name", createdAt: "created_at" },
+          urlAliases: { userName: "name", createdAt: "created_at" },
         }),
       ).toEqual({
         filters: [{ attribute: "userName", value: ["John"] }],
@@ -160,7 +160,7 @@ describe("parseSearchParams", () => {
     it("leaves attributes untouched when no alias matches", () => {
       expect(
         parseSearchParams("?filter[unknown]=x", {
-          aliases: { userName: "name" },
+          urlAliases: { userName: "name" },
         }),
       ).toEqual({ filters: [{ attribute: "unknown", value: ["x"] }] });
     });
@@ -168,7 +168,7 @@ describe("parseSearchParams", () => {
     it("first-wins on alias collisions (multiple frontends → same backend)", () => {
       expect(
         parseSearchParams("?filter[name]=John", {
-          aliases: { userName: "name", fullName: "name" },
+          urlAliases: { userName: "name", fullName: "name" },
         }),
       ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
     });
@@ -243,13 +243,13 @@ describe("parseSearchParams", () => {
   });
 
   describe("policy is alias-aware (matches both frontend and backend names)", () => {
-    const aliases = { userName: "name", adminFlag: "is_admin" };
+    const urlAliases = { userName: "name", adminFlag: "is_admin" };
 
     it("DX: allowed.filters with FRONTEND name hydrates a URL with backend name", () => {
       // Dev writes the name they think in (frontend), URL has the wire name.
       expect(
         parseSearchParams("?filter[name]=John", {
-          aliases,
+          urlAliases,
           allowed: { filters: ["userName"] },
         }),
       ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
@@ -258,7 +258,7 @@ describe("parseSearchParams", () => {
     it("DX: allowed.filters with BACKEND name also works (existing behaviour)", () => {
       expect(
         parseSearchParams("?filter[name]=John", {
-          aliases,
+          urlAliases,
           allowed: { filters: ["name"] },
         }),
       ).toEqual({ filters: [{ attribute: "userName", value: ["John"] }] });
@@ -268,7 +268,7 @@ describe("parseSearchParams", () => {
       // Attacker tries to bypass `is_admin` denylist by using the alias key.
       expect(
         parseSearchParams("?filter[adminFlag]=true", {
-          aliases,
+          urlAliases,
           excludeKeys: { filters: ["is_admin"] },
         }),
       ).toEqual({});
@@ -277,7 +277,7 @@ describe("parseSearchParams", () => {
     it("security: excludeKeys.filters with frontend name still blocks backend URL form", () => {
       expect(
         parseSearchParams("?filter[is_admin]=true", {
-          aliases,
+          urlAliases,
           excludeKeys: { filters: ["adminFlag"] },
         }),
       ).toEqual({});
@@ -286,14 +286,14 @@ describe("parseSearchParams", () => {
     it("sorts get the same dual-name treatment", () => {
       expect(
         parseSearchParams("?sort=-name", {
-          aliases,
+          urlAliases,
           allowed: { sorts: ["userName"] },
         }),
       ).toEqual({ sorts: [{ attribute: "userName", direction: "desc" }] });
 
       expect(
         parseSearchParams("?sort=adminFlag", {
-          aliases,
+          urlAliases,
           excludeKeys: { sorts: ["is_admin"] },
         }),
       ).toEqual({});
@@ -354,7 +354,7 @@ describe("parseSearchParams", () => {
     it("matches the raw backend name BEFORE reverse alias", () => {
       expect(
         parseSearchParams("?filter[is_admin]=true", {
-          aliases: { isAdmin: "is_admin" },
+          urlAliases: { isAdmin: "is_admin" },
           excludeKeys: { filters: ["is_admin"] },
         }),
       ).toEqual({});

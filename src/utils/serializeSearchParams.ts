@@ -27,7 +27,7 @@ export const serializeSearchParams = <
   policy?: PolicyGate,
 ): string => {
   const keys = { ...DEFAULT_URL_KEYS, ...(options?.keys ?? {}) };
-  const aliases = options?.aliases ?? state.aliases;
+  const aliases = options?.urlAliases ?? state.aliases;
   const aliasOf = (name: string): string => aliases?.[name] ?? name;
   const { pass } = policy ?? compilePolicy(options);
   const sp = new URLSearchParams();

@@ -206,10 +206,12 @@ const urlAdapter = createSearchParamsAdapter({
   //   (search) => void → custom — receives the serialised query string
   //                       (e.g. router integration, debouncing)
   sync: true,
-  // Optional: frontend→backend attribute map. Reader applies the reverse map
-  // (URL holds backend names, state holds frontend names); writer applies
-  // forward. If omitted here, picked up from BaseConfig.aliases via context.
-  aliases: { userName: 'name' },
+  // Optional `state → URL` attribute map for the URL namespace only.
+  // (BaseConfig.aliases is `state → backend` and drives .build()).
+  // Omit to inherit the builder's aliases (URL == backend, common case).
+  // Pass `urlAliases: {}` to opt out of any translation (URL == state).
+  // Set explicitly when you want URL ≠ backend, e.g. user-friendly URL.
+  urlAliases: { dni: 'documento' },
 })
 
 const builder = useQueryBuilder({ adapter: urlAdapter })

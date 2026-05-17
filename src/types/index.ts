@@ -183,16 +183,28 @@ export interface SearchParamsAdapterOptions {
    */
   keys?: Partial<Record<ConfigurableURLKey, string>>;
   /**
-   * Frontend → backend attribute mapping. When set, the reader applies the
-   * REVERSE map (URL contains backend names → state holds frontend names),
-   * and the writer applies the forward map (state holds frontend names → URL
-   * contains backend names). Round-trip-safe with `.build()` since the
-   * builder's `.build()` already produces backend names.
+   * `state → URL` attribute mapping for the URL namespace **only**. The
+   * key is the name you use in your code (`builder.filter('dni', …)`),
+   * the value is what shows up in the URL bar.
    *
-   * If you do not pass this here, `createSearchParamsAdapter` picks it up
-   * from the builder's `BaseConfig.aliases` at `read()` time.
+   * This is intentionally **separate from `BaseConfig.aliases`** (which
+   * maps `state → backend` and drives `.build()`). The split lets the URL
+   * speak the user's language while the backend keeps its own technical
+   * names — see "Different names for URL and backend" in the URL Adapter
+   * docs.
+   *
+   * Resolution at runtime:
+   * - If `urlAliases` is set here → use it verbatim.
+   * - If omitted → fall back to the builder's `aliases` (passed in via
+   *   `read({ aliases })`), so URL and backend share the same naming by
+   *   default (the common case).
+   * - Pass `urlAliases: {}` to explicitly opt out of any translation —
+   *   the URL then mirrors the state-space names.
+   *
+   * The reader builds the reverse map internally, so you only declare the
+   * `state → URL` direction once.
    */
-  aliases?: Record<string, string>;
+  urlAliases?: Record<string, string>;
   /**
    * Bucket-scoped allowlist. **When a bucket is defined**, only entries
    * matching the list pass through (both on read AND on write — for

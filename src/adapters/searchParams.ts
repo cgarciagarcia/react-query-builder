@@ -92,6 +92,19 @@ const makeWriter = <A extends Record<string, string> | undefined = undefined>(
  *
  * useQueryBuilder({ adapter: urlAdapter });
  * ```
+ *
+ * To use different names in the URL than what the API expects, set
+ * `urlAliases` here and `BaseConfig.aliases` on the builder independently:
+ *
+ * ```ts
+ * useQueryBuilder({
+ *   aliases: { dni: "code" },          // state → backend (for .build())
+ *   adapter: createSearchParamsAdapter({
+ *     sync: true,
+ *     urlAliases: { dni: "documento" }, // state → URL (for the URL bar)
+ *   }),
+ * });
+ * ```
  */
 export const createSearchParamsAdapter = <
   Aliases extends Record<string, string> | undefined = undefined,
@@ -107,10 +120,13 @@ export const createSearchParamsAdapter = <
   const adapter: QueryBuilderAdapter<Aliases> = {
     read(context?: AdapterReadContext<Aliases>): Partial<GlobalState<Aliases>> {
       const source = options?.source ?? defaultSource;
-      const aliases = options?.aliases ?? context?.aliases;
+      // Explicit `urlAliases` wins. Otherwise the URL namespace inherits
+      // the builder's `aliases` — so by default URL and backend share
+      // the same naming, which is the common case.
+      const urlAliases = options?.urlAliases ?? context?.aliases;
       return parseSearchParams<Aliases>(
         source(),
-        { ...options, aliases },
+        { ...options, urlAliases },
         policy,
       );
     },
