@@ -703,7 +703,7 @@ console.log(builder.build())
 const adapter = createSearchParamsAdapter({
   source: () => '?filter[name]=John&filter[is_admin]=true&fields[user]=password,name&utm_source=ad',
   // urlAliases here would override; omitting it means the adapter
-  // inherits the builder's `aliases` below (URL == backend, common case).
+  // inherits the builder's aliases below (URL == backend, common case).
   // Bucket-scoped allowlist: only listed names enter; everything else is
   // ignored. Omit a bucket → its default behavior (filters/sorts/etc. =
   // allow-all; params = deny-all).
@@ -877,8 +877,8 @@ interface SearchParamsAdapterOptions {
   keys?:          Partial<Record<ConfigurableURLKey, string>>;
   /** state → URL attribute map for the URL namespace only. Independent
    *  from BaseConfig.aliases (which is state → backend). Omit to inherit
-   *  the builder's aliases (URL == backend, common case). Set to `{}` to
-   *  opt out of any URL translation (URL == state). */
+   *  the builder's aliases (URL == backend, common case). Set to an
+   *  empty object to opt out of any URL translation (URL == state). */
   urlAliases?:    Record<string, string>;
   /** Allowlist per bucket. When defined, only entries in the list pass
    *  (read + write). Omit a bucket for its default behavior: filters/sorts/
