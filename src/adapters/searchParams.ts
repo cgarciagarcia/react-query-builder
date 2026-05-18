@@ -28,6 +28,8 @@ const isManagedKey = (
     key.startsWith(`${keys.fields}[`) ||
     key === keys.sort ||
     key === keys.include ||
+    key === "page" ||
+    key === "limit" ||
     managedParams.includes(key)
   );
 };
@@ -143,7 +145,6 @@ export const createSearchParamsAdapter = <
       );
     },
   };
-
 
   if (options?.sync !== undefined) {
     adapter.write = makeWriter<Aliases>(options, policy);

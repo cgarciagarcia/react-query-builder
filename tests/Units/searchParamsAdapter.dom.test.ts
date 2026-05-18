@@ -98,6 +98,18 @@ describe("createSearchParamsAdapter (browser env)", () => {
     ).toEqual(["archived"]);
   });
 
+  it("overwrites page/limit on subsequent writes instead of appending", () => {
+    const adapter = createSearchParamsAdapter({ sync: true });
+
+    adapter.write?.(fullState({ pagination: { page: 1, limit: 20 } }));
+    adapter.write?.(fullState({ pagination: { page: 2, limit: 20 } }));
+    adapter.write?.(fullState({ pagination: { page: 3, limit: 50 } }));
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.getAll("page")).toEqual(["3"]);
+    expect(params.getAll("limit")).toEqual(["50"]);
+  });
+
   it("clears managed keys when state has nothing to write", () => {
     window.history.replaceState(
       null,
