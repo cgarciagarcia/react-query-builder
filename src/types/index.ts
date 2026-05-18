@@ -160,6 +160,18 @@ export interface QueryBuilder<
 export type ConfigurableURLKey = "filter" | "sort" | "include" | "fields";
 
 /**
+ * Entry accepted by `urlOmit` bucket lists. Either a plain attribute name
+ * or the wildcard `"*"`, which omits every entry in that bucket.
+ *
+ * The `(string & {})` half is a TypeScript trick that keeps the `"*"`
+ * literal visible in IDE autocomplete while still allowing any string
+ * value — without it, TS collapses the union to plain `string` and the
+ * wildcard suggestion never surfaces.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type UrlOmitEntry = "*" | (string & {});
+
+/**
  * Options for the built-in URL adapter / parser / serializer.
  *
  * ## Known protocol limitations
@@ -312,16 +324,21 @@ export interface SearchParamsAdapterOptions {
    * // URL bar   → ?…                                   (clean for the user)
    * ```
    *
+   * Each list accepts plain attribute names AND the wildcard `"*"`,
+   * which drops every entry in that bucket. Common case: hide all
+   * `fields` from the URL because they're an internal API optimisation
+   * the user doesn't care about (`urlOmit: { fields: ["*"] }`).
+   *
    * The reader is **not** affected — if a malicious URL contains one of
    * these names, it still goes through the policy. Add the same names to
    * `excludeKeys` if you also want to refuse them on hydration.
    */
   urlOmit?: {
-    filters?: string[];
-    sorts?: string[];
-    includes?: string[];
-    fields?: string[];
-    params?: string[];
+    filters?: UrlOmitEntry[];
+    sorts?: UrlOmitEntry[];
+    includes?: UrlOmitEntry[];
+    fields?: UrlOmitEntry[];
+    params?: UrlOmitEntry[];
   };
   /**
    * Lazy provider of the query string to parse. Default:

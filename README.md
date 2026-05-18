@@ -440,6 +440,20 @@ builder.filter("status", "active");
 // URL bar  → ?filter[status]=active                                    ← user
 ```
 
+**Wildcard `"*"`** drops every entry in that bucket — useful for `fields`, which are an internal API optimisation the user rarely needs to see in the URL:
+
+```ts
+adapter: createSearchParamsAdapter({
+  sync: true,
+  urlOmit: {
+    fields: ["*"],                                // hide ALL fields from URL
+    includes: ["organization", "permissions"],    // hide only these
+  },
+}),
+```
+
+IDE autocomplete suggests `"*"` thanks to a literal-union typing trick, so it's discoverable while still accepting any plain attribute name.
+
 Alias-aware on `filters` and `sorts` — list a name in either vocabulary (state or URL) and both forms are skipped.
 
 **Note**: `urlOmit` only affects the writer. If a crafted URL contains one of these names, the reader still processes it. Add the same names to `excludeKeys` if you also want to refuse them on hydration.

@@ -405,12 +405,14 @@
     }
     function _compilePolicy(options = {}) {
       const buckets = ['filters', 'sorts', 'includes', 'fields', 'params']
-      const allowed = {}, excluded = {}, omitted = {}
+      const allowed = {}, excluded = {}, omitted = {}, omitAll = {}
       for (const b of buckets) {
         const a = options.allowed?.[b]
         allowed[b] = a ? new Set(a) : null
         excluded[b] = new Set(options.excludeKeys?.[b] ?? [])
-        omitted[b]  = new Set(options.urlOmit?.[b] ?? [])
+        const oList = options.urlOmit?.[b] ?? []
+        omitAll[b] = oList.includes('*')
+        omitted[b] = new Set(oList.filter(x => x !== '*'))
       }
       return {
         pass: (bucket, ...candidates) => {
@@ -420,7 +422,7 @@
           return bucket !== 'params'
         },
         omit: (bucket, ...candidates) =>
-          candidates.some(c => omitted[bucket].has(c)),
+          omitAll[bucket] || candidates.some(c => omitted[bucket].has(c)),
       }
     }
     function parseSearchParams(search, options = {}) {
@@ -900,13 +902,14 @@ interface SearchParamsAdapterOptions {
   };
   /** Writer-only denylist per bucket. Listed names stay in state (so
    *  .build() still emits them to the API) but are skipped on URL write.
-   *  Use for backend-required context the user shouldn't see in the URL. */
+   *  Use for backend-required context the user shouldn't see in the URL.
+   *  Wildcard "*" drops every entry in that bucket. */
   urlOmit?:       {
-    filters?:  string[];
-    sorts?:    string[];
-    includes?: string[];
-    fields?:   string[];
-    params?:   string[];
+    filters?:  ('*' | (string & {}))[];
+    sorts?:    ('*' | (string & {}))[];
+    includes?: ('*' | (string & {}))[];
+    fields?:   ('*' | (string & {}))[];
+    params?:   ('*' | (string & {}))[];
   };
   /** Provider of the query string. Default: () => window.location.search */
   source?:        () => string;

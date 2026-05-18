@@ -336,6 +336,39 @@ describe("serializeSearchParams", () => {
       );
     });
 
+    it("urlOmit with '*' wildcard drops every entry in that bucket", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [{ attribute: "status", value: ["active"] }],
+            includes: ["author", "tags"],
+            fields: ["id", "user.name", "user.email"],
+          },
+          { urlOmit: { fields: ["*"], includes: ["*"] } },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
+    it("urlOmit '*' coexists with named entries in other buckets", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "status", value: ["active"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+            includes: ["user", "logs"],
+          },
+          {
+            urlOmit: {
+              filters: ["is_admin"], // specific
+              includes: ["*"],       // wildcard
+            },
+          },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
     it("urlOmit is alias-aware on filters and sorts", () => {
       expect(
         serializeSearchParams(
@@ -354,7 +387,7 @@ describe("serializeSearchParams", () => {
             urlOmit: {
               filters: ["documento"], // listed by WIRE name → state "dni" also dropped
               sorts: ["dni"], // listed by STATE name → wire "dni" also dropped
-            },
+            }
           },
         ),
       ).toBe("filter[name]=x&sort=name");

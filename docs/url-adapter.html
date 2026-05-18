@@ -475,6 +475,21 @@ builder.filter("status", "active")
                     <code class="text-purple-400">sorts</code> — list a name in either
                     vocabulary (state or URL) and both forms are skipped.
                 </p>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    <strong>Wildcard <code class="text-purple-400">"*"</code></strong> drops every
+                    entry in that bucket. Most common use: hide all
+                    <code class="text-purple-400">fields</code> from the URL, since they're an
+                    internal API optimisation the user rarely cares about. IDE autocomplete
+                    surfaces <code class="text-purple-400">"*"</code> via a literal-union typing
+                    trick.
+                </p>
+<pre class="mt-3"><code class="language-typescript">adapter: createSearchParamsAdapter({
+  sync: true,
+  urlOmit: {
+    fields:   ["*"],                              // hide ALL fields
+    includes: ["organization", "permissions"],    // hide only these
+  },
+})</code></pre>
                 <div class="callout callout-warn mt-4">
                     <p class="callout-title">Reader is not affected</p>
                     <p class="t-muted text-sm leading-relaxed">

@@ -31,11 +31,17 @@ export const compilePolicy = (
   const allowed = {} as Record<Bucket, Set<string> | null>;
   const excluded = {} as Record<Bucket, Set<string>>;
   const omitted = {} as Record<Bucket, Set<string>>;
+  // `urlOmit[bucket]: ["*"]` is a wildcard meaning "drop every entry in
+  // this bucket". Tracked separately so `omit(...)` short-circuits without
+  // scanning candidates.
+  const omitAll = {} as Record<Bucket, boolean>;
   for (const b of BUCKETS) {
     const allow = options?.allowed?.[b];
     allowed[b] = allow ? new Set(allow) : null;
     excluded[b] = new Set(options?.excludeKeys?.[b] ?? []);
-    omitted[b] = new Set(options?.urlOmit?.[b] ?? []);
+    const omitList = options?.urlOmit?.[b] ?? [];
+    omitAll[b] = omitList.includes("*");
+    omitted[b] = new Set(omitList.filter((x) => x !== "*"));
   }
 
   return {
@@ -46,6 +52,6 @@ export const compilePolicy = (
       return bucket !== "params";
     },
     omit: (bucket, ...candidates) =>
-      candidates.some((c) => omitted[bucket].has(c)),
+      omitAll[bucket] || candidates.some((c) => omitted[bucket].has(c)),
   };
 };

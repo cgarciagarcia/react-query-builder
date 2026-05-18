@@ -221,7 +221,12 @@ const urlAdapter = createSearchParamsAdapter({
   // Writer-only denylist per bucket. Listed names stay in state (so
   // .build() still emits them to the API) but are skipped on URL write.
   // Use for backend-required context the user shouldn't see in the URL.
-  urlOmit: { includes: ['organization', 'permissions'] },
+  // Wildcard "*" drops every entry in that bucket — handy for `fields`,
+  // which are usually an internal API optimisation.
+  urlOmit: {
+    includes: ['organization', 'permissions'],
+    fields:   ['*'],
+  },
 })
 
 const builder = useQueryBuilder({ adapter: urlAdapter })
