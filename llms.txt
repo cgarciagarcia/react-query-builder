@@ -45,6 +45,7 @@ interface BaseConfig {
   }
   useQuestionMark?: boolean  // prepend "?" to build() output (default: true)
   pagination?: { page: number; limit?: number }
+  adapter?: QueryBuilderAdapter  // see "Adapters" section below
 }
 ```
 
@@ -141,6 +142,172 @@ const builder = useQueryBuilder({
 ```
 
 Conflicts are automatically bidirectional.
+
+## Adapters (hydrating from external sources)
+
+The builder bridges to external state sources via `adapter`. An adapter is any
+object with the shape:
+
+```ts
+interface QueryBuilderAdapter<Aliases = undefined> {
+  read:  (context?: { aliases?: Aliases }) => Partial<GlobalState<Aliases>>
+  write?: (state: GlobalState<Aliases>) => void
+}
+```
+
+- `read(context)` runs **exactly once** at builder creation — lazy init, like
+  `useState(() => ...)`. The builder passes its `aliases` through `context`
+  so adapters can stay aligned without you declaring them twice.
+- `write?(state)` is optional. When defined, the builder fires it once
+  right after construction (to normalise the external source against the
+  final state — `BaseConfig` defaults, `urlOmit`, etc. — without waiting
+  for a mutation), then on every state change.
+  The built-in URL adapter forces `replaceState` on that first call so
+  `sync: "push"` doesn't add a phantom history entry; custom callbacks
+  fire on mount too — guard with a closure flag if your router would
+  loop on a redirect-on-mount.
+- Precedence: built-in defaults < `adapter.read()` < explicit `BaseConfig`
+  fields. Passing `filters: [...]` alongside an adapter overrides what
+  `read()` returned for that field.
+
+### Built-in URL adapter
+
+```ts
+import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const urlAdapter = createSearchParamsAdapter({
+  // Optional: rename the URL keys the parser looks for.
+  // Omitted keys keep their default ('filter' | 'sort' | 'include' | 'fields').
+  keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
+  // Optional bucket-scoped allowlist. Applies on read AND write
+  // (symmetric — URL never carries entries outside the policy). Omit a
+  // bucket → its default: filters/sorts/includes/fields = allow-all,
+  // params = deny-all. When you DO list a bucket, only those names pass.
+  allowed: {
+    filters:  ['status', 'role', 'created_at'],
+    sorts:    ['created_at', 'name'],
+    includes: ['author', 'tags'],
+    fields:   ['id', 'title', 'user.name'],
+    params:   ['locale', 'tenant'],
+  },
+  // Optional bucket-scoped defense-in-depth denylist. Each bucket has its
+  // own deny list, because a name (e.g. 'password') may be dangerous as a
+  // filter but legitimate as a `fields` entry. Wins over `allowed`.
+  excludeKeys: {
+    filters:  ['is_admin', 'tenant_id', 'password'],
+    includes: ['internal_audit_log'],
+    sorts:    ['secret_score'],
+    fields:   ['api_token'],
+    params:   ['debug'],
+  },
+  // Optional. Default: () => window.location.search (returns "" in SSR).
+  // Evaluated inside read(), so module-scope instantiation is safe.
+  source: () => window.location.search,
+  // Optional: enable two-way binding (write).
+  //   true | 'replace' → history.replaceState (no extra history entries)
+  //   'push'           → history.pushState (each mutation adds a back step)
+  //   (search) => void → custom — receives the serialised query string
+  //                       (e.g. router integration, debouncing)
+  sync: true,
+  // Optional `state → URL` attribute map for the URL namespace only.
+  // (BaseConfig.aliases is `state → backend` and drives .build()).
+  // Omit to inherit the builder's aliases (URL == backend, common case).
+  // Pass `urlAliases: {}` to opt out of any translation (URL == state).
+  // Set explicitly when you want URL ≠ backend, e.g. user-friendly URL.
+  urlAliases: { dni: 'documento' },
+  // Writer-only denylist per bucket. Listed names stay in state (so
+  // .build() still emits them to the API) but are skipped on URL write.
+  // Use for backend-required context the user shouldn't see in the URL.
+  // Wildcard "*" drops every entry in that bucket — handy for `fields`,
+  // which are usually an internal API optimisation.
+  urlOmit: {
+    includes: ['organization', 'permissions'],
+    fields:   ['*'],
+  },
+})
+
+const builder = useQueryBuilder({ adapter: urlAdapter })
+```
+
+Configurable URL keys: `filter`, `sort`, `include`, `fields`.
+Pagination (`page` / `limit`) is **auto-hydrated** when present in the
+URL and emitted by the writer when set on the builder — round-trips out
+of the box, no extra config.
+
+Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
+Renamed keys only apply when **reading from / writing to** the URL.
+
+The built-in writer **preserves any query params not managed by the adapter**
+(anything not matching `keys` or `allowed.params`) so third-party params like
+`utm_source` are left untouched.
+
+### Custom adapter — localStorage (two-way)
+
+```ts
+import {
+  useQueryBuilder,
+  type QueryBuilderAdapter,
+} from "@cgarciagarcia/react-query-builder"
+
+const STORAGE_KEY = "user-filters"
+
+const localStorageAdapter: QueryBuilderAdapter = {
+  read: () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") }
+    catch { return {} }
+  },
+  write: (state) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      filters:    state.filters,
+      sorts:      state.sorts,
+      fields:     state.fields,
+      includes:   state.includes,
+      pagination: state.pagination,
+    }))
+  },
+}
+
+const builder = useQueryBuilder({ adapter: localStorageAdapter })
+```
+
+### Lower-level: `parseSearchParams` / `serializeSearchParams`
+
+Both pure (no DOM), exported for ad-hoc use without the adapter wrapper:
+
+```ts
+import {
+  parseSearchParams,
+  serializeSearchParams,
+} from "@cgarciagarcia/react-query-builder"
+
+parseSearchParams("?filt[status]=active&srt=-name", {
+  keys: { filter: "filt", sort: "srt" },
+  allowed: { params: ["locale"] },
+})
+// → { filters: [{ attribute: "status", value: ["active"] }],
+//     sorts:   [{ attribute: "name",   direction: "desc"   }] }
+
+serializeSearchParams({
+  filters: [{ attribute: "status", value: ["active"] }],
+  sorts:   [{ attribute: "name",   direction: "desc"   }],
+})
+// → "filter[status]=active&sort=-name"
+```
+
+### Known protocol limitations (URL adapter)
+
+Filter values must not contain control symbols of the protocol; they
+silently corrupt on round-trip:
+
+- `,`  → multi-value separator (`filter[tag]=a,b` → `["a", "b"]`).
+- Leading `<`, `>`, `<=`, `>=`, `<>` → operator prefixes (`filter[age]=>=18`
+  → operator `>=`, value `["18"]`).
+
+Other "special-looking" characters (`%`, `&`, `+`, spaces) ARE safe — they
+travel URL-escaped and round-trip intact.
 
 ## Integration with TanStack Query
 

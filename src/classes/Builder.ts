@@ -62,6 +62,10 @@ export class Builder<
 > implements QueryBuilder<Aliases> {
   private state: GlobalState<Aliases>;
 
+  // Stored so `rehydrate()` can re-run `read()` after mount when the
+  // external source has changed (browser back/forward, etc.).
+  private adapter?: BaseConfig<Aliases>["adapter"];
+
   private subscribers: Record<string, (state: GlobalState<Aliases>) => void> =
     {};
 
@@ -80,6 +84,11 @@ export class Builder<
   };
 
   constructor(config?: BaseConfig<Aliases>) {
+    const { adapter, ...rest } = config ?? {};
+    this.adapter = adapter;
+    const seeded: Partial<GlobalState<Aliases>> =
+      adapter?.read({ aliases: rest.aliases }) ?? {};
+
     this.state = {
       aliases: {} as Aliases,
       filters: [],
@@ -89,9 +98,10 @@ export class Builder<
       params: {},
       useQuestionMark: true,
       pagination: {},
-      ...(config ?? {}),
+      ...seeded,
+      ...rest,
       pruneConflictingFilters: reverseConflicts(
-        config?.pruneConflictingFilters ?? {},
+        rest.pruneConflictingFilters ?? {},
       ),
       delimiters: {
         global: ",",
@@ -100,9 +110,18 @@ export class Builder<
         sorts: null,
         includes: null,
         params: null,
-        ...(config?.delimiters ?? {}),
+        ...(rest.delimiters ?? {}),
       },
     };
+
+    if (adapter?.write) {
+      this.addSubscriber(adapter.write);
+      // Normalise the external source against the final state, so it
+      // reflects defaults and `urlOmit` even before the first mutation.
+      // Adapters that don't want this can no-op their first call (the
+      // built-in URL adapter already does so for "push" and custom-fn sync).
+      adapter.write(this.state);
+    }
   }
 
   private setState(fn: (s: GlobalState<Aliases>) => GlobalState<Aliases>) {
@@ -277,7 +296,9 @@ export class Builder<
     if (this.state.pagination?.page && this.state.pagination.page >= 1) {
       this.setState((s) =>
         pageAction(
-          /* v8 ignore next */ s.pagination?.page !== undefined ? s.pagination.page + 1 : 1,
+          /* v8 ignore next */ s.pagination?.page !== undefined
+            ? s.pagination.page + 1
+            : 1,
           s,
         ),
       );
@@ -295,7 +316,10 @@ export class Builder<
   previousPage(): QueryBuilder<Aliases> {
     if (this.state.pagination?.page && this.state.pagination.page > 1) {
       this.setState((s) =>
-        pageAction(/* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1, s),
+        pageAction(
+          /* v8 ignore next */ s.pagination?.page ? s.pagination.page - 1 : 1,
+          s,
+        ),
       );
     }
     return this;
@@ -411,6 +435,26 @@ export class Builder<
   }
   hasPagination(): boolean {
     return !!this.state.pagination;
+  }
+
+  rehydrate(): QueryBuilder<Aliases> {
+    if (!this.adapter) return this;
+    const seeded: Partial<GlobalState<Aliases>> =
+      this.adapter.read({ aliases: this.state.aliases }) ?? {};
+    this.setState((s) => ({
+      ...s,
+      // Replace the data layer (what the source provides); preserve the
+      // config layer (aliases, delimiters, pruneConflictingFilters,
+      // useQuestionMark). An absent key in `seeded` means "the source
+      // has nothing for this bucket" → reset to the empty default.
+      filters: seeded.filters ?? [],
+      sorts: seeded.sorts ?? [],
+      includes: seeded.includes ?? [],
+      fields: seeded.fields ?? [],
+      params: seeded.params ?? {},
+      pagination: seeded.pagination ?? {},
+    }));
+    return this;
   }
 
   private shouldResetPage(): boolean {

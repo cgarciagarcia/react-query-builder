@@ -1,0 +1,407 @@
+import { type GlobalState } from "@/types";
+import { serializeSearchParams } from "@/utils/serializeSearchParams";
+import { describe, expect, it } from "vitest";
+
+describe("serializeSearchParams", () => {
+  it("returns an empty string for empty state", () => {
+    expect(serializeSearchParams({})).toBe("");
+  });
+
+  it.each<[string, Partial<GlobalState>, string]>([
+    [
+      "filters with single and multi-value",
+      {
+        filters: [
+          { attribute: "status", value: ["active", "pending"] },
+          { attribute: "name", value: ["John"] },
+        ],
+      },
+      "filter[status]=active,pending&filter[name]=John",
+    ],
+    [
+      "filters with operator prefixes",
+      {
+        filters: [
+          { attribute: "age", value: ["18"], operator: ">=" },
+          { attribute: "score", value: ["0"], operator: "<>" },
+        ],
+      },
+      "filter[age]=>=18&filter[score]=<>0",
+    ],
+    [
+      "filter with equals operator omits the prefix",
+      { filters: [{ attribute: "x", value: ["1"], operator: "=" }] },
+      "filter[x]=1",
+    ],
+    [
+      "sort with mixed directions",
+      {
+        sorts: [
+          { attribute: "created_at", direction: "desc" },
+          { attribute: "name", direction: "asc" },
+        ],
+      },
+      "sort=-created_at,name",
+    ],
+    ["include into csv", { includes: ["user", "team"] }, "include=user,team"],
+    [
+      "bare and dotted fields collapsed to bracketed groups",
+      { fields: ["id", "user.name", "user.email"] },
+      "fields=id&fields[user]=name,email",
+    ],
+  ])("serialises %s", (_label, state, expected) => {
+    expect(serializeSearchParams(state)).toBe(expected);
+  });
+
+  it("honours custom URL keys", () => {
+    expect(
+      serializeSearchParams(
+        {
+          filters: [{ attribute: "status", value: ["active"] }],
+          sorts: [{ attribute: "name", direction: "desc" }],
+          includes: ["user"],
+          fields: ["user.id"],
+        },
+        {
+          keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+        },
+      ),
+    ).toBe("filt[status]=active&fld[user]=id&srt=-name&inc=user");
+  });
+
+  it("writes only allowlisted params; drops the rest", () => {
+    expect(
+      serializeSearchParams(
+        { params: { locale: ["es"], tenant: ["acme"], secret: ["leak"] } },
+        { allowed: { params: ["locale", "tenant"] } },
+      ),
+    ).toBe("locale=es&tenant=acme");
+  });
+
+  describe("writer respects allowed + excludeKeys (symmetric with reader)", () => {
+    it("drops filters not in allowed.filters", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "status", value: ["active"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+          },
+          { allowed: { filters: ["status"] } },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
+    it("drops sorts/includes/fields not in their bucket allowlist", () => {
+      expect(
+        serializeSearchParams(
+          {
+            sorts: [
+              { attribute: "name", direction: "asc" },
+              { attribute: "secret", direction: "asc" },
+            ],
+            includes: ["user", "internal_log"],
+            fields: ["id", "password"],
+          },
+          {
+            allowed: {
+              sorts: ["name"],
+              includes: ["user"],
+              fields: ["id"],
+            },
+          },
+        ),
+      ).toBe("fields=id&sort=name&include=user");
+    });
+
+    it("excludeKeys drops on write across all buckets", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "name", value: ["x"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+            sorts: [
+              { attribute: "name", direction: "asc" },
+              { attribute: "secret_score", direction: "desc" },
+            ],
+            includes: ["user", "internal_log"],
+            params: { locale: ["es"], debug: ["1"] },
+          },
+          {
+            allowed: { params: ["locale", "debug"] },
+            excludeKeys: {
+              filters: ["is_admin"],
+              sorts: ["secret_score"],
+              includes: ["internal_log"],
+              params: ["debug"],
+            },
+          },
+        ),
+      ).toBe("filter[name]=x&sort=name&include=user&locale=es");
+    });
+
+    it("excludeKeys wins over allowed when both are set", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "name", value: ["x"] },
+              { attribute: "status", value: ["y"] },
+            ],
+          },
+          {
+            allowed: { filters: ["name", "status"] },
+            excludeKeys: { filters: ["status"] },
+          },
+        ),
+      ).toBe("filter[name]=x");
+    });
+
+    it("allowed.fields filters bracketed (entity.prop) fields too", () => {
+      expect(
+        serializeSearchParams(
+          { fields: ["user.id", "user.password", "admin.role"] },
+          { allowed: { fields: ["user.id", "admin.role"] } },
+        ),
+      ).toBe("fields[user]=id&fields[admin]=role");
+    });
+
+    it("applies excludeKeys to fields by short prop or entity.prop", () => {
+      expect(
+        serializeSearchParams(
+          { fields: ["id", "user.password", "user.name", "admin.password"] },
+          { excludeKeys: { fields: ["password"] } },
+        ),
+      ).toBe("fields=id&fields[user]=name");
+    });
+  });
+
+  describe("pagination", () => {
+    it("emits page and limit when present in state", () => {
+      expect(
+        serializeSearchParams({ pagination: { page: 3, limit: 20 } }),
+      ).toBe("page=3&limit=20");
+    });
+
+    it("emits page only when limit is undefined", () => {
+      expect(serializeSearchParams({ pagination: { page: 5 } })).toBe("page=5");
+    });
+
+    it("emits nothing when pagination is absent or empty", () => {
+      expect(serializeSearchParams({})).toBe("");
+      expect(serializeSearchParams({ pagination: {} })).toBe("");
+    });
+
+    it("round-trips pagination through parseSearchParams", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "status", value: ["active"] }],
+        pagination: { page: 7, limit: 50 },
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+  });
+
+  it("accepts an externally pre-compiled policy as the 3rd argument", async () => {
+    const { compilePolicy } = await import("@/utils/searchParamsPolicy");
+    const policy = compilePolicy({ allowed: { filters: ["status"] } });
+    expect(
+      serializeSearchParams(
+        {
+          filters: [
+            { attribute: "status", value: ["active"] },
+            { attribute: "is_admin", value: ["true"] },
+          ],
+        },
+        undefined,
+        policy,
+      ),
+    ).toBe("filter[status]=active");
+  });
+
+  describe("safe encoding for special characters in values", () => {
+    it("round-trips a value containing a literal percent sign", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "name", value: ["50%25discount"] }],
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+
+    it("round-trips values with =, &, # and spaces", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const state = {
+        filters: [{ attribute: "q", value: ["a=b & c#1", "hello world"] }],
+      };
+      const url = serializeSearchParams(state);
+      expect(parseSearchParams(url)).toEqual(state);
+    });
+
+    it("keeps brackets readable in the output URL", () => {
+      expect(
+        serializeSearchParams({
+          filters: [{ attribute: "status", value: ["active"] }],
+        }),
+      ).toBe("filter[status]=active");
+    });
+  });
+
+  it("round-trips with parseSearchParams for the canonical case", async () => {
+    const { parseSearchParams } = await import("@/utils/parseSearchParams");
+    const state: Partial<GlobalState> = {
+      filters: [{ attribute: "status", value: ["active"] }],
+      sorts: [{ attribute: "name", direction: "desc" }],
+      includes: ["user"],
+      fields: ["user.id", "user.email"],
+      params: { locale: ["es"] },
+    };
+    const serialized = serializeSearchParams(state, {
+      allowed: { params: ["locale"] },
+    });
+    expect(
+      parseSearchParams(serialized, { allowed: { params: ["locale"] } }),
+    ).toEqual(state);
+  });
+
+  describe("aliases (forward map)", () => {
+    it("rewrites filter and sort attributes from frontend → backend via urlAliases", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [{ attribute: "userName", value: ["John"] }],
+            sorts: [{ attribute: "createdAt", direction: "desc" }],
+          },
+          { urlAliases: { userName: "name", createdAt: "created_at" } },
+        ),
+      ).toBe("filter[name]=John&sort=-created_at");
+    });
+
+    it("falls back to state.aliases when options.urlAliases is absent", () => {
+      expect(
+        serializeSearchParams<{ userName: "name" }>({
+          aliases: { userName: "name" },
+          filters: [{ attribute: "userName", value: ["John"] }],
+        }),
+      ).toBe("filter[name]=John");
+    });
+
+    it("policy is alias-aware on write: allowed.filters with FRONTEND name passes", () => {
+      expect(
+        serializeSearchParams(
+          { filters: [{ attribute: "userName", value: ["John"] }] },
+          {
+            urlAliases: { userName: "name" },
+            allowed: { filters: ["userName"] },
+          },
+        ),
+      ).toBe("filter[name]=John");
+    });
+
+    it("policy is alias-aware on write: excludeKeys with BACKEND name drops a state entry that aliases to it", () => {
+      expect(
+        serializeSearchParams(
+          { filters: [{ attribute: "adminFlag", value: ["true"] }] },
+          {
+            urlAliases: { adminFlag: "is_admin" },
+            excludeKeys: { filters: ["is_admin"] },
+          },
+        ),
+      ).toBe("");
+    });
+
+    it("urlOmit hides entries from the URL but keeps them in state output of .build()", () => {
+      // Writer skips listed names; the items are still in `state` (the
+      // caller's responsibility — we verify the URL output only here).
+      expect(
+        serializeSearchParams(
+          {
+            filters: [{ attribute: "status", value: ["active"] }],
+            includes: ["organization", "permissions", "author"],
+            fields: ["id", "user.email", "internal_token"],
+          },
+          {
+            urlOmit: {
+              includes: ["organization", "permissions"],
+              fields: ["internal_token"],
+            },
+          },
+        ),
+      ).toBe(
+        "filter[status]=active&fields=id&fields[user]=email&include=author",
+      );
+    });
+
+    it("urlOmit with '*' wildcard drops every entry in that bucket", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [{ attribute: "status", value: ["active"] }],
+            includes: ["author", "tags"],
+            fields: ["id", "user.name", "user.email"],
+          },
+          { urlOmit: { fields: ["*"], includes: ["*"] } },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
+    it("urlOmit '*' coexists with named entries in other buckets", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "status", value: ["active"] },
+              { attribute: "is_admin", value: ["true"] },
+            ],
+            includes: ["user", "logs"],
+          },
+          {
+            urlOmit: {
+              filters: ["is_admin"], // specific
+              includes: ["*"],       // wildcard
+            },
+          },
+        ),
+      ).toBe("filter[status]=active");
+    });
+
+    it("urlOmit is alias-aware on filters and sorts", () => {
+      expect(
+        serializeSearchParams(
+          {
+            filters: [
+              { attribute: "dni", value: ["123"] },
+              { attribute: "name", value: ["x"] },
+            ],
+            sorts: [
+              { attribute: "dni", direction: "asc" },
+              { attribute: "name", direction: "asc" },
+            ],
+          },
+          {
+            urlAliases: { dni: "documento" },
+            urlOmit: {
+              filters: ["documento"], // listed by WIRE name → state "dni" also dropped
+              sorts: ["dni"], // listed by STATE name → wire "dni" also dropped
+            }
+          },
+        ),
+      ).toBe("filter[name]=x&sort=name");
+    });
+
+    it("round-trips through parseSearchParams with the same urlAliases on both ends", async () => {
+      const { parseSearchParams } = await import("@/utils/parseSearchParams");
+      const urlAliases = { userName: "name", createdAt: "created_at" };
+      const state = {
+        filters: [{ attribute: "userName", value: ["John"] }],
+        sorts: [{ attribute: "createdAt", direction: "desc" as const }],
+      };
+      const url = serializeSearchParams(state, { urlAliases });
+      expect(parseSearchParams(url, { urlAliases })).toEqual(state);
+    });
+  });
+});

@@ -25,6 +25,7 @@ A TypeScript React hook that builds query strings compatible with [spatie/larave
   - [Pagination](#pagination)
   - [Utilities](#utilities)
 - [Advanced: Conflicting Filters](#advanced-conflicting-filters)
+- [Hydrating from URL](#hydrating-from-url)
 - [Support](#support)
 - [License](#license)
 
@@ -293,6 +294,319 @@ builder.filter('between_dates', ['2024-08-06', '2024-08-13'])
 ```
 
 The conflict is **bidirectional by default** — you only need to declare it once. You can also declare both directions explicitly if you prefer.
+
+---
+
+## Hydrating from URL
+
+Say you have a list view with filters, sorts and pagination. A user picks "status = active", sorts by date, opens page 3 — and shares the link with a teammate. You want that link to open with the exact same filters already applied.
+
+That's what an **adapter** does: it bridges the builder to an external source (URL, `localStorage`, anything you want). The built-in `createSearchParamsAdapter` handles the URL case.
+
+### The 30-second example
+
+```ts
+import {
+  useQueryBuilder,
+  createSearchParamsAdapter,
+} from "@cgarciagarcia/react-query-builder";
+
+const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+});
+
+builder.filter("status", "active").sort("created_at", "desc");
+// URL bar is now: /?filter[status]=active&sort=-created_at
+```
+
+Refresh the page, share the link — the filters come back. That's it.
+
+What just happened:
+- On mount, the adapter **reads** the current URL and seeds the builder.
+- `sync: true` then **writes once right after mount** to normalise the URL against the final state (so `BaseConfig` defaults, `urlOmit`, or a stale link the user landed on get reconciled immediately — no mutation required), and on every subsequent change.
+- The URL output mirrors what `.build()` produces, so your backend and your URL bar agree.
+
+### Read-only hydration (no URL writes)
+
+If you only want to hydrate at mount and never touch the URL after, just leave `sync` out:
+
+```ts
+useQueryBuilder({
+  adapter: createSearchParamsAdapter(),
+});
+```
+
+Now `read()` runs once when the hook mounts — same semantics as `useState(() => …)` — and that's the end of it. URL changes after mount don't re-hydrate.
+
+### Customising the writer
+
+`sync` accepts three forms depending on how aggressive you want the URL updates to be:
+
+```ts
+// 1) Default behavior: replaceState (no extra browser history entries)
+createSearchParamsAdapter({ sync: true });           // alias for "replace"
+
+// 2) pushState (every mutation is a back-button step)
+createSearchParamsAdapter({ sync: "push" });
+
+// 3) Bring your own — useful for Next.js / React Router / debouncing
+createSearchParamsAdapter({
+  sync: (search) => router.replace({ search }),
+});
+```
+
+**Mount-time normalisation** runs in all three modes — the writer fires once right after the builder is constructed so the URL bar reflects the final state immediately. For `sync: "push"` the very first call still uses `replaceState` (so the mount fire doesn't add a phantom back-button entry); your custom callback also fires once on mount, guard it with a closure flag if that surprises your router.
+
+Don't worry about other apps' query params — the writer **preserves anything it doesn't recognise**. So `?utm_source=newsletter` or `?theme=dark` stays untouched while your filters get added, updated, or cleared.
+
+### Aliases: keep your frontend names, ship backend names
+
+You probably name things one way in the UI (`userName`, `createdAt`) and another in the API (`name`, `created_at`). Pass `aliases` to the builder and the adapter handles the translation in **both directions** automatically:
+
+```ts
+useQueryBuilder({
+  aliases: { userName: "name", createdAt: "created_at" },
+  adapter: createSearchParamsAdapter({ sync: true }),
+});
+
+// Your code keeps using frontend names:
+builder.filter("userName", "Jane").sort("createdAt", "desc");
+
+// The URL bar shows backend names (same as .build() would emit):
+// /?filter[name]=Jane&sort=-created_at
+
+// On refresh, ?filter[name]=Jane hydrates back as { userName: "Jane" }.
+```
+
+The adapter automatically reads aliases from the builder config, so you only declare them once.
+
+### Different names for URL and backend
+
+The URL and the backend don't have to share the same naming. Maybe you want the URL to speak the user's language (`?filter[documento]=…`) while your API keeps technical names (`?filter[code]=…`). Or your code uses `rol` in Spanish but the URL should read `type` for shareable links.
+
+Pass `urlAliases` to the adapter independently of the builder's `aliases`:
+
+```ts
+useQueryBuilder({
+  aliases:    { dni: "code", rol: "type" },        // state → backend (drives .build())
+  adapter: createSearchParamsAdapter({
+    sync: true,
+    urlAliases: { dni: "documento", rol: "type" }, // state → URL bar
+  }),
+});
+
+builder.filter("dni", "12345").filter("rol", "admin");
+// URL bar:  ?filter[documento]=12345&filter[type]=admin   ← user sees this
+// .build(): ?filter[code]=12345&filter[type]=admin        ← API receives this
+```
+
+Three independent namespaces for the same logical attribute:
+
+| Layer | Name | Controlled by |
+|---|---|---|
+| State (your code) | `dni`, `rol` | how you call `.filter()` |
+| URL bar | `documento`, `type` | `adapter.urlAliases` |
+| Backend | `code`, `type` | `builder.aliases` |
+
+Omit `urlAliases` to make the URL share the builder's names (the common case). Pass `urlAliases: {}` to explicitly opt out of any URL translation — the URL then mirrors your state-space names verbatim, even when `builder.aliases` is set.
+
+**Security note**: with URL ≠ backend, an attacker who knows the backend name could craft `?filter[code]=…` directly. Lock it down with an allowlist on the adapter:
+
+```ts
+adapter: createSearchParamsAdapter({
+  sync: true,
+  urlAliases: { dni: "documento", rol: "type" },
+  allowed: { filters: ["documento", "type"] },   // backend-name attempts → dropped
+}),
+```
+
+### Hide noisy state from the URL: `urlOmit`
+
+Sometimes the builder carries entries your **backend needs but your user shouldn't see in the URL bar**. Typical case: default includes/fields the API always requires (`include=organization,permissions`) that just clutter shareable links.
+
+`urlOmit` is a writer-only denylist per bucket. The listed names stay in state (so `.build()` still emits them to the API), they just don't reach the URL:
+
+```ts
+useQueryBuilder({
+  includes: ["organization", "permissions"],     // always sent to API
+  adapter: createSearchParamsAdapter({
+    sync: true,
+    urlOmit: { includes: ["organization", "permissions"] },
+  }),
+});
+
+builder.filter("status", "active");
+// .build() → ?filter[status]=active&include=organization,permissions   ← backend
+// URL bar  → ?filter[status]=active                                    ← user
+```
+
+**Wildcard `"*"`** drops every entry in that bucket — useful for `fields`, which are an internal API optimisation the user rarely needs to see in the URL:
+
+```ts
+adapter: createSearchParamsAdapter({
+  sync: true,
+  urlOmit: {
+    fields: ["*"],                                // hide ALL fields from URL
+    includes: ["organization", "permissions"],    // hide only these
+  },
+}),
+```
+
+IDE autocomplete suggests `"*"` thanks to a literal-union typing trick, so it's discoverable while still accepting any plain attribute name.
+
+Alias-aware on `filters` and `sorts` — list a name in either vocabulary (state or URL) and both forms are skipped.
+
+**Note**: `urlOmit` only affects the writer. If a crafted URL contains one of these names, the reader still processes it. Add the same names to `excludeKeys` if you also want to refuse them on hydration.
+
+### Renaming the URL keys
+
+Sometimes the default URL is verbose:
+
+```
+?filter[status]=active&filter[role]=admin&sort=-created_at&include=author,tags&fields[user]=id,name
+```
+
+That's a mouthful — long enough to overflow in chat previews, ugly to share, and harder to scan. Remap the keys to shorten it:
+
+```ts
+createSearchParamsAdapter({
+  keys: { filter: "filt", sort: "srt", include: "inc", fields: "fld" },
+  sync: true,
+});
+```
+
+Now the same state produces:
+
+```
+?filt[status]=active&filt[role]=admin&srt=-created_at&inc=author,tags&fld[user]=id,name
+```
+
+Why you might want this:
+
+- **Shorter, more shareable links** — saves bytes per param, big difference when you have many filters.
+- **Cleaner URL bar** — easier on the eye for users and for screenshots in support tickets.
+- **Brand or domain language** — your app says "query", not "filter"? Match the vocabulary your users already know.
+- **Avoiding collisions** — if the surrounding app already uses `?filter=...` or `?sort=...` for something else, rename to coexist.
+
+Both reader and writer use the new keys, so round-trips still work. This **only** affects the URL bar — `.build()` (what you pass to `fetch`) keeps using the canonical `filter`/`sort`/… names your backend expects.
+
+### Locking down which keys can come from the URL
+
+The URL is user input. Without limits, a crafted link like `?filter[is_admin]=true` would flow straight into your `.build()` call and out to your backend. You have two primitives, **per bucket**, and you pick the one that matches your situation:
+
+#### `allowed` — strict allowlist ("only these")
+
+Use it when you have a short, explicit list of what's legitimate:
+
+```ts
+createSearchParamsAdapter({
+  allowed: {
+    filters: ["status", "role", "created_at"],
+    sorts:   ["created_at", "name"],
+    params:  ["locale", "tenant"],   // anything not here is dropped
+  },
+});
+```
+
+Defaults when you omit a bucket:
+- `filters` / `sorts` / `includes` / `fields` → allow everything (so the URL can drive filtering freely)
+- `params` → allow nothing (the catch-all is deny-by-default — params are arbitrary, so you must opt-in by listing them)
+
+#### `excludeKeys` — targeted denylist ("everything except these")
+
+Use it when you trust the bucket in general but want to block a handful of dangerous names — without enumerating everything legitimate:
+
+```ts
+createSearchParamsAdapter({
+  // No allowed.filters → I accept any filter from the URL.
+  // I have 47 legitimate filter attributes and I add more every month;
+  // maintaining a full whitelist is brittle. But is_admin and password
+  // must NEVER come through the URL.
+  excludeKeys: {
+    filters: ["is_admin", "password"],
+  },
+});
+```
+
+#### Which one should I use?
+
+| Situation | Use |
+|---|---|
+| "Short, explicit list of what's allowed" | `allowed` |
+| "Accept everything, except these few" | `excludeKeys` |
+| "Whitelist plus a moving denylist on top" | both (defense in depth) |
+
+If you set `allowed.filters: ["status", "role"]`, listing `is_admin` in `excludeKeys.filters` is **redundant** — it's already dropped because it's not allowed. It doesn't break anything (and reads as documentation of intent), but it's not pulling weight in runtime. The combination is useful when you keep a stable allowlist and want a separate, fast-changing denylist on top.
+
+#### Details that apply to both
+
+- Both apply to the **reader and the writer** symmetrically — the URL bar is always inside your policy.
+- `excludeKeys` always wins over `allowed` (deny beats allow).
+- **Alias-aware on `filters` and `sorts`.** When you set `aliases`, the policy matches if **either** the URL-side name (backend) OR the state-side name (frontend) is in the list. Write your rules in whichever vocabulary you think in:
+
+  ```ts
+  aliases: { userName: "name" },
+  allowed: { filters: ["userName"] }   // ✓ allows ?filter[name]=...
+  // — or —
+  allowed: { filters: ["name"] }       // ✓ also allows it
+  ```
+
+  Same on the deny side: `excludeKeys: { filters: ["is_admin"] }` blocks both `?filter[is_admin]=...` AND `?filter[adminFlag]=...` (the alias key), so an attacker can't bypass the denylist by switching vocabularies.
+- For `fields`, you can match by short prop (`password`) or by `entity.prop` (`user.password`). Pick the precision you need.
+- `page` and `limit` are **auto-hydrated** when present in the URL and emitted by the writer when set in `state.pagination`. Round-trips out of the box — no extra config.
+- **Why per bucket?** `password` is dangerous as a filter but fine as a `fields` selection (it's just picking which column the API returns). One flat list would force you into all-or-nothing.
+
+### Want a different source? Write your own adapter
+
+`QueryBuilderAdapter` is just `{ read, write? }`. Wrap anything:
+
+```ts
+// Persist to localStorage instead of the URL
+const localStorageAdapter: QueryBuilderAdapter = {
+  read:  () => JSON.parse(localStorage.getItem("filters") ?? "{}"),
+  write: (state) => localStorage.setItem("filters", JSON.stringify(state)),
+};
+
+useQueryBuilder({ adapter: localStorageAdapter });
+```
+
+Same pattern works for `react-router` search params, hash routers, in-memory stores, IndexedDB — anything you can read from and write to.
+
+### Going lower-level
+
+If you only want the URL parser without the hook integration, both pieces are exported as pure functions:
+
+```ts
+import {
+  parseSearchParams,
+  serializeSearchParams,
+} from "@cgarciagarcia/react-query-builder";
+
+// URL → state
+parseSearchParams("?filter[status]=active&sort=-name");
+// → { filters: [...], sorts: [{ attribute: "name", direction: "desc" }] }
+
+// state → URL
+serializeSearchParams({
+  filters: [{ attribute: "status", value: ["active"] }],
+});
+// → "filter[status]=active"
+```
+
+Both accept the same `keys` / `urlAliases` / `allowed` / `excludeKeys` options as the adapter.
+
+### Known limitations
+
+The URL protocol uses a few characters as control symbols. Filter values containing them **silently corrupt** on round-trip — the writer emits the value, but the reader splits it differently. Until we lift this limitation, treat these as off-limits inside filter values:
+
+| Character | Why it breaks |
+|---|---|
+| `,` | Multi-value separator — `filter[tag]=a,b` becomes `["a", "b"]` on parse |
+| `<`, `>`, `<=`, `>=`, `<>` (as a **leading** prefix) | Operator syntax — `filter[age]=>=18` becomes operator `>=` + value `["18"]` |
+
+Other "special-looking" characters like `%`, `&`, `+` and spaces are fine — they travel URL-escaped and survive the round-trip intact.
+
+If you need any of these characters inside a value (e.g. tags with commas), keep that piece of state outside the URL adapter, or escape it on your side before passing it to `.filter()`.
 
 ---
 
