@@ -62,6 +62,10 @@ export class Builder<
 > implements QueryBuilder<Aliases> {
   private state: GlobalState<Aliases>;
 
+  // Stored so `rehydrate()` can re-run `read()` after mount when the
+  // external source has changed (browser back/forward, etc.).
+  private adapter?: BaseConfig<Aliases>["adapter"];
+
   private subscribers: Record<string, (state: GlobalState<Aliases>) => void> =
     {};
 
@@ -81,6 +85,7 @@ export class Builder<
 
   constructor(config?: BaseConfig<Aliases>) {
     const { adapter, ...rest } = config ?? {};
+    this.adapter = adapter;
     const seeded: Partial<GlobalState<Aliases>> =
       adapter?.read({ aliases: rest.aliases }) ?? {};
 
@@ -430,6 +435,26 @@ export class Builder<
   }
   hasPagination(): boolean {
     return !!this.state.pagination;
+  }
+
+  rehydrate(): QueryBuilder<Aliases> {
+    if (!this.adapter) return this;
+    const seeded: Partial<GlobalState<Aliases>> =
+      this.adapter.read({ aliases: this.state.aliases }) ?? {};
+    this.setState((s) => ({
+      ...s,
+      // Replace the data layer (what the source provides); preserve the
+      // config layer (aliases, delimiters, pruneConflictingFilters,
+      // useQuestionMark). An absent key in `seeded` means "the source
+      // has nothing for this bucket" → reset to the empty default.
+      filters: seeded.filters ?? [],
+      sorts: seeded.sorts ?? [],
+      includes: seeded.includes ?? [],
+      fields: seeded.fields ?? [],
+      params: seeded.params ?? {},
+      pagination: seeded.pagination ?? {},
+    }));
+    return this;
   }
 
   private shouldResetPage(): boolean {

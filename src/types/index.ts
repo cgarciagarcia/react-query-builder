@@ -150,6 +150,31 @@ export interface QueryBuilder<
   previousPage: () => QueryBuilder<AliasType>;
   getCurrentPage: () => number | undefined;
   getLimit: () => number | undefined;
+  /**
+   * Re-run the adapter's `read()` and replace the data layer of the
+   * builder state (filters, sorts, includes, fields, params, pagination)
+   * with what it returns. Config-layer fields (aliases, delimiters,
+   * pruneConflictingFilters, useQuestionMark) are preserved.
+   *
+   * Use it to sync the builder with an external source that changed
+   * after mount — most commonly the URL on browser back/forward:
+   *
+   * ```ts
+   * window.addEventListener("popstate", () => builder.rehydrate());
+   * ```
+   *
+   * Triggers subscribers (so the component re-renders) and the adapter
+   * `write` (typically idempotent, e.g. `replaceState` to the same URL).
+   * For non-idempotent writes (websocket, fetch), debounce in your write.
+   *
+   * **Semantics**: full replace of the data layer. If the adapter returns
+   * no `filters`, state filters become `[]`. Suitable for sources of
+   * truth like the URL — if you need merge semantics (e.g. localStorage
+   * that only stores filters), call individual builder methods instead.
+   *
+   * No-op when no `adapter` was configured.
+   */
+  rehydrate: () => QueryBuilder<AliasType>;
 }
 
 /**
