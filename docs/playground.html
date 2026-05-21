@@ -116,6 +116,18 @@
     .output-panel::-webkit-scrollbar { width: 5px; }
     .output-panel::-webkit-scrollbar-track { background: transparent; }
     .output-panel::-webkit-scrollbar-thumb { background: var(--c-border-card); border-radius: 9px; }
+
+    /* localStorage inspector */
+    .storage-toolbar { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .storage-key-tag { font-family: ui-monospace, monospace; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); color: #60a5fa; background: rgba(96,165,250,0.08); }
+    .storage-btn { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 0.3rem; border: 1px solid var(--c-border-card); background: transparent; color: var(--c-text-muted); cursor: pointer; transition: all 0.15s; }
+    .storage-btn:hover { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.08); }
+    .storage-textarea { width: 100%; box-sizing: border-box; min-height: 6rem; font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1.5; color: var(--c-text); background: var(--c-card); border: 1px solid var(--c-border-card); border-radius: 0.4rem; padding: 0.55rem 0.75rem; resize: vertical; outline: none; }
+    .storage-textarea:focus { border-color: #34d399; }
+    .storage-hint { font-size: 0.68rem; color: var(--c-text-faint); margin-top: 0.4rem; }
+    .storage-feedback { font-size: 0.68rem; margin-top: 0.4rem; font-family: ui-monospace, monospace; }
+    .storage-feedback.ok    { color: #34d399; }
+    .storage-feedback.error { color: #f87171; }
   </style>
 </head>
 <body>
@@ -127,6 +139,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         Docs
       </a>
+      <a href="./url-adapter.html" style="color:var(--c-text-muted)" class="text-sm hover:text-white transition-colors hidden sm:inline">URL Adapter</a>
       <span style="color:var(--c-border-card)">|</span>
       <span style="color:var(--c-text-heading)" class="font-semibold text-sm">Playground</span>
       <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">TypeScript</span>
@@ -159,6 +172,9 @@
         <button class="example-btn" onclick="loadExample('fields', this)">Fields & Includes</button>
         <button class="example-btn" onclick="loadExample('conflicts', this)">Conflicts</button>
         <button class="example-btn" onclick="loadExample('aliases', this)">Aliases</button>
+        <button class="example-btn" onclick="loadExample('urlAdapter', this)">URL Adapter</button>
+        <button class="example-btn" onclick="loadExample('urlWriter', this)">Two-way URL</button>
+        <button class="example-btn" onclick="loadExample('localStorageAdapter', this)">localStorage Adapter</button>
       </div>
       <div id="monaco-container"></div>
     </div>
@@ -184,9 +200,21 @@
         <div id="console-output"><span class="empty-hint">console.log() output appears here</span></div>
       </div>
 
-      <div class="output-section" style="border-bottom:none">
+      <div class="output-section">
         <div class="output-label">Builder State</div>
         <div id="state-output"><span class="empty-hint">Internal state after execution</span></div>
+      </div>
+
+      <div class="output-section" id="storage-section" style="border-bottom:none;display:none">
+        <div class="output-label">localStorage</div>
+        <div class="storage-toolbar">
+          <span class="storage-key-tag" id="storage-key-label">rqb-playground-demo</span>
+          <button class="storage-btn" onclick="loadSampleStorage()">Sample</button>
+          <button class="storage-btn" onclick="saveStorageKey()" style="margin-left:auto;border-color:#34d399;color:#34d399">Save &amp; Run</button>
+        </div>
+        <textarea id="storage-input" class="storage-textarea" spellcheck="false" placeholder='{ "filters": [{ "attribute": "status", "value": ["active"] }] }'></textarea>
+        <div id="storage-feedback" class="storage-feedback"></div>
+        <div class="storage-hint">Used by the <strong>localStorage Adapter</strong> example. Edit the JSON and click <strong>Save &amp; Run</strong> to re-hydrate the builder from it. <strong>Reload</strong> refreshes from the current localStorage value.</div>
       </div>
 
     </div>
@@ -261,19 +289,24 @@
 
     class _Builder {
       constructor(config = {}) {
+        const seeded = config.adapter?.read?.({ aliases: config.aliases }) ?? {}
+        const pick = (key) => (config[key] !== undefined ? config[key] : seeded[key])
+
         this._state = {
-          aliases: config.aliases ?? {},
-          filters: JSON.parse(JSON.stringify(config.filters ?? [])),
-          includes: [...(config.includes ?? [])],
-          sorts: JSON.parse(JSON.stringify(config.sorts ?? [])),
-          fields: [...(config.fields ?? [])],
-          params: JSON.parse(JSON.stringify(config.params ?? {})),
+          aliases: config.aliases ?? seeded.aliases ?? {},
+          filters: JSON.parse(JSON.stringify(pick('filters') ?? [])),
+          includes: [...(pick('includes') ?? [])],
+          sorts: JSON.parse(JSON.stringify(pick('sorts') ?? [])),
+          fields: [...(pick('fields') ?? [])],
+          params: JSON.parse(JSON.stringify(pick('params') ?? {})),
           useQuestionMark: config.useQuestionMark ?? true,
           pagination: config.pagination ? { ...config.pagination } : undefined,
           pruneConflictingFilters: _reverseConflicts(config.pruneConflictingFilters ?? {}),
           delimiters: { global: ',', fields: null, filters: null, sorts: null, includes: null, params: null, ...(config.delimiters ?? {}) },
         }
+        this._writeFn = typeof config.adapter?.write === 'function' ? config.adapter.write : null
       }
+      _notifyWrite() { if (this._writeFn) this._writeFn(this._state) }
       filter(attribute, value, override) {
         if (_isOperator(value)) {
           const op = value, realValue = Array.isArray(override) ? override : [override]
@@ -329,8 +362,203 @@
       when(cond, cb)  { if (cond) cb(this._state); return this }
     }
 
+    // Wrap every mutator so adapter.write(state) is invoked on every mutation.
+    const _MUTATORS = [
+      'filter', 'removeFilter', 'clearFilters',
+      'sort', 'removeSort', 'clearSorts',
+      'fields', 'removeField', 'clearFields',
+      'include', 'removeInclude', 'clearIncludes',
+      'setParam', 'removeParam', 'clearParams',
+      'page', 'limit', 'nextPage', 'previousPage',
+    ]
+    for (const name of _MUTATORS) {
+      const original = _Builder.prototype[name]
+      _Builder.prototype[name] = function (...args) {
+        const result = original.apply(this, args)
+        this._notifyWrite()
+        return result
+      }
+    }
+
     const FilterOperator = { Equals:'=', LessThan:'<', GreaterThan:'>', LessThanOrEqual:'<=', GreaterThanOrEqual:'>=', Distinct:'<>' }
     function useQueryBuilder(config) { return new _Builder(config) }
+
+    // ─── Adapter helpers (mirror src/utils/parseSearchParams + src/adapters/searchParams) ─
+    const _OP_PREFIXES = ['<>', '<=', '>=', '<', '>']
+    function _extractOperator(raw) {
+      for (const op of _OP_PREFIXES) {
+        if (raw.startsWith(op)) return { operator: op, rest: raw.slice(op.length) }
+      }
+      return { rest: raw }
+    }
+    function _bracketedKey(paramKey, prefix) {
+      if (!paramKey.startsWith(prefix + '[') || !paramKey.endsWith(']')) return null
+      const inner = paramKey.slice(prefix.length + 1, -1)
+      return inner.includes('[') || inner.includes(']') ? null : inner
+    }
+    function _reverseAliases(aliases) {
+      const reverse = new Map()
+      for (const [front, back] of Object.entries(aliases ?? {})) {
+        if (!reverse.has(back)) reverse.set(back, front)
+      }
+      return reverse
+    }
+    function _compilePolicy(options = {}) {
+      const buckets = ['filters', 'sorts', 'includes', 'fields', 'params']
+      const allowed = {}, excluded = {}, omitted = {}, omitAll = {}
+      for (const b of buckets) {
+        const a = options.allowed?.[b]
+        allowed[b] = a ? new Set(a) : null
+        excluded[b] = new Set(options.excludeKeys?.[b] ?? [])
+        const oList = options.urlOmit?.[b] ?? []
+        omitAll[b] = oList.includes('*')
+        omitted[b] = new Set(oList.filter(x => x !== '*'))
+      }
+      return {
+        pass: (bucket, ...candidates) => {
+          if (candidates.some(c => excluded[bucket].has(c))) return false
+          const allow = allowed[bucket]
+          if (allow !== null) return candidates.some(c => allow.has(c))
+          return bucket !== 'params'
+        },
+        omit: (bucket, ...candidates) =>
+          omitAll[bucket] || candidates.some(c => omitted[bucket].has(c)),
+      }
+    }
+    function parseSearchParams(search, options = {}) {
+      const trimmed = (search ?? '').replace(/^\?/, '').trim()
+      if (!trimmed) return {}
+      const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
+      const { pass } = _compilePolicy(options)
+      const forward = options.urlAliases ?? {}
+      const reverse = _reverseAliases(options.urlAliases)
+      const aliasOf = (n) => reverse.get(n) ?? n
+      const altNameOf = (n) => reverse.get(n) ?? forward[n] ?? n
+      const filters = [], fields = [], sorts = [], includes = [], collected = {}
+
+      const pagination = {}
+      for (const [key, raw] of new URLSearchParams(trimmed).entries()) {
+        if (key === 'page' || key === 'limit') {
+          const n = Number(raw)
+          if (Number.isFinite(n)) pagination[key] = n
+          continue
+        }
+        const filterAttr = _bracketedKey(key, keys.filter)
+        if (filterAttr !== null) {
+          if (!pass('filters', filterAttr, altNameOf(filterAttr))) continue
+          const { operator, rest } = _extractOperator(raw)
+          filters.push({ attribute: aliasOf(filterAttr), value: rest === '' ? [] : rest.split(','), ...(operator ? { operator } : {}) })
+          continue
+        }
+        const fieldEntity = _bracketedKey(key, keys.fields)
+        if (fieldEntity !== null) {
+          for (const prop of raw.split(',')) {
+            const full = `${fieldEntity}.${prop}`
+            if (pass('fields', prop, full)) fields.push(full)
+          }
+          continue
+        }
+        if (key === keys.fields) {
+          for (const f of raw.split(',')) { if (pass('fields', f)) fields.push(f) }
+          continue
+        }
+        if (key === keys.sort) {
+          for (const item of raw.split(',')) {
+            const desc = item.startsWith('-')
+            const attr = desc ? item.slice(1) : item
+            if (pass('sorts', attr, altNameOf(attr))) sorts.push({ attribute: aliasOf(attr), direction: desc ? 'desc' : 'asc' })
+          }
+          continue
+        }
+        if (key === keys.include) {
+          for (const inc of raw.split(',')) { if (pass('includes', inc)) includes.push(inc) }
+          continue
+        }
+        if (pass('params', key)) collected[key] = raw.split(',')
+      }
+      const result = {}
+      if (filters.length)  result.filters  = filters
+      if (fields.length)   result.fields   = fields
+      if (sorts.length)    result.sorts    = sorts
+      if (includes.length) result.includes = includes
+      if (Object.keys(collected).length) result.params = collected
+      if (pagination.page !== undefined || pagination.limit !== undefined) {
+        result.pagination = pagination
+      }
+      return result
+    }
+    function serializeSearchParams(state, options = {}) {
+      const keys = { filter: 'filter', sort: 'sort', include: 'include', fields: 'fields', ...(options.keys ?? {}) }
+      const aliases = options.urlAliases ?? state.aliases
+      const aliasOf = (n) => aliases?.[n] ?? n
+      const { pass, omit } = _compilePolicy(options)
+      const sp = new URLSearchParams()
+
+      for (const f of state.filters ?? []) {
+        const wire = aliasOf(f.attribute)
+        if (omit('filters', f.attribute, wire)) continue
+        if (!pass('filters', f.attribute, wire)) continue
+        const op = (f.operator && f.operator !== '=') ? f.operator : ''
+        sp.append(`${keys.filter}[${wire}]`, op + f.value.join(','))
+      }
+      const bare = [], grouped = {}
+      for (const fld of state.fields ?? []) {
+        const dot = fld.indexOf('.')
+        if (dot === -1) {
+          if (omit('fields', fld)) continue
+          if (pass('fields', fld)) bare.push(fld)
+          continue
+        }
+        const e = fld.slice(0, dot), p = fld.slice(dot + 1)
+        if (omit('fields', p, fld)) continue
+        if (pass('fields', p, fld)) (grouped[e] ??= []).push(p)
+      }
+      if (bare.length) sp.append(keys.fields, bare.join(','))
+      for (const [e, ps] of Object.entries(grouped)) {
+        sp.append(`${keys.fields}[${e}]`, ps.join(','))
+      }
+
+      const sortsKept = (state.sorts ?? []).filter(s => {
+        const wire = aliasOf(s.attribute)
+        return !omit('sorts', s.attribute, wire) && pass('sorts', s.attribute, wire)
+      })
+      if (sortsKept.length) {
+        sp.append(keys.sort, sortsKept.map(s => `${s.direction === 'desc' ? '-' : ''}${aliasOf(s.attribute)}`).join(','))
+      }
+      const includesKept = (state.includes ?? []).filter(i => !omit('includes', i) && pass('includes', i))
+      if (includesKept.length) sp.append(keys.include, includesKept.join(','))
+      for (const [k, v] of Object.entries(state.params ?? {})) {
+        if (omit('params', k)) continue
+        if (pass('params', k)) sp.append(k, v.join(','))
+      }
+      if (state.pagination?.page !== undefined) sp.append('page', String(state.pagination.page))
+      if (state.pagination?.limit !== undefined) sp.append('limit', String(state.pagination.limit))
+      const raw = sp.toString()
+      return raw
+        ? raw
+            .replace(/%5B/gi, '[').replace(/%5D/gi, ']')
+            .replace(/%2C/gi, ',')
+            .replace(/%3C/gi, '<').replace(/%3E/gi, '>').replace(/%3D/gi, '=')
+        : ''
+    }
+    function createSearchParamsAdapter(options = {}) {
+      const defaultSource = () => (typeof window === 'undefined' ? '' : window.location.search)
+      const adapter = {
+        read: (context = {}) => {
+          const urlAliases = options.urlAliases ?? context.aliases
+          return parseSearchParams((options.source ?? defaultSource)(), { ...options, urlAliases })
+        },
+      }
+      if (options.sync !== undefined) {
+        adapter.write = (state) => {
+          const serialized = serializeSearchParams(state, options)
+          if (typeof options.sync === 'function') { options.sync(serialized); return }
+          // Playground stub: don't touch the real URL. Surface what would be written via console.log.
+          console.log('[adapter.write] ' + (serialized || '(empty)'))
+        }
+      }
+      return adapter
+    }
 
     // ─── Examples ───────────────────────────────────────────────────────────────
     const EXAMPLES = {
@@ -440,6 +668,115 @@ console.log(builder.build())
 // hasFilter uses frontend names too
 console.log('has userName:', builder.hasFilter('userName'))
 `,
+      urlAdapter: `// URL adapter — hydrate the builder from a query string on first mount.
+//
+// In a real app you'd let createSearchParamsAdapter read window.location.search.
+// Here we inject a fake \`source\` so the example is reproducible inside the
+// playground (no actual URL changes).
+const urlAdapter = createSearchParamsAdapter({
+  source: () => '?filt[status]=active&srt=-created_at&inc=user&fld[user]=id,email&locale=es',
+  keys: { filter: 'filt', sort: 'srt', include: 'inc', fields: 'fld' },
+  allowed: { params: ['locale'] },  // anything outside this list is ignored
+})
+
+const builder = useQueryBuilder({ adapter: urlAdapter })
+
+console.log('Hydrated query string:')
+console.log(builder.build())
+// → ?filter[status]=active&fields[user]=id,email&sort=-created_at&include=user&locale=es
+
+// Output always uses the library default keys ('filter', 'sort', ...).
+// Renaming only applies when READING from the URL.
+
+// Mutations work normally — the seed is just an initial value.
+builder.filter('role', 'admin').sort('name')
+console.log('\\nAfter further mutations:')
+console.log(builder.build())
+`,
+      urlWriter: `// Two-way URL adapter — read on mount + write on every mutation.
+//
+// In a real app, sync:true pushes to window.history.replaceState. The
+// playground uses a console.log stub (see runtime) so the URL bar isn't
+// touched — every "[adapter.write] ..." line below is what the URL WOULD
+// become.
+//
+// Also showcases: aliases (frontend→backend round-trip) and excludeKeys
+// (denylist that drops dangerous URL injections like ?filter[is_admin]).
+const adapter = createSearchParamsAdapter({
+  source: () => '?filter[name]=John&filter[is_admin]=true&fields[user]=password,name&utm_source=ad',
+  // urlAliases here would override; omitting it means the adapter
+  // inherits the builder's aliases below (URL == backend, common case).
+  // Bucket-scoped allowlist: only listed names enter; everything else is
+  // ignored. Omit a bucket → its default behavior (filters/sorts/etc. =
+  // allow-all; params = deny-all).
+  allowed: {
+    filters: ['name', 'status'],          // is_admin not listed → dropped
+    fields:  ['user.name', 'user.email'], // password not listed → dropped
+    params:  ['utm_source'],
+  },
+  // Bucket-scoped denylist: complements allowed (deny wins).
+  excludeKeys: {
+    includes: ['internal_audit_log'],
+  },
+  sync: true,  // ← enables write
+})
+
+const builder = useQueryBuilder({
+  aliases: { userName: 'name' },  // shared with the adapter via context
+  adapter,
+})
+
+console.log('Hydrated (is_admin dropped, name → userName reversed):')
+console.log(builder.build())
+
+// Mutations trigger the writer. URL output uses BACKEND names (round-trip
+// with .build()) — userName becomes name on the wire.
+builder.filter('userName', 'Jane', true).sort('userName', 'asc')
+console.log('\\nAfter mutation, builder.build():')
+console.log(builder.build())
+`,
+      localStorageAdapter: `// localStorage adapter — two-way binding with browser storage.
+// read() seeds the builder on mount; write() persists every mutation.
+//
+// TIP: there's a live editor for this key in the "localStorage" panel on the
+// right. Click "Sample" → "Save & Run" to seed it, or edit the JSON directly.
+const KEY = 'rqb-playground-demo'
+
+const localStorageAdapter = {
+  read: () => {
+    try { return JSON.parse(localStorage.getItem(KEY) ?? '{}') }
+    catch { return {} }
+  },
+  write: (state) => {
+    localStorage.setItem(KEY, JSON.stringify({
+      filters:  state.filters,
+      sorts:    state.sorts,
+      includes: state.includes,
+      fields:   state.fields,
+      params:   state.params,
+    }))
+  },
+}
+
+const builder = useQueryBuilder({ adapter: localStorageAdapter })
+
+console.log('Seeded from localStorage on mount:')
+console.log(builder.build() || '(empty)')
+
+// Every mutation triggers write() automatically.
+builder
+  .filter('status', 'active', true)
+  .sort('updated_at', 'desc')
+  .include('author')
+
+console.log('\\nAfter mutations:')
+console.log(builder.build())
+
+console.log('\\nPersisted payload in localStorage:')
+console.log(JSON.parse(localStorage.getItem(KEY) ?? '{}'))
+
+// Re-run this example to see the previous state being restored.
+`,
     }
 
     // ─── Monaco setup ────────────────────────────────────────────────────────────
@@ -507,6 +844,96 @@ interface QueryBuilder {
   when(condition: boolean, callback: (state: object) => void): QueryBuilder;
 }
 
+interface GlobalState {
+  aliases:  Record<string, string>;
+  filters:  { attribute: string; value: (string|number)[]; operator?: OperatorType }[];
+  sorts:    { attribute: string; direction: Direction }[];
+  includes: string[];
+  fields:   string[];
+  params:   Record<string, (string|number)[]>;
+  pagination?: { page?: number; limit?: number };
+  useQuestionMark: boolean;
+  delimiters: {
+    global: string;
+    fields: string | null; filters: string | null; sorts: string | null;
+    includes: string | null; params: string | null;
+  };
+  pruneConflictingFilters: Record<string, string[]>;
+}
+
+/**
+ * Bridge to an external source of state. \`read()\` seeds the builder once
+ * at creation; the optional \`write()\` runs on every mutation.
+ */
+interface AdapterReadContext { aliases?: Record<string, string>; }
+
+interface QueryBuilderAdapter {
+  read:   (context?: AdapterReadContext) => Partial<GlobalState>;
+  write?: (state: GlobalState) => void;
+}
+
+type ConfigurableURLKey = 'filter' | 'sort' | 'include' | 'fields';
+
+interface SearchParamsAdapterOptions {
+  /** Rename the URL keys the parser looks for. Defaults to identity. */
+  keys?:          Partial<Record<ConfigurableURLKey, string>>;
+  /** state → URL attribute map for the URL namespace only. Independent
+   *  from BaseConfig.aliases (which is state → backend). Omit to inherit
+   *  the builder's aliases (URL == backend, common case). Set to an
+   *  empty object to opt out of any URL translation (URL == state). */
+  urlAliases?:    Record<string, string>;
+  /** Allowlist per bucket. When defined, only entries in the list pass
+   *  (read + write). Omit a bucket for its default behavior: filters/sorts/
+   *  includes/fields = allow-all; params = deny-all. */
+  allowed?: {
+    filters?:  string[];
+    sorts?:    string[];
+    includes?: string[];
+    fields?:   string[];
+    params?:   string[];
+  };
+  /** Defense-in-depth denylist, scoped per bucket. */
+  excludeKeys?:   {
+    filters?:  string[];
+    sorts?:    string[];
+    includes?: string[];
+    fields?:   string[];
+    params?:   string[];
+  };
+  /** Writer-only denylist per bucket. Listed names stay in state (so
+   *  .build() still emits them to the API) but are skipped on URL write.
+   *  Use for backend-required context the user shouldn't see in the URL.
+   *  Wildcard "*" drops every entry in that bucket. */
+  urlOmit?:       {
+    filters?:  ('*' | (string & {}))[];
+    sorts?:    ('*' | (string & {}))[];
+    includes?: ('*' | (string & {}))[];
+    fields?:   ('*' | (string & {}))[];
+    params?:   ('*' | (string & {}))[];
+  };
+  /** Provider of the query string. Default: () => window.location.search */
+  source?:        () => string;
+  /** Enable two-way binding: true|'replace' → replaceState, 'push' → pushState, fn → custom */
+  sync?:          true | 'replace' | 'push' | ((search: string) => void);
+}
+
+/** Pure parser: query string → Partial<GlobalState>. No DOM needed. */
+declare function parseSearchParams(
+  search: string,
+  options?: SearchParamsAdapterOptions,
+): Partial<GlobalState>;
+
+/** Pure serializer: Partial<GlobalState> → query string. Inverse of parseSearchParams. */
+declare function serializeSearchParams(
+  state: Partial<GlobalState>,
+  options?: SearchParamsAdapterOptions,
+): string;
+
+/** Built-in adapter that reads window.location.search (or any \`source\`). */
+declare function createSearchParamsAdapter(
+  options?: SearchParamsAdapterOptions,
+): QueryBuilderAdapter;
+
 interface BaseConfig {
   aliases?:                  Record<string, string>;
   filters?:                  { attribute: string; value: (string|number)[]; operator?: OperatorType }[];
@@ -525,6 +952,8 @@ interface BaseConfig {
   };
   useQuestionMark?: boolean;
   pagination?: { page: number; limit?: number };
+  /** Hydrate from an external source on mount; optionally persist on every change. */
+  adapter?:         QueryBuilderAdapter;
 }
 
 /** Create a new QueryBuilder instance */
@@ -594,11 +1023,18 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
 
         // Wrap in function with provided globals
         const fn = new Function(
-          'useQueryBuilder', 'FilterOperator', 'console',
+          'useQueryBuilder', 'FilterOperator', 'createSearchParamsAdapter', 'parseSearchParams', 'serializeSearchParams', 'console',
           jsCode + '\n;typeof builder !== "undefined" ? builder : null'
         )
 
-        const result = fn(useQueryBuilder, FilterOperator, { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) })
+        const result = fn(
+          useQueryBuilder,
+          FilterOperator,
+          createSearchParamsAdapter,
+          parseSearchParams,
+          serializeSearchParams,
+          { log: (...args) => logs.push(args.map(a => formatValue(a)).join(' ')) },
+        )
         _lastBuilder = result instanceof _Builder ? result : null
 
         renderOutput(_lastBuilder)
@@ -609,6 +1045,7 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
         setStatus('error', err.message)
       } finally {
         console.log = origLog
+        refreshStorageInput({ preserveFocus: true })
       }
     }
 
@@ -704,6 +1141,77 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
       document.getElementById('console-output').innerHTML = '<span class="empty-hint">No console output</span>'
     }
 
+    // ─── localStorage inspector ──────────────────────────────────────────────────
+    const STORAGE_DEMO_KEY = 'rqb-playground-demo'
+    const STORAGE_SAMPLE = {
+      filters: [
+        { attribute: 'status', value: ['active'] },
+        { attribute: 'role',   value: ['admin', 'editor'] },
+      ],
+      sorts: [{ attribute: 'created_at', direction: 'desc' }],
+      includes: ['author', 'tags'],
+      fields: ['id', 'title', 'user.name'],
+      params: {},
+    }
+
+    function _storageInput()    { return document.getElementById('storage-input') }
+    function _storageFeedback() { return document.getElementById('storage-feedback') }
+
+    function _setFeedback(kind, msg) {
+      const el = _storageFeedback()
+      el.className = 'storage-feedback ' + (kind || '')
+      el.textContent = msg || ''
+      if (kind === 'ok' && msg) {
+        clearTimeout(_setFeedback._t)
+        _setFeedback._t = setTimeout(() => {
+          if (el.textContent === msg) { el.textContent = ''; el.className = 'storage-feedback' }
+        }, 1800)
+      }
+    }
+
+    function refreshStorageInput(options) {
+      const input = _storageInput()
+      if (!input) return
+      // Don't clobber the user's edits while they're typing
+      if (options?.preserveFocus && document.activeElement === input) return
+
+      const raw = localStorage.getItem(STORAGE_DEMO_KEY)
+      if (raw === null) {
+        input.value = ''
+        return
+      }
+      try {
+        input.value = JSON.stringify(JSON.parse(raw), null, 2)
+      } catch {
+        input.value = raw // not JSON — show as-is so the user can fix it
+      }
+    }
+
+    function saveStorageKey() {
+      const input = _storageInput()
+      const raw = input.value.trim()
+      if (raw === '') {
+        localStorage.removeItem(STORAGE_DEMO_KEY)
+        _setFeedback('ok', 'Cleared (empty value).')
+        runCode()
+        return
+      }
+      try {
+        const parsed = JSON.parse(raw)
+        localStorage.setItem(STORAGE_DEMO_KEY, JSON.stringify(parsed))
+        input.value = JSON.stringify(parsed, null, 2)
+        _setFeedback('ok', 'Saved. Re-running the example…')
+        runCode()
+      } catch (err) {
+        _setFeedback('error', 'Invalid JSON: ' + err.message)
+      }
+    }
+
+    function loadSampleStorage() {
+      _storageInput().value = JSON.stringify(STORAGE_SAMPLE, null, 2)
+      _setFeedback('', 'Sample loaded — click "Save & Run" to apply.')
+    }
+
     // ─── Example loader ──────────────────────────────────────────────────────────
     function loadExample(key, btn) {
       if (!editor) return
@@ -711,6 +1219,14 @@ declare function useQueryBuilder(config?: BaseConfig): QueryBuilder;
       btn.classList.add('active')
       editor.setValue(EXAMPLES[key])
       editor.setScrollPosition({ scrollTop: 0 })
+      toggleStorageSection(key === 'localStorageAdapter')
+    }
+
+    function toggleStorageSection(visible) {
+      const section = document.getElementById('storage-section')
+      if (!section) return
+      section.style.display = visible ? '' : 'none'
+      if (visible) refreshStorageInput()
     }
 
     // ─── Theme toggle ─────────────────────────────────────────────────────────────

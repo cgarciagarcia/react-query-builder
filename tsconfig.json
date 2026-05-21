@@ -20,7 +20,7 @@
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
-    "removeComments": true,
+    "removeComments": false,
     "skipLibCheck": true,
     "strict": true,
     "paths": {

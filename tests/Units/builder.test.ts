@@ -679,4 +679,89 @@ describe("Testing the class Builder", () => {
 
     expect(builder.build()).toBe("?filter[status]=inactive");
   });
+
+  describe("rehydrate()", () => {
+    it("re-runs adapter.read and replaces the data layer", () => {
+      let currentReadResult: Record<string, unknown> = {
+        filters: [{ attribute: "status", value: ["active"] }],
+      };
+      const builder = new Builder({
+        adapter: {
+          read: () => currentReadResult as never,
+        },
+      });
+
+      expect(builder.hasFilter("status")).toBe(true);
+
+      // External source "changed":
+      currentReadResult = {
+        filters: [{ attribute: "role", value: ["admin"] }],
+      };
+      builder.rehydrate();
+
+      expect(builder.hasFilter("status")).toBe(false);
+      expect(builder.hasFilter("role")).toBe(true);
+    });
+
+    it("clears a bucket when the new read result omits it", () => {
+      let result: Record<string, unknown> = {
+        includes: ["author"],
+      };
+      const builder = new Builder({
+        adapter: { read: () => result as never },
+      });
+      expect(builder.hasInclude("author")).toBe(true);
+
+      // Source no longer has includes.
+      result = {};
+      builder.rehydrate();
+
+      expect(builder.hasInclude("author")).toBe(false);
+    });
+
+    it("preserves config-layer fields (aliases, delimiters, useQuestionMark)", () => {
+      const builder = new Builder<{ name: "full_name" }>({
+        aliases: { name: "full_name" },
+        useQuestionMark: false,
+        adapter: {
+          read: () => ({
+            filters: [{ attribute: "name", value: ["x"] }],
+          }),
+        },
+      });
+
+      builder.rehydrate();
+
+      expect(builder.build()).toBe("filter[full_name]=x"); // aliases applied, no leading ?
+    });
+
+    it("is a no-op when no adapter was configured", () => {
+      const builder = new Builder({
+        filters: [{ attribute: "status", value: ["active"] }],
+      });
+      expect(builder.hasFilter("status")).toBe(true);
+
+      builder.rehydrate();
+
+      expect(builder.hasFilter("status")).toBe(true);
+    });
+
+    it("fires adapter.write after rehydrating", () => {
+      const write = vi.fn();
+      let result: Record<string, unknown> = {};
+      const builder = new Builder({
+        adapter: {
+          read: () => result as never,
+          write,
+        },
+      });
+
+      const callsAfterMount = write.mock.calls.length;
+
+      result = { filters: [{ attribute: "x", value: ["1"] }] };
+      builder.rehydrate();
+
+      expect(write.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    });
+  });
 });
