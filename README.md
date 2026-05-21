@@ -359,6 +359,27 @@ createSearchParamsAdapter({
 
 Don't worry about other apps' query params — the writer **preserves anything it doesn't recognise**. So `?utm_source=newsletter` or `?theme=dark` stays untouched while your filters get added, updated, or cleared.
 
+### Reacting to external changes (`builder.rehydrate()`)
+
+`read()` runs **once** at mount. After that, the builder owns the state. If something else changes the underlying source — the user clicks Back/Forward, another tab mutates `localStorage`, a websocket pushes a new server-side filter — the builder won't notice on its own.
+
+`builder.rehydrate()` re-runs the adapter's `read()` and replaces the data layer (filters / sorts / includes / fields / params / pagination) with whatever the source now says. Config (aliases, delimiters, `pruneConflictingFilters`, `useQuestionMark`) is preserved.
+
+```ts
+const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+});
+
+// Re-pull state from the URL after the browser navigates.
+useEffect(() => {
+  const onPop = () => builder.rehydrate();
+  window.addEventListener("popstate", onPop);
+  return () => window.removeEventListener("popstate", onPop);
+}, [builder]);
+```
+
+Why manual and not automatic? Different sources need different listeners (`popstate` for history, `storage` for cross-tab localStorage, a websocket subscription for server state, …). Wiring the right listener belongs in your code, where the choice is obvious. The library stays out of your way.
+
 ### Aliases: keep your frontend names, ship backend names
 
 You probably name things one way in the UI (`userName`, `createdAt`) and another in the API (`name`, `created_at`). Pass `aliases` to the builder and the adapter handles the translation in **both directions** automatically:

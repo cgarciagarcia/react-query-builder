@@ -237,6 +237,32 @@ Pagination (`page` / `limit`) is **auto-hydrated** when present in the
 URL and emitted by the writer when set on the builder — round-trips out
 of the box, no extra config.
 
+### Reacting to external changes — `builder.rehydrate()`
+
+`read()` runs **once** at mount. If something else mutates the source
+afterwards (browser Back/Forward, another tab writing to localStorage,
+a server push), call `builder.rehydrate()` to re-pull state from the
+adapter. It replaces the data layer (filters / sorts / includes /
+fields / params / pagination) and preserves config (aliases,
+delimiters, `pruneConflictingFilters`, `useQuestionMark`).
+
+```ts
+const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+useEffect(() => {
+  const onPop = () => builder.rehydrate()
+  window.addEventListener('popstate', onPop)
+  return () => window.removeEventListener('popstate', onPop)
+}, [builder])
+```
+
+Why manual? Different sources need different listeners (`popstate` for
+history, `storage` for cross-tab localStorage, a websocket subscription
+for server state, …). The library doesn't subscribe to anything on
+your behalf; you wire the listener that fits the adapter.
+
 Output `build()` always uses the **default** keys (`filter`, `sort`, etc.).
 Renamed keys only apply when **reading from / writing to** the URL.
 

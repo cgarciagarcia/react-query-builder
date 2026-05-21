@@ -750,6 +750,12 @@ function UserList() {
                 <code class="text-emerald-400">read()</code> returned, so
                 <code class="text-emerald-400">filters: [...]</code> here overrides whatever the URL had at mount time.
             </p>
+            <p class="t-muted text-sm mt-3">
+                After mount, call <code class="text-emerald-400">builder.rehydrate()</code> to re-pull
+                state from the adapter — useful when the source changes outside the builder
+                (browser Back/Forward, another tab, server push).
+                See <a href="url-adapter.html#rehydrate" class="text-emerald-500 hover:underline">Reacting to external changes</a>.
+            </p>
         </div>
 
         <div id="api-filters" class="mb-14">

@@ -217,6 +217,7 @@ builder.filter("status", "active").sort("created_at", "desc")
                 <a href="#quickstart" class="toc-link">30-second example</a>
                 <a href="#readonly" class="toc-link">Read-only mode</a>
                 <a href="#sync" class="toc-link">Two-way binding</a>
+                <a href="#rehydrate" class="toc-link">Reacting to external changes</a>
                 <a href="#aliases" class="toc-link">Aliases</a>
                 <a href="#omit" class="toc-link">Hide from URL</a>
                 <a href="#keys" class="toc-link">Renaming URL keys</a>
@@ -347,6 +348,58 @@ createSearchParamsAdapter({
                         <code class="text-purple-400">?utm_source=newsletter</code> or
                         <code class="text-purple-400">?theme=dark</code> stays untouched while your
                         filters get added, updated, or cleared.
+                    </p>
+                </div>
+            </div>
+
+            <!-- REHYDRATE -->
+            <div id="rehydrate">
+                <h2 class="text-2xl font-bold mb-3 flex items-center gap-2 t-heading anchor-heading">
+                    Reacting to external changes
+                    <a href="#rehydrate" class="anchor-link">#</a>
+                </h2>
+                <p class="t-muted mb-4 leading-relaxed">
+                    The adapter <code class="text-purple-400">read()</code> runs <strong>once</strong> at
+                    mount. After that, the builder owns the state. If something <em>else</em> changes
+                    the underlying source — the user clicks Back/Forward, another tab mutates
+                    <code class="text-purple-400">localStorage</code>, a websocket pushes a new
+                    server-side filter — the builder won't notice on its own.
+                </p>
+                <p class="t-muted mb-4 leading-relaxed">
+                    <code class="text-purple-400">builder.rehydrate()</code> re-runs the adapter's
+                    <code class="text-purple-400">read()</code> and replaces the data layer
+                    (filters / sorts / includes / fields / params / pagination) with whatever the
+                    source now says. Config — aliases, delimiters,
+                    <code class="text-purple-400">pruneConflictingFilters</code>,
+                    <code class="text-purple-400">useQuestionMark</code> — is preserved.
+                </p>
+                <div class="copy-block">
+                    <button class="copy-block-btn" onclick="copyBlock(this)"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+<pre><code class="language-typescript">const builder = useQueryBuilder({
+  adapter: createSearchParamsAdapter({ sync: true }),
+})
+
+// Re-pull state from the URL after the browser navigates.
+useEffect(() => {
+  const onPop = () => builder.rehydrate()
+  window.addEventListener("popstate", onPop)
+  return () => window.removeEventListener("popstate", onPop)
+}, [builder])</code></pre>
+                </div>
+                <p class="t-muted text-sm mt-4 leading-relaxed">
+                    Why manual and not automatic? Different sources need different listeners
+                    (<code class="text-purple-400">popstate</code> for history,
+                    <code class="text-purple-400">storage</code> for cross-tab localStorage, a
+                    websocket subscription for server state, …). Wiring the right listener belongs
+                    in your code, where the choice is obvious. The library stays out of your way.
+                </p>
+                <div class="callout callout-tip mt-6">
+                    <p class="callout-title">Other sources</p>
+                    <p class="t-muted text-sm leading-relaxed">
+                        Same pattern works for any custom adapter. A localStorage adapter pairs
+                        with <code class="text-purple-400">window.addEventListener("storage", …)</code>
+                        to react to other tabs. A server-backed adapter pairs with whatever
+                        push mechanism you already use.
                     </p>
                 </div>
             </div>
