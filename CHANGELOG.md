@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.22.0](https://github.com/cgarciagarcia/react-query-builder/compare/v1.21.4...v1.22.0) (2026-05-21)
+
+
+### Features
+
+* **adapter:** add QueryBuilderAdapter for one-shot hydration and two-way binding ([#86](https://github.com/cgarciagarcia/react-query-builder/issues/86)) ([a6847b8](https://github.com/cgarciagarcia/react-query-builder/commit/a6847b8ca2694d1ff767304b83357ce5116b6b43)), closes [#3](https://github.com/cgarciagarcia/react-query-builder/issues/3) [#3](https://github.com/cgarciagarcia/react-query-builder/issues/3) [#5](https://github.com/cgarciagarcia/react-query-builder/issues/5) [#0a0f1](https://github.com/cgarciagarcia/react-query-builder/issues/0a0f1)
+
 ### [1.21.4](https://github.com/cgarciagarcia/react-query-builder/compare/v1.21.3...v1.21.4) (2026-03-28)
 
 ### [1.21.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.21.2...v1.21.3) (2026-03-28)
