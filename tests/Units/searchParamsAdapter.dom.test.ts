@@ -83,6 +83,25 @@ describe("createSearchParamsAdapter (browser env)", () => {
     expect(window.location.search).toContain("filter[x]=2");
   });
 
+  it("sync:'push' keeps pushing new entries on every subsequent mutation", () => {
+    const initialLength = window.history.length;
+    const adapter = createSearchParamsAdapter({ sync: "push" });
+
+    // Mount-time normalisation (always replaceState).
+    adapter.write?.(fullState({}));
+    expect(window.history.length).toBe(initialLength);
+
+    // N real mutations → N pushState entries, not just one.
+    for (let i = 1; i <= 5; i++) {
+      adapter.write?.(
+        fullState({ filters: [{ attribute: "x", value: [String(i)] }] }),
+      );
+      expect(window.history.length).toBe(initialLength + i);
+    }
+
+    expect(window.location.search).toContain("filter[x]=5");
+  });
+
   it("subsequent writes overwrite the previously managed keys", () => {
     const adapter = createSearchParamsAdapter({ sync: true });
 

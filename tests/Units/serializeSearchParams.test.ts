@@ -362,7 +362,7 @@ describe("serializeSearchParams", () => {
           {
             urlOmit: {
               filters: ["is_admin"], // specific
-              includes: ["*"],       // wildcard
+              includes: ["*"], // wildcard
             },
           },
         ),
@@ -387,7 +387,7 @@ describe("serializeSearchParams", () => {
             urlOmit: {
               filters: ["documento"], // listed by WIRE name → state "dni" also dropped
               sorts: ["dni"], // listed by STATE name → wire "dni" also dropped
-            }
+            },
           },
         ),
       ).toBe("filter[name]=x&sort=name");
