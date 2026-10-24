@@ -23,6 +23,7 @@
     "skipLibCheck": true,
     "strict": true,
     "paths": {
+      "@/types": ["./src/types/index.ts"],
       "@/*": ["./src/*"],
       "@tests/*": ["./tests/*"]
     }
