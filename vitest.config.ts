@@ -17,7 +17,7 @@ export default defineConfig({
       reportsDirectory: "./tests/coverage",
       exclude: [
         "**/*.config.{cjs,js,ts}",
-        "**/.eslintrc.cjs",
+        "eslint.config.js",
         "index.ts",
         "src/index.ts",
       ],

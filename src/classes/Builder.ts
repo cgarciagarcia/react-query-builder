@@ -194,7 +194,7 @@ export class Builder<
     const overrideValue = args[0];
     const filter = this.state.filters.find((f) => f.attribute === attribute);
     let filterValues: FilterValue = [],
-      shouldUpdate = false;
+      shouldUpdate: boolean;
 
     if (isOperator(value)) {
       if (overrideValue === undefined || typeof overrideValue === "boolean")
