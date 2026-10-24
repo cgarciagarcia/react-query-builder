@@ -60,8 +60,7 @@ export interface GlobalState<Al = NonNullable<Record<string, string>>> {
 
 export interface QueryBuilder<
   AliasType extends Record<string, string> | undefined =
-    | Record<string, string>
-    | undefined,
+    Record<string, string> | undefined,
 > {
   /**
    * Add or override a filter.
@@ -193,7 +192,6 @@ export type ConfigurableURLKey = "filter" | "sort" | "include" | "fields";
  * value — without it, TS collapses the union to plain `string` and the
  * wildcard suggestion never surfaces.
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type UrlOmitEntry = "*" | (string & {});
 
 /**

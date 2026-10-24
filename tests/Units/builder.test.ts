@@ -687,7 +687,7 @@ describe("Testing the class Builder", () => {
       };
       const builder = new Builder({
         adapter: {
-          read: () => currentReadResult as never,
+          read: () => currentReadResult,
         },
       });
 
@@ -708,7 +708,7 @@ describe("Testing the class Builder", () => {
         includes: ["author"],
       };
       const builder = new Builder({
-        adapter: { read: () => result as never },
+        adapter: { read: () => result },
       });
       expect(builder.hasInclude("author")).toBe(true);
 
@@ -751,7 +751,7 @@ describe("Testing the class Builder", () => {
       let result: Record<string, unknown> = {};
       const builder = new Builder({
         adapter: {
-          read: () => result as never,
+          read: () => result,
           write,
         },
       });
