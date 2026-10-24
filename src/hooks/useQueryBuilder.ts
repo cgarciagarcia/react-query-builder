@@ -26,7 +26,9 @@ export const useQueryBuilder = <
   const [, forceRender] = useReducer((r: number) => r + 1, 0);
 
   useMount(() => {
-    instance.addSubscriber(() => forceRender());
+    instance.addSubscriber(() => {
+      forceRender();
+    });
   });
 
   return instance;
