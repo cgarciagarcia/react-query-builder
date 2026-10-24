@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": "./",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
@@ -11,7 +13,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "sourceMap": false,
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node",
     "emitDeclarationOnly": true,
     "types": ["react", "vitest/globals"],
     "outDir": "./dist",
@@ -23,7 +25,6 @@
     "skipLibCheck": true,
     "strict": true,
     "paths": {
-      "@/types": ["./src/types/index.ts"],
       "@/*": ["./src/*"],
       "@tests/*": ["./tests/*"]
     }
