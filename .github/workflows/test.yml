@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [25.x]
+        node-version: [24.x]
 
     steps:
       - name: 'Checkout Project'

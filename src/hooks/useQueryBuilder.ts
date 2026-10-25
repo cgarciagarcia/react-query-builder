@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useReducer, useState } from "react";
 import { Builder } from "@/classes/Builder";
 import { useMount } from "@/hooks/useMount";
-import { type BaseConfig, type QueryBuilder } from "src/types";
+import { type BaseConfig, type QueryBuilder } from "@/types";
 
 /**
  * React hook that returns a stable `QueryBuilder` instance.
@@ -21,15 +21,13 @@ export const useQueryBuilder = <
 >(
   config?: BaseConfig<Aliases>,
 ): QueryBuilder<Aliases> => {
-  const builder = useRef<Builder<Aliases> | null>(null);
-  builder.current ??= new Builder<Aliases>(config);
-  const instance = builder.current;
+  const [instance] = useState(() => new Builder<Aliases>(config));
 
-  const [, setReRendersCounter] = useState(0);
+  const [, forceRender] = useReducer((r: number) => r + 1, 0);
 
   useMount(() => {
     instance.addSubscriber(() => {
-      setReRendersCounter((r) => r + 1);
+      forceRender();
     });
   });
 

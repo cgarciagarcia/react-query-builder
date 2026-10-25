@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "baseUrl": "./",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
@@ -12,7 +11,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "sourceMap": false,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "emitDeclarationOnly": true,
     "types": ["react", "vitest/globals"],
     "outDir": "./dist",
@@ -33,6 +32,7 @@
     "node_modules",
     "*.config.cjs",
     "commitlint.config.js",
+    "eslint.config.js",
     "examples"
   ]
 }

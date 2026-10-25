@@ -6,3 +6,5 @@ dist
 .git
 
 tests/coverage/*
+
+package-lock.json

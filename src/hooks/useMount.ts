@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 
 export const useMount = (fn: () => void, deps: unknown[] = []) => {
-  const onceFlag = useRef(true);
+  const onceFlagRef = useRef(true);
 
   useEffect(() => {
-    if (onceFlag.current) {
-      onceFlag.current = false;
+    if (onceFlagRef.current) {
+      onceFlagRef.current = false;
       fn();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, deps);
 };
