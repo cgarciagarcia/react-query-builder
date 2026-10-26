@@ -16,6 +16,7 @@ export default defineConfig(
       "examples/",
       "**/coverage/",
       "eslint.config.js",
+      ".eslintrc.cjs",
       "*.config.js",
       "*.config.cjs",
       "*.config.ts",
