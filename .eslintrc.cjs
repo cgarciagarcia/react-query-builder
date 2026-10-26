@@ -1,12 +1,12 @@
+// Legacy config kept only for Codacy, which runs ESLint 8 and cannot read
+// eslint.config.js. ESLint 10 ignores this file; keep both in sync.
 /** @type {import('eslint').Linter.Config} */
 const config = {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:jsx-a11y/recommended",
     "plugin:react-hooks/recommended",
-    "plugin:react/recommended",
   ],
   env: {
     es2022: true,
@@ -17,9 +17,8 @@ const config = {
   parserOptions: {
     project: "./tsconfig.json",
   },
-  plugins: ["@typescript-eslint", "import", "unused-imports", "@vitest"],
+  plugins: ["@typescript-eslint", "unused-imports", "@vitest"],
   rules: {
-    "react/prop-types": "off",
     "@typescript-eslint/unbound-method": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
@@ -37,9 +36,6 @@ const config = {
       2,
       { checksVoidReturn: { attributes: false } },
     ],
-    "import/consistent-type-specifier-style": ["error", "prefer-inline"],
-    "import/no-duplicates": "error",
-    "object-curly-spacing": ["warn", "always"],
 
     // Vitest Configuration
     "@vitest/no-disabled-tests": "warn",
@@ -57,9 +53,6 @@ const config = {
   reportUnusedDisableDirectives: true,
   globals: {
     React: "writable",
-  },
-  settings: {
-    react: { version: "detect" },
   },
 };
 
