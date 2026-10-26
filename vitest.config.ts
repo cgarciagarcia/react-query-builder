@@ -18,6 +18,7 @@ export default defineConfig({
       exclude: [
         "**/*.config.{cjs,js,ts}",
         "eslint.config.js",
+        "**/.eslintrc.cjs",
         "index.ts",
         "src/index.ts",
       ],
