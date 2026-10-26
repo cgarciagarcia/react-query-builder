@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.22.3](https://github.com/cgarciagarcia/react-query-builder/compare/v1.22.2...v1.22.3) (2026-10-26)
+
+
+### Bug Fixes
+
+* **codacy:** restore legacy ESLint config for Codacy's analyzer ([#90](https://github.com/cgarciagarcia/react-query-builder/issues/90)) ([1f81c07](https://github.com/cgarciagarcia/react-query-builder/commit/1f81c074c7a511f42b37df8e7172bb58ebd31d6b))
+
 ### [1.22.2](https://github.com/cgarciagarcia/react-query-builder/compare/v1.22.1...v1.22.2) (2026-10-25)
 
 ### [1.22.1](https://github.com/cgarciagarcia/react-query-builder/compare/v1.22.0...v1.22.1) (2026-10-24)
